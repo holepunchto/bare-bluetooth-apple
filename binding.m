@@ -3147,29 +3147,6 @@ bare_bluetooth_apple_l2cap__on_drain(js_env_t *env, js_value_t *function, void *
 
   js_call_function(env, receiver, function, 0, NULL, NULL);
 
-  if (!atomic_exchange(&l2cap->finalized, true)) {
-    err = js_delete_reference(env, l2cap->ctx);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(l2cap->tsfn_open, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(l2cap->tsfn_close, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(l2cap->tsfn_error, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(l2cap->tsfn_end, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(l2cap->tsfn_drain, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(l2cap->tsfn_data, js_threadsafe_function_release);
-    assert(err == 0);
-  }
-
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
 }
@@ -3237,6 +3214,29 @@ bare_bluetooth_apple_l2cap__on_close(js_env_t *env, js_value_t *function, void *
   assert(err == 0);
 
   js_call_function(env, receiver, function, 0, NULL, NULL);
+
+  if (!atomic_exchange(&l2cap->finalized, true)) {
+    err = js_delete_reference(env, l2cap->ctx);
+    assert(err == 0);
+
+    err = js_release_threadsafe_function(l2cap->tsfn_open, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_release_threadsafe_function(l2cap->tsfn_close, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_release_threadsafe_function(l2cap->tsfn_error, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_release_threadsafe_function(l2cap->tsfn_end, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_release_threadsafe_function(l2cap->tsfn_drain, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_release_threadsafe_function(l2cap->tsfn_data, js_threadsafe_function_release);
+    assert(err == 0);
+  }
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
