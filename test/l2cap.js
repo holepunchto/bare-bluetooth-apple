@@ -1,7 +1,6 @@
 const test = require('brittle')
 const os = require('bare-os')
 const Server = require('../lib/server')
-const L2CAPChannel = require('../lib/channel')
 
 const isCI = !!os.getEnv('CI')
 
