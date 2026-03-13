@@ -1,8 +1,6 @@
 const test = require('brittle')
-const os = require('bare-os')
 const Central = require('../lib/central')
-
-const isCI = !!os.getEnv('CI')
+const { isCI } = require('./helpers')
 
 test('central emits stateChange on init', { skip: isCI }, async (t) => {
   const central = new Central()

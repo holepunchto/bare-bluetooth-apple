@@ -1,8 +1,6 @@
 const test = require('brittle')
-const os = require('bare-os')
 const Server = require('../lib/server')
-
-const isCI = !!os.getEnv('CI')
+const { isCI } = require('./helpers')
 
 test('server publish L2CAP channel returns PSM', { skip: isCI }, async (t) => {
   const server = new Server()

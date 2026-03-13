@@ -1,9 +1,7 @@
 const test = require('brittle')
-const os = require('bare-os')
 const Central = require('../lib/central')
 const Peripheral = require('../lib/peripheral')
-
-const isCI = !!os.getEnv('CI')
+const { isCI } = require('./helpers')
 
 test('connect and discover services', { skip: isCI }, async (t) => {
   const central = new Central()
