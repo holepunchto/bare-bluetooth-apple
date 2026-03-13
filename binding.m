@@ -10,11 +10,6 @@ bare_bluetooth_apple__on_bridged_release(js_env_t *env, void *data, void *finali
   CFBridgingRelease(data);
 }
 
-static void
-bare_bluetooth_apple__on_tsfn_finalize(js_env_t *env, void *data, void *finalize_hint) {
-  CFBridgingRelease(data);
-}
-
 static js_value_t *
 bare_bluetooth_apple_create_cbuuid(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -663,25 +658,25 @@ bare_bluetooth_apple_peripheral_init(js_env_t *env, js_callback_info_t *info) {
     err = js_create_reference(env, argv[1], 1, &handle->ctx);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_services_discover, &handle->tsfn_services_discover);
+    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_services_discover, &handle->tsfn_services_discover);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_characteristics_discover, &handle->tsfn_characteristics_discover);
+    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_characteristics_discover, &handle->tsfn_characteristics_discover);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_read, &handle->tsfn_read);
+    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_read, &handle->tsfn_read);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_write, &handle->tsfn_write);
+    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_write, &handle->tsfn_write);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[6], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_notify, &handle->tsfn_notify);
+    err = js_create_threadsafe_function(env, argv[6], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_notify, &handle->tsfn_notify);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[7], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_notify_state, &handle->tsfn_notify_state);
+    err = js_create_threadsafe_function(env, argv[7], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_notify_state, &handle->tsfn_notify_state);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[8], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_channel_open, &handle->tsfn_channel_open);
+    err = js_create_threadsafe_function(env, argv[8], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_peripheral__on_channel_open, &handle->tsfn_channel_open);
     assert(err == 0);
 
     handle->peripheral.delegate = handle;
@@ -1799,31 +1794,31 @@ bare_bluetooth_apple_server_init(js_env_t *env, js_callback_info_t *info) {
     err = js_create_reference(env, argv[0], 1, &handle->ctx);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[1], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_state_change, &handle->tsfn_state_change);
+    err = js_create_threadsafe_function(env, argv[1], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_state_change, &handle->tsfn_state_change);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_add_service, &handle->tsfn_add_service);
+    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_add_service, &handle->tsfn_add_service);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_read_request, &handle->tsfn_read_request);
+    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_read_request, &handle->tsfn_read_request);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_write_requests, &handle->tsfn_write_requests);
+    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_write_requests, &handle->tsfn_write_requests);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_subscribe, &handle->tsfn_subscribe);
+    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_subscribe, &handle->tsfn_subscribe);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[6], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_unsubscribe, &handle->tsfn_unsubscribe);
+    err = js_create_threadsafe_function(env, argv[6], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_unsubscribe, &handle->tsfn_unsubscribe);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[7], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_ready_to_update, &handle->tsfn_ready_to_update);
+    err = js_create_threadsafe_function(env, argv[7], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_ready_to_update, &handle->tsfn_ready_to_update);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[8], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_channel_publish, &handle->tsfn_channel_publish);
+    err = js_create_threadsafe_function(env, argv[8], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_channel_publish, &handle->tsfn_channel_publish);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[9], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_channel_open, &handle->tsfn_channel_open);
+    err = js_create_threadsafe_function(env, argv[9], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_server__on_channel_open, &handle->tsfn_channel_open);
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.server", DISPATCH_QUEUE_SERIAL);
@@ -2679,19 +2674,19 @@ bare_bluetooth_apple_central_init(js_env_t *env, js_callback_info_t *info) {
     err = js_create_reference(env, argv[0], 1, &handle->ctx);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[1], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_state_change, &handle->tsfn_state_change);
+    err = js_create_threadsafe_function(env, argv[1], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_state_change, &handle->tsfn_state_change);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_discover, &handle->tsfn_discover);
+    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_discover, &handle->tsfn_discover);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_connect, &handle->tsfn_connect);
+    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_connect, &handle->tsfn_connect);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_disconnect, &handle->tsfn_disconnect);
+    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_disconnect, &handle->tsfn_disconnect);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_connect_fail, &handle->tsfn_connect_fail);
+    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_central__on_connect_fail, &handle->tsfn_connect_fail);
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.central", DISPATCH_QUEUE_SERIAL);
@@ -3293,22 +3288,22 @@ bare_bluetooth_apple_l2cap_init(js_env_t *env, js_callback_info_t *info) {
     err = js_create_reference(env, argv[1], 1, &handle->ctx);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_data, &handle->tsfn_data);
+    err = js_create_threadsafe_function(env, argv[2], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_data, &handle->tsfn_data);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_drain, &handle->tsfn_drain);
+    err = js_create_threadsafe_function(env, argv[3], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_drain, &handle->tsfn_drain);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_end, &handle->tsfn_end);
+    err = js_create_threadsafe_function(env, argv[4], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_end, &handle->tsfn_end);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_error, &handle->tsfn_error);
+    err = js_create_threadsafe_function(env, argv[5], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_error, &handle->tsfn_error);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[6], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_close, &handle->tsfn_close);
+    err = js_create_threadsafe_function(env, argv[6], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_close, &handle->tsfn_close);
     assert(err == 0);
 
-    err = js_create_threadsafe_function(env, argv[7], 0, 1, bare_bluetooth_apple__on_tsfn_finalize, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_open, &handle->tsfn_open);
+    err = js_create_threadsafe_function(env, argv[7], 0, 1, bare_bluetooth_apple__on_bridged_release, NULL, (void *) CFBridgingRetain(handle), bare_bluetooth_apple_l2cap__on_open, &handle->tsfn_open);
     assert(err == 0);
 
     err = js_create_external(env, (void *) CFBridgingRetain(handle), bare_bluetooth_apple__on_bridged_release, NULL, &result);
