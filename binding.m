@@ -2510,6 +2510,8 @@ bare_bluetooth_apple_central__on_discover(js_env_t *env, js_value_t *function, v
   bare_bluetooth_apple_central_discover_t *event = (bare_bluetooth_apple_central_discover_t *) data;
   BareBluetoothAppleCentral *central = (__bridge BareBluetoothAppleCentral *) context;
 
+  if (!central->manager.isScanning) return;
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
