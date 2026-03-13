@@ -4,9 +4,9 @@
   "description": "CoreBluetooth bindings for Bare",
   "addon": true,
   "scripts": {
-    "lint": "lunte --fix",
-    "fmt": "prettier . -w",
-    "test": "brittle-bare test/*.js"
+    "format": "prettier --write .",
+    "lint": "prettier --check . && lunte",
+    "test": "brittle-bare --coverage test.js"
   },
   "exports": {
     "./package": "./package.json",
