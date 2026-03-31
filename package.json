@@ -8,12 +8,14 @@
     "lint": "prettier --check . && lunte",
     "test": "brittle-bare --coverage test.js"
   },
+  "types": "./index.d.ts",
   "exports": {
     "./package": "./package.json",
     ".": "./index.js"
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "binding.m",
     "binding.js",
     "CMakeLists.txt",
