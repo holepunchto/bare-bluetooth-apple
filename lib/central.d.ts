@@ -1,4 +1,4 @@
-import { EventEmitter } from 'bare-events'
+import { EventEmitter, EventMap } from 'bare-events'
 import Peripheral from './peripheral'
 
 export type BluetoothState =
@@ -9,7 +9,7 @@ export type BluetoothState =
   | 'poweredOff'
   | 'poweredOn'
 
-export interface CentralEventMap {
+export interface CentralEventMap extends EventMap {
   stateChange: [state: BluetoothState]
   discover: [peripheral: Peripheral]
   connect: [peripheral: Peripheral, error?: string]

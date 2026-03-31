@@ -1,4 +1,4 @@
-import { EventEmitter } from 'bare-events'
+import { EventEmitter, EventMap } from 'bare-events'
 import Service from './service'
 import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
@@ -30,7 +30,7 @@ export interface WriteRequest {
   data: Uint8Array
 }
 
-export interface ServerEventMap {
+export interface ServerEventMap extends EventMap {
   stateChange: [state: BluetoothState]
   addService: [uuid: string, error?: string]
   channelPublish: [psm: number, error?: string]

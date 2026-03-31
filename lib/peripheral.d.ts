@@ -1,4 +1,4 @@
-import { EventEmitter } from 'bare-events'
+import { EventEmitter, EventMap } from 'bare-events'
 import Service from './service'
 import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
@@ -9,7 +9,7 @@ export interface PeripheralOptions {
   name?: string
 }
 
-export interface PeripheralEventMap {
+export interface PeripheralEventMap extends EventMap {
   servicesDiscover: [services: Service[] | null, error?: string]
   characteristicsDiscover: [
     service: string,
