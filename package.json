@@ -8,10 +8,12 @@
     "lint": "prettier --check . && lunte",
     "test": "brittle-bare --coverage test.js"
   },
-  "types": "./index.d.ts",
   "exports": {
     "./package": "./package.json",
-    ".": "./index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
   },
   "files": [
     "index.js",
