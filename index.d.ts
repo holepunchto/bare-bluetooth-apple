@@ -10,3 +10,4 @@ export {
   WriteRequest
 } from './lib/server'
 export { default as Central } from './lib/central'
+export { default as Peripheral, PeripheralOptions } from './lib/peripheral'
