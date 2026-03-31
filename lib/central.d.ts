@@ -12,7 +12,7 @@ export type BluetoothState =
 /**
  * Bluetooth Central - central manager for scanning and connecting to peripherals
  */
-declare class Central extends EventEmitter {
+export default class Central extends EventEmitter {
   constructor()
 
   /** The current Bluetooth adapter state */
@@ -39,5 +39,3 @@ declare class Central extends EventEmitter {
   on(event: 'disconnect', listener: (peripheral: Peripheral | null, error?: string) => void): this
   on(event: 'connectFail', listener: (id: string, error: string) => void): this
 }
-
-export default Central
