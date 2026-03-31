@@ -10,10 +10,14 @@
   },
   "exports": {
     "./package": "./package.json",
-    ".": "./index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "binding.m",
     "binding.js",
     "CMakeLists.txt",
