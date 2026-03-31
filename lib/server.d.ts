@@ -1,4 +1,4 @@
-import { EventEmitter } from 'bare-events'
+import { EventEmitter, EventMap } from 'bare-events'
 import Service from './service'
 import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
@@ -30,10 +30,22 @@ export interface WriteRequest {
   data: Uint8Array
 }
 
+export interface ServerEventMap extends EventMap {
+  stateChange: [state: BluetoothState]
+  addService: [uuid: string, error?: string]
+  channelPublish: [psm: number, error?: string]
+  channelOpen: [channel: L2CAPChannel | null, error?: string]
+  readRequest: [request: ReadRequest]
+  writeRequests: [requests: WriteRequest[]]
+  subscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
+  unsubscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
+  readyToUpdate: []
+}
+
 /**
  * Bluetooth Server - peripheral server for GATT services and L2CAP channels
  */
-declare class Server extends EventEmitter {
+declare class Server extends EventEmitter<ServerEventMap> {
   constructor()
 
   /** The current Bluetooth adapter state */
@@ -76,23 +88,6 @@ declare class Server extends EventEmitter {
   static readonly ATT_WRITE_NOT_PERMITTED: number
   static readonly ATT_INSUFFICIENT_RESOURCES: number
   static readonly ATT_UNLIKELY_ERROR: number
-
-  // Events
-  on(event: 'stateChange', listener: (state: BluetoothState) => void): this
-  on(event: 'addService', listener: (uuid: string, error?: string) => void): this
-  on(event: 'channelPublish', listener: (psm: number, error?: string) => void): this
-  on(event: 'channelOpen', listener: (channel: L2CAPChannel | null, error?: string) => void): this
-  on(event: 'readRequest', listener: (request: ReadRequest) => void): this
-  on(event: 'writeRequests', listener: (requests: WriteRequest[]) => void): this
-  on(
-    event: 'subscribe',
-    listener: (centralHandle: ArrayBuffer, characteristicUuid: string) => void
-  ): this
-  on(
-    event: 'unsubscribe',
-    listener: (centralHandle: ArrayBuffer, characteristicUuid: string) => void
-  ): this
-  on(event: 'readyToUpdate', listener: () => void): this
 }
 
 export default Server

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'bare-events'
+import { EventEmitter, EventMap } from 'bare-events'
 import Service from './service'
 import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
@@ -9,10 +9,24 @@ export interface PeripheralOptions {
   name?: string
 }
 
+export interface PeripheralEventMap extends EventMap {
+  servicesDiscover: [services: Service[] | null, error?: string]
+  characteristicsDiscover: [
+    service: string,
+    characteristics: Characteristic[] | null,
+    error?: string
+  ]
+  read: [characteristic: string, data: Uint8Array, error?: string]
+  write: [characteristic: string, error?: string]
+  notify: [characteristic: string, data: Uint8Array, error?: string]
+  notifyState: [characteristic: string, isNotifying: boolean, error?: string]
+  channelOpen: [channel: L2CAPChannel | null, error?: string]
+}
+
 /**
  * Bluetooth Peripheral - represents a connected or discovered peripheral device
  */
-export default class Peripheral extends EventEmitter {
+export default class Peripheral extends EventEmitter<PeripheralEventMap> {
   constructor(peripheralHandle: ArrayBuffer, opts?: PeripheralOptions)
 
   /** The peripheral UUID identifier */
@@ -36,28 +50,4 @@ export default class Peripheral extends EventEmitter {
   static readonly PROPERTY_WRITE: number
   static readonly PROPERTY_NOTIFY: number
   static readonly PROPERTY_INDICATE: number
-
-  // Events
-  on(
-    event: 'servicesDiscover',
-    listener: (services: Service[] | null, error?: string) => void
-  ): this
-  on(
-    event: 'characteristicsDiscover',
-    listener: (service: string, characteristics: Characteristic[] | null, error?: string) => void
-  ): this
-  on(
-    event: 'read',
-    listener: (characteristic: string, data: Uint8Array, error?: string) => void
-  ): this
-  on(event: 'write', listener: (characteristic: string, error?: string) => void): this
-  on(
-    event: 'notify',
-    listener: (characteristic: string, data: Uint8Array, error?: string) => void
-  ): this
-  on(
-    event: 'notifyState',
-    listener: (characteristic: string, isNotifying: boolean, error?: string) => void
-  ): this
-  on(event: 'channelOpen', listener: (channel: L2CAPChannel | null, error?: string) => void): this
 }
