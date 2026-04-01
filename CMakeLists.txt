@@ -4,9 +4,9 @@ find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 find_package(cmake-harden REQUIRED PATHS node_modules/cmake-harden)
 
-project(bare_bluetooth_apple C OBJC)
+project(bare_bluetooth_apple CXX OBJC)
 
-fetch_package("github:holepunchto/libjstl#098664c")
+fetch_package("github:holepunchto/libjstl#06ee3ac")
 
 add_bare_module(bare_bluetooth_apple)
 
@@ -15,7 +15,7 @@ add_bare_module(bare_bluetooth_apple)
 target_sources(
   ${bare_bluetooth_apple}
   PRIVATE
-    binding.m
+    binding.mm
 )
 
 target_link_libraries(
