@@ -20,7 +20,7 @@
   ],
   "addon": true,
   "scripts": {
-    "format": "prettier --write .",
+    "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
     "test": "brittle-bare --coverage test.js"
   },
