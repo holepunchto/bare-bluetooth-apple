@@ -10,7 +10,7 @@ fetch_package("github:holepunchto/libjstl#06ee3ac")
 
 add_bare_module(bare_bluetooth_apple)
 
-# harden(${bare_bluetooth_apple})
+harden(${bare_bluetooth_apple})
 
 target_sources(
   ${bare_bluetooth_apple}
