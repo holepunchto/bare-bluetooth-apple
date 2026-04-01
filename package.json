@@ -1,13 +1,7 @@
 {
-  "name": "@holepunchto/bare-bluetooth-apple",
+  "name": "bare-bluetooth-apple",
   "version": "0.0.1",
   "description": "CoreBluetooth bindings for Bare",
-  "addon": true,
-  "scripts": {
-    "format": "prettier --write .",
-    "lint": "prettier --check . && lunte",
-    "test": "brittle-bare --coverage test.js"
-  },
   "exports": {
     "./package": "./package.json",
     ".": {
@@ -18,12 +12,18 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "binding.m",
+    "binding.mm",
     "binding.js",
     "CMakeLists.txt",
     "lib",
     "prebuilds"
   ],
+  "addon": true,
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "prettier --check . && lunte",
+    "test": "brittle-bare --coverage test.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/holepunchto/bare-bluetooth-apple.git"
