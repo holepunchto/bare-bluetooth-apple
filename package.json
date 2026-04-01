@@ -43,6 +43,8 @@
     "bare-os": "^3.7.1",
     "brittle": "^3.18.0",
     "cmake-bare": "^1.6.5",
+    "cmake-fetch": "^1.4.9",
+    "cmake-harden": "^1.1.2",
     "lunte": "^1.6.0",
     "prettier": "^3.8.1",
     "prettier-config-holepunch": "^2.0.0"
