@@ -1,5 +1,5 @@
-#include <cstdint>
 #include <atomic>
+#include <cstdint>
 
 #import <bare.h>
 #import <js.h>
@@ -7,31 +7,6 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 #import <Foundation/Foundation.h>
-
-static void
-bare_bluetooth_apple__on_bridged_release(js_env_t *env, void *data, void *finalize_hint) {
-  CFBridgingRelease(data);
-}
-
-static js_external_t<void>
-bare_bluetooth_apple_create_cbuuid(
-  js_env_t *env,
-  js_receiver_t,
-  std::string str
-) {
-  int err;
-
-  @autoreleasepool {
-    CBUUID *uuid = [CBUUID UUIDWithString:[NSString stringWithUTF8String:str.c_str()]];
-    void *retained_uuid = const_cast<void *>(CFBridgingRetain(uuid));
-
-    js_external_t<void> result;
-    err = js_create_external(env, retained_uuid, result);
-    assert(err == 0);
-
-    return result;
-  }
-}
 
 typedef struct {
   CFTypeRef ref;
@@ -298,6 +273,31 @@ typedef struct {
 }
 
 @end
+
+static void
+bare_bluetooth_apple__on_bridged_release(js_env_t *env, void *data, void *finalize_hint) {
+  CFBridgingRelease(data);
+}
+
+static js_external_t<void>
+bare_bluetooth_apple_create_cbuuid(
+  js_env_t *env,
+  js_receiver_t,
+  std::string str
+) {
+  int err;
+
+  @autoreleasepool {
+    CBUUID *uuid = [CBUUID UUIDWithString:[NSString stringWithUTF8String:str.c_str()]];
+    void *retained_uuid = const_cast<void *>(CFBridgingRetain(uuid));
+
+    js_external_t<void> result;
+    err = js_create_external(env, retained_uuid, result);
+    assert(err == 0);
+
+    return result;
+  }
+}
 
 static void
 bare_bluetooth_apple_peripheral__on_services_discover(js_env_t *env, js_value_t *function, void *context, void *data) {
