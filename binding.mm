@@ -1,5 +1,5 @@
 #include <cstdint>
-#import <stdatomic.h>
+#include <atomic>
 
 #import <bare.h>
 #import <js.h>
@@ -13,7 +13,7 @@ bare_bluetooth_apple__on_bridged_release(js_env_t *env, void *data, void *finali
   CFBridgingRelease(data);
 }
 
-static js_arraybuffer_t
+static js_external_t<void>
 bare_bluetooth_apple_create_cbuuid(
   js_env_t *env,
   js_receiver_t,
@@ -23,9 +23,10 @@ bare_bluetooth_apple_create_cbuuid(
 
   @autoreleasepool {
     CBUUID *uuid = [CBUUID UUIDWithString:[NSString stringWithUTF8String:str.c_str()]];
+    void *retained_uuid = const_cast<void *>(CFBridgingRetain(uuid));
 
-    js_arraybuffer_t result;
-    err = js_create_external(env, (void *) CFBridgingRetain(uuid), bare_bluetooth_apple__on_bridged_release, NULL, result);
+    js_external_t<void> result;
+    err = js_create_external(env, retained_uuid, result);
     assert(err == 0);
 
     return result;
@@ -2889,11 +2890,11 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
   NSOutputStream *outputStream;
 
   NSThread *streamThread;
-  _Atomic bool opened;
-  _Atomic bool closing;
-  _Atomic bool closed;
-  _Atomic bool destroyed;
-  _Atomic bool finalized;
+  std::atomic<bool> opened;
+  std::atomic<bool> closing;
+  std::atomic<bool> closed;
+  std::atomic<bool> destroyed;
+  std::atomic<bool> finalized;
   NSMutableArray *writeQueue;
 }
 
@@ -2911,8 +2912,8 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
 }
 
 - (void)open {
-  if (atomic_load(&opened)) return;
-  atomic_store(&opened, true);
+  if (opened.load()) return;
+  opened.store(true);
 
   inputStream = channel.inputStream;
   outputStream = channel.outputStream;
@@ -2936,17 +2937,17 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
     [inputStream open];
     [outputStream open];
 
-    while (!atomic_load(&destroyed) && [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]) {
+    while (!destroyed.load() && [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]) {
     }
   }
 }
 
 - (void)destroy {
-  if (atomic_load(&destroyed) || atomic_load(&closing)) return;
-  atomic_store(&closing, true);
-  atomic_store(&destroyed, true);
+  if (destroyed.load() || closing.load()) return;
+  closing.store(true);
+  destroyed.store(true);
 
-  if (!atomic_load(&opened)) {
+  if (!opened.load()) {
     js_call_threadsafe_function(tsfn_close, NULL, js_threadsafe_function_nonblocking);
     return;
   }
@@ -2978,7 +2979,7 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
 }
 
 - (void)closeOnStreamThread {
-  if (atomic_load(&closed)) return;
+  if (closed.load()) return;
 
   [inputStream close];
   [outputStream close];
@@ -2992,13 +2993,13 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
 
   [writeQueue removeAllObjects];
 
-  atomic_store(&closed, true);
+  closed.store(true);
 
   js_call_threadsafe_function(tsfn_close, NULL, js_threadsafe_function_nonblocking);
 }
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode {
-  if (atomic_load(&closing)) return;
+  if (closing.load()) return;
 
   switch (eventCode) {
   case NSStreamEventHasBytesAvailable: {
@@ -3200,7 +3201,7 @@ bare_bluetooth_apple_l2cap__on_close(js_env_t *env, js_value_t *function, void *
 
   js_call_function(env, receiver, function, 0, NULL, NULL);
 
-  if (!atomic_exchange(&l2cap->finalized, true)) {
+  if (!l2cap->finalized.exchange(true)) {
     err = js_delete_reference(env, l2cap->ctx);
     assert(err == 0);
 
@@ -3270,11 +3271,11 @@ bare_bluetooth_apple_l2cap_init(js_env_t *env, js_callback_info_t *info) {
 
     handle->env = env;
     handle->channel = (__bridge CBL2CAPChannel *) channel_handle;
-    atomic_store(&handle->opened, false);
-    atomic_store(&handle->closing, false);
-    atomic_store(&handle->closed, false);
-    atomic_store(&handle->destroyed, false);
-    atomic_store(&handle->finalized, false);
+    handle->opened.store(false);
+    handle->closing.store(false);
+    handle->closed.store(false);
+    handle->destroyed.store(false);
+    handle->finalized.store(false);
 
     err = js_create_reference(env, argv[1], 1, &handle->ctx);
     assert(err == 0);
