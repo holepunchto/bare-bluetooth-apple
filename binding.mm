@@ -2010,7 +2010,7 @@ bare_bluetooth_apple_server_start_advertising(js_env_t *env, js_callback_info_t 
       err = js_get_value_string_utf8(env, argv[1], NULL, 0, &name_len);
       assert(err == 0);
 
-      char *name_str = new char[name_len + 1];
+      auto name_str = new char[name_len + 1];
       err = js_get_value_string_utf8(env, argv[1], (utf8_t *) name_str, name_len + 1, NULL);
       assert(err == 0);
 
@@ -3002,19 +3002,16 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
   case NSStreamEventHasBytesAvailable: {
     if (stream != inputStream) break;
 
-    size_t capacity = 4096;
+    std::vector<uint8_t> buffer;
+    buffer.reserve(4096);
     size_t total = 0;
-    uint8_t *buf = new uint8_t[capacity];
-    if (!buf) abort();
 
     do {
-      if (total == capacity) {
-        capacity *= 2;
-        buf = static_cast<uint8_t *>(realloc(buf, capacity));
-        if (!buf) abort();
+      if (total == buffer.size()) {
+        buffer.resize(buffer.size() == 0 ? 4096 : buffer.size() * 2);
       }
 
-      NSInteger bytesRead = [inputStream read:buf + total maxLength:capacity - total];
+      NSInteger bytesRead = [inputStream read:buffer.data() + total maxLength:buffer.size() - total];
 
       if (bytesRead <= 0) break;
 
@@ -3022,14 +3019,13 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
     } while (inputStream.hasBytesAvailable);
 
     if (total > 0) {
-      bare_bluetooth_apple_l2cap_data_t *event = new bare_bluetooth_apple_l2cap_data_t;
+      auto event = new bare_bluetooth_apple_l2cap_data_t;
       if (!event) abort();
       event->len = total;
-      event->bytes = buf;
+      event->bytes = new uint8_t[total];
+      std::memcpy(event->bytes, buffer.data(), total);
 
       js_call_threadsafe_function(tsfn_data, event, js_threadsafe_function_nonblocking);
-    } else {
-      delete[] buf;
     }
 
     break;
@@ -3054,7 +3050,7 @@ bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
   case NSStreamEventErrorOccurred: {
     NSError *error = stream.streamError;
 
-    bare_bluetooth_apple_l2cap_error_t *event = new bare_bluetooth_apple_l2cap_error_t;
+    auto event = new bare_bluetooth_apple_l2cap_error_t;
     if (!event) abort();
     event->message = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown stream error");
 
