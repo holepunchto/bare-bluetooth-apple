@@ -3521,16 +3521,13 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
 
 #undef V
 
-  err = js_set_property<bare_bluetooth_apple_create_cbuuid>(env, exports, "createCBUUID");
+#define V(name, fn) \
+  err = js_set_property<fn>(env, exports, name); \
   assert(err == 0);
 
-  /* #define V(name, fn) \ */
-  /*   err = js_set_property<fn>(env, exports, name); \ */
-  /*   assert(err == 0); */
-  /**/
-  /*   V("createCBUUID", bare_bluetooth_apple_create_cbuuid) */
-  /**/
-  /* #undef V */
+  V("createCBUUID", bare_bluetooth_apple_create_cbuuid)
+
+#undef V
 
 #define V(name, n) \
   { \
