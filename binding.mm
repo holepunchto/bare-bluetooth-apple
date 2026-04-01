@@ -1,5 +1,4 @@
-#include <atomic>
-#include <cstdint>
+#import <atomic>
 
 #import <bare.h>
 #import <js.h>
@@ -410,7 +409,7 @@ bare_bluetooth_apple_peripheral__on_read(js_env_t *env, js_value_t *function, vo
     err = js_create_typedarray(env, js_uint8array, event->data_len, arraybuffer, 0, &argv[2]);
     assert(err == 0);
 
-    delete[] reinterpret_cast<uint8_t*>(event->data);
+    delete[] reinterpret_cast<uint8_t *>(event->data);
   } else {
     err = js_get_null(env, &argv[2]);
     assert(err == 0);
@@ -509,7 +508,7 @@ bare_bluetooth_apple_peripheral__on_notify(js_env_t *env, js_value_t *function, 
     err = js_create_typedarray(env, js_uint8array, event->data_len, arraybuffer, 0, &argv[2]);
     assert(err == 0);
 
-    delete[] reinterpret_cast<uint8_t*>(event->data);
+    delete[] reinterpret_cast<uint8_t *>(event->data);
   } else {
     err = js_get_null(env, &argv[2]);
     assert(err == 0);
@@ -3108,7 +3107,7 @@ bare_bluetooth_apple_l2cap__on_data(js_env_t *env, js_value_t *function, void *c
   err = js_create_typedarray(env, js_uint8array, event->len, arraybuffer, 0, &argv[0]);
   assert(err == 0);
 
-  delete[] reinterpret_cast<uint8_t*>(event->bytes);
+  delete[] reinterpret_cast<uint8_t *>(event->bytes);
   delete event;
 
   js_call_function(env, receiver, function, 1, argv, NULL);
