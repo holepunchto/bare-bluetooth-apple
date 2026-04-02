@@ -28,7 +28,10 @@ server.on('stateChange', (state) => {
 server.on('serviceAdd', (uuid, error) => {
   if (error) return
 
-  server.startAdvertising({ name: 'MyDevice', serviceUUIDs: ['01230000-0000-1000-8000-00805F9B34FB'] })
+  server.startAdvertising({
+    name: 'MyDevice',
+    serviceUUIDs: ['01230000-0000-1000-8000-00805F9B34FB']
+  })
 })
 
 server.on('writeRequest', (requests) => {
@@ -337,34 +340,51 @@ The peer identifier of the channel.
 ### Constants
 
 #### `Server.STATE_UNKNOWN`
+
 #### `Server.STATE_POWERED_ON`
+
 #### `Server.STATE_POWERED_OFF`
+
 #### `Server.STATE_RESETTING`
+
 #### `Server.STATE_UNAUTHORIZED`
+
 #### `Server.STATE_UNSUPPORTED`
 
 Bluetooth state constants.
 
 #### `Server.PROPERTY_READ`
+
 #### `Server.PROPERTY_WRITE_WITHOUT_RESPONSE`
+
 #### `Server.PROPERTY_WRITE`
+
 #### `Server.PROPERTY_NOTIFY`
+
 #### `Server.PROPERTY_INDICATE`
 
 Characteristic property flags.
 
 #### `Server.PERMISSION_READABLE`
+
 #### `Server.PERMISSION_WRITEABLE`
+
 #### `Server.PERMISSION_READ_ENCRYPTED`
+
 #### `Server.PERMISSION_WRITE_ENCRYPTED`
 
 Characteristic permission flags.
 
 #### `Server.ATT_SUCCESS`
+
 #### `Server.ATT_INVALID_HANDLE`
+
 #### `Server.ATT_READ_NOT_PERMITTED`
+
 #### `Server.ATT_WRITE_NOT_PERMITTED`
+
 #### `Server.ATT_INSUFFICIENT_RESOURCES`
+
 #### `Server.ATT_UNLIKELY_ERROR`
 
 ATT result codes for use with `server.respondToRequest()`.
