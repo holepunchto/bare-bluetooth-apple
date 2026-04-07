@@ -713,59 +713,33 @@ bare_bluetooth_apple_peripheral_name(
   }
 }
 
-static js_value_t *
-bare_bluetooth_apple_peripheral_discover_services(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1 || argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_peripheral_discover_services(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothApplePeripheral> handle,
+  std::optional<std::vector<js_external_t<CBUUID>>> uuids
+) {
   @autoreleasepool {
-    BareBluetoothApplePeripheral *wrapper = (__bridge BareBluetoothApplePeripheral *) handle;
+    int err;
+    BareBluetoothApplePeripheral *wrapper;
+    err = js_get_value(env, handle, wrapper);
+    assert(err == 0);
 
-    NSArray<CBUUID *> *serviceUUIDs = nil;
+    NSMutableArray<CBUUID *> *serviceUUIDs = nil;
 
-    if (argc == 2) {
-      bool is_null;
-      err = js_is_null(env, argv[1], &is_null);
-      assert(err == 0);
-
-      if (!is_null) {
-        uint32_t len;
-        err = js_get_array_length(env, argv[1], &len);
+    if (uuids.has_value()) {
+      serviceUUIDs = [NSMutableArray arrayWithCapacity:uuids.value().size()];
+      for (auto uuid : *uuids) {
+        CBUUID *id;
+        err = js_get_value(env, uuid, id);
         assert(err == 0);
-
-        NSMutableArray<CBUUID *> *uuids = [NSMutableArray arrayWithCapacity:len];
-
-        for (uint32_t i = 0; i < len; i++) {
-          js_value_t *element;
-          err = js_get_element(env, argv[1], i, &element);
-          assert(err == 0);
-
-          void *uuid_handle;
-          err = js_get_value_external(env, element, &uuid_handle);
-          assert(err == 0);
-
-          [uuids addObject:(__bridge CBUUID *) uuid_handle];
-        }
-
-        serviceUUIDs = uuids;
+        [serviceUUIDs addObject:(id)];
       }
     }
 
     [wrapper->peripheral discoverServices:serviceUUIDs];
   }
-
-  return NULL;
 }
 
 static js_value_t *
@@ -3449,7 +3423,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("centralDisconnect", bare_bluetooth_apple_central_disconnect)
   V("centralDestroy", bare_bluetooth_apple_central_destroy)
 
-  V("peripheralDiscoverServices", bare_bluetooth_apple_peripheral_discover_services)
   V("peripheralDiscoverCharacteristics", bare_bluetooth_apple_peripheral_discover_characteristics)
   V("peripheralRead", bare_bluetooth_apple_peripheral_read)
   V("peripheralWrite", bare_bluetooth_apple_peripheral_write)
@@ -3502,6 +3475,7 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("peripheralInit", bare_bluetooth_apple_peripheral_init)
   V("peripheralId", bare_bluetooth_apple_peripheral_id)
   V("peripheralName", bare_bluetooth_apple_peripheral_name)
+  V("peripheralDiscoverServices", bare_bluetooth_apple_peripheral_discover_services)
 
 #undef V
 
