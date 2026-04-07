@@ -1,4 +1,5 @@
 #import <atomic>
+#include <cassert>
 #include <optional>
 
 #import <bare.h>
@@ -779,28 +780,22 @@ bare_bluetooth_apple_peripheral_discover_characteristics(
 }
 
 static js_value_t *
-bare_bluetooth_apple_peripheral_read(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  void *char_handle;
-  err = js_get_value_external(env, argv[1], &char_handle);
-  assert(err == 0);
-
+bare_bluetooth_apple_peripheral_read(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothApplePeripheral> handle,
+  js_external_t<CBCharacteristic> char_handle
+) {
   @autoreleasepool {
-    BareBluetoothApplePeripheral *wrapper = (__bridge BareBluetoothApplePeripheral *) handle;
-    CBCharacteristic *characteristic = (__bridge CBCharacteristic *) char_handle;
+    int err;
+
+    BareBluetoothApplePeripheral *wrapper;
+    js_get_value(env, handle, wrapper);
+    assert(err == 0);
+
+    CBCharacteristic *characteristic;
+    js_get_value(env, char_handle, characteristic);
+    assert(err == 0);
 
     [wrapper->peripheral readValueForCharacteristic:characteristic];
   }
@@ -3399,7 +3394,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("centralDisconnect", bare_bluetooth_apple_central_disconnect)
   V("centralDestroy", bare_bluetooth_apple_central_destroy)
 
-  V("peripheralRead", bare_bluetooth_apple_peripheral_read)
   V("peripheralWrite", bare_bluetooth_apple_peripheral_write)
   V("peripheralSubscribe", bare_bluetooth_apple_peripheral_subscribe)
   V("peripheralUnsubscribe", bare_bluetooth_apple_peripheral_unsubscribe)
@@ -3455,6 +3449,7 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("peripheralName", bare_bluetooth_apple_peripheral_name)
   V("peripheralDiscoverServices", bare_bluetooth_apple_peripheral_discover_services)
   V("peripheralDiscoverCharacteristics", bare_bluetooth_apple_peripheral_discover_characteristics)
+  V("peripheralRead", bare_bluetooth_apple_peripheral_read)
 
 #undef V
 
