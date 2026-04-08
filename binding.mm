@@ -281,6 +281,12 @@ bare_bluetooth_apple__on_bridged_release(js_env_t *env, void *data, void *finali
   CFBridgingRelease(data);
 }
 
+template <typename T>
+static void
+bare_bluetooth_apple__release_bridged(js_env_t *, T *data) {
+  CFBridgingRelease(data);
+}
+
 static js_external_t<CBUUID>
 bare_bluetooth_apple_create_cbuuid(
   js_env_t *env,
@@ -672,7 +678,11 @@ bare_bluetooth_apple_peripheral_init(
     handle->peripheral.delegate = handle;
 
     js_external_t<BareBluetoothApplePeripheral> result;
-    err = js_create_external(env, static_cast<BareBluetoothApplePeripheral *>(CFBridgingRetain(handle)), result);
+    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothApplePeripheral>>(
+      env,
+      static_cast<BareBluetoothApplePeripheral *>(CFBridgingRetain(handle)),
+      result
+    );
     assert(err == 0);
 
     return result;
@@ -926,6 +936,65 @@ bare_bluetooth_apple_peripheral_unsubscribe(
   }
 }
 
+static void
+bare_bluetooth_apple_peripheral_open_l2cap_channel(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothApplePeripheral> handle,
+  uint32_t psm
+) {
+  @autoreleasepool {
+    BareBluetoothApplePeripheral *wrapper;
+    int err = js_get_value(env, handle, wrapper);
+    assert(err == 0);
+
+    [wrapper->peripheral openL2CAPChannel:(CBL2CAPPSM) psm];
+  }
+}
+
+static uint32_t
+bare_bluetooth_apple_peripheral_service_count(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothApplePeripheral> handle
+) {
+  @autoreleasepool {
+    BareBluetoothApplePeripheral *wrapper;
+    int err = js_get_value(env, handle, wrapper);
+    assert(err == 0);
+
+    return wrapper->peripheral.services.count;
+  }
+}
+
+static js_external_t<CBService>
+bare_bluetooth_apple_peripheral_service_at_index(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothApplePeripheral> handle,
+  uint32_t index
+) {
+
+  @autoreleasepool {
+    BareBluetoothApplePeripheral *wrapper;
+    int err = js_get_value(env, handle, wrapper);
+    assert(err == 0);
+
+    CBService *service = wrapper->peripheral.services[index];
+
+    js_external_t<CBService> result;
+    err = js_create_external<bare_bluetooth_apple__release_bridged<CBService>>(
+      env,
+      static_cast<CBService *>(CFBridgingRetain(service)),
+      result
+    );
+
+    assert(err == 0);
+
+    return result;
+  }
+}
+
 static js_value_t *
 bare_bluetooth_apple_service_key(js_env_t *env, js_callback_info_t *info) {
   int err;
@@ -1067,68 +1136,6 @@ bare_bluetooth_apple_characteristic_properties(js_env_t *env, js_callback_info_t
 }
 
 static js_value_t *
-bare_bluetooth_apple_peripheral_service_count(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  js_value_t *result;
-
-  @autoreleasepool {
-    BareBluetoothApplePeripheral *wrapper = (__bridge BareBluetoothApplePeripheral *) handle;
-
-    err = js_create_uint32(env, (uint32_t) wrapper->peripheral.services.count, &result);
-    assert(err == 0);
-  }
-
-  return result;
-}
-
-static js_value_t *
-bare_bluetooth_apple_peripheral_service_at_index(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  uint32_t index;
-  err = js_get_value_uint32(env, argv[1], &index);
-  assert(err == 0);
-
-  js_value_t *result;
-
-  @autoreleasepool {
-    BareBluetoothApplePeripheral *wrapper = (__bridge BareBluetoothApplePeripheral *) handle;
-
-    CBService *service = wrapper->peripheral.services[index];
-
-    err = js_create_external(env, (void *) CFBridgingRetain(service), bare_bluetooth_apple__on_bridged_release, NULL, &result);
-    assert(err == 0);
-  }
-
-  return result;
-}
-
-static js_value_t *
 bare_bluetooth_apple_service_characteristic_count(js_env_t *env, js_callback_info_t *info) {
   int err;
 
@@ -1188,36 +1195,6 @@ bare_bluetooth_apple_service_characteristic_at_index(js_env_t *env, js_callback_
   }
 
   return result;
-}
-
-static js_value_t *
-bare_bluetooth_apple_peripheral_open_l2cap_channel(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  uint32_t psm;
-  err = js_get_value_uint32(env, argv[1], &psm);
-  assert(err == 0);
-  assert(psm <= UINT16_MAX);
-
-  @autoreleasepool {
-    BareBluetoothApplePeripheral *wrapper = (__bridge BareBluetoothApplePeripheral *) handle;
-
-    [wrapper->peripheral openL2CAPChannel:(CBL2CAPPSM) psm];
-  }
-
-  return NULL;
 }
 
 @interface BareBluetoothAppleServer : NSObject <CBPeripheralManagerDelegate> {
@@ -3361,10 +3338,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("centralDisconnect", bare_bluetooth_apple_central_disconnect)
   V("centralDestroy", bare_bluetooth_apple_central_destroy)
 
-  V("peripheralOpenL2CAPChannel", bare_bluetooth_apple_peripheral_open_l2cap_channel)
-  V("peripheralServiceCount", bare_bluetooth_apple_peripheral_service_count)
-  V("peripheralServiceAtIndex", bare_bluetooth_apple_peripheral_service_at_index)
-
   V("serviceKey", bare_bluetooth_apple_service_key)
   V("serviceUuid", bare_bluetooth_apple_service_uuid)
   V("serviceCharacteristicCount", bare_bluetooth_apple_service_characteristic_count)
@@ -3417,6 +3390,9 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("peripheralWrite", bare_bluetooth_apple_peripheral_write)
   V("peripheralSubscribe", bare_bluetooth_apple_peripheral_subscribe)
   V("peripheralUnsubscribe", bare_bluetooth_apple_peripheral_unsubscribe)
+  V("peripheralOpenL2CAPChannel", bare_bluetooth_apple_peripheral_open_l2cap_channel)
+  V("peripheralServiceCount", bare_bluetooth_apple_peripheral_service_count)
+  V("peripheralServiceAtIndex", bare_bluetooth_apple_peripheral_service_at_index)
 
 #undef V
 
