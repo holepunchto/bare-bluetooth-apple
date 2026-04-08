@@ -1,6 +1,4 @@
 #import <atomic>
-#include <cassert>
-#include <cstdint>
 #include <optional>
 
 #import <bare.h>
