@@ -698,7 +698,7 @@ bare_bluetooth_apple_peripheral_destroy(
   int err;
 
   BareBluetoothApplePeripheral *wrapper;
-  js_get_value(env, handle, wrapper);
+  err = js_get_value(env, handle, wrapper);
   assert(err == 0);
 
   if (wrapper->destroyed) return;
@@ -757,6 +757,8 @@ bare_bluetooth_apple_peripheral_name(
   @autoreleasepool {
     BareBluetoothApplePeripheral *wrapper;
     int err = js_get_value(env, handle, wrapper);
+    assert(err == 0);
+
     NSString *name = wrapper->peripheral.name;
 
     if (name) {
@@ -785,10 +787,10 @@ bare_bluetooth_apple_peripheral_discover_services(
     if (uuids.has_value()) {
       serviceUUIDs = [NSMutableArray arrayWithCapacity:uuids.value().size()];
       for (auto uuid : *uuids) {
-        CBUUID *id;
-        err = js_get_value(env, uuid, id);
+        CBUUID *cbuuid;
+        err = js_get_value(env, uuid, cbuuid);
         assert(err == 0);
-        [serviceUUIDs addObject:(id)];
+        [serviceUUIDs addObject:cbuuid];
       }
     }
 
@@ -821,10 +823,10 @@ bare_bluetooth_apple_peripheral_discover_characteristics(
       characteristicUUIDs = [NSMutableArray arrayWithCapacity:uuids.value().size()];
 
       for (auto uuid : uuids.value()) {
-        CBUUID *id;
-        err = js_get_value(env, uuid, id);
+        CBUUID *cbuuid;
+        err = js_get_value(env, uuid, cbuuid);
         assert(err == 0);
-        [characteristicUUIDs addObject:id];
+        [characteristicUUIDs addObject:cbuuid];
       }
     }
 
@@ -843,11 +845,11 @@ bare_bluetooth_apple_peripheral_read(
     int err;
 
     BareBluetoothApplePeripheral *wrapper;
-    js_get_value(env, handle, wrapper);
+    err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
     CBCharacteristic *characteristic;
-    js_get_value(env, char_handle, characteristic);
+    err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
     [wrapper->peripheral readValueForCharacteristic:characteristic];
@@ -869,18 +871,14 @@ bare_bluetooth_apple_peripheral_write(
     int err;
 
     BareBluetoothApplePeripheral *wrapper;
-    js_get_value(env, handle, wrapper);
+    err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
     CBCharacteristic *characteristic;
-    js_get_value(env, char_handle, characteristic);
+    err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
-    auto buffer = malloc(size);
-    memcpy(buffer, &data[offset], size);
-    assert(buffer);
-
-    NSData *nsdata = [NSData dataWithBytes:buffer length:size];
+    NSData *nsdata = [NSData dataWithBytes:&data[offset] length:size];
 
     CBCharacteristicWriteType type = with_response
                                        ? CBCharacteristicWriteWithResponse
@@ -902,11 +900,11 @@ bare_bluetooth_apple_peripheral_subscribe(
     int err;
 
     BareBluetoothApplePeripheral *wrapper;
-    js_get_value(env, handle, wrapper);
+    err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
     CBCharacteristic *characteristic;
-    js_get_value(env, char_handle, characteristic);
+    err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
     [wrapper->peripheral setNotifyValue:YES forCharacteristic:characteristic];
@@ -924,11 +922,11 @@ bare_bluetooth_apple_peripheral_unsubscribe(
     int err;
 
     BareBluetoothApplePeripheral *wrapper;
-    js_get_value(env, handle, wrapper);
+    err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
     CBCharacteristic *characteristic;
-    js_get_value(env, char_handle, characteristic);
+    err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
     // TODO: pass notify as parameter ?
