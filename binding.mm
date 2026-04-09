@@ -1705,130 +1705,84 @@ bare_bluetooth_apple_service_set_characteristics(
   }
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_add_service(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  void *service_handle;
-  err = js_get_value_external(env, argv[1], &service_handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_server_add_service(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle,
+  js_external_t<CBMutableService> service_handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
-    CBMutableService *service = (__bridge CBMutableService *) service_handle;
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
+
+    CBMutableService *service;
+    err = js_get_value(env, service_handle, service);
+    assert(err == 0);
 
     [server->manager addService:service];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_start_advertising(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 3;
-  js_value_t *argv[3];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 3);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_server_start_advertising(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle,
+  std::optional<std::string> name,
+  std::optional<js_array_t> service_uuids
+) {
   @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
 
     NSMutableDictionary *advertisementData = [NSMutableDictionary dictionary];
 
-    bool name_null;
-    err = js_is_null(env, argv[1], &name_null);
-    assert(err == 0);
-
-    if (!name_null) {
-      size_t name_len;
-      err = js_get_value_string_utf8(env, argv[1], NULL, 0, &name_len);
-      assert(err == 0);
-
-      auto name_str = new char[name_len + 1];
-      err = js_get_value_string_utf8(env, argv[1], (utf8_t *) name_str, name_len + 1, NULL);
-      assert(err == 0);
-
-      advertisementData[CBAdvertisementDataLocalNameKey] = [NSString stringWithUTF8String:name_str];
-
-      delete[] name_str;
+    if (name) {
+      advertisementData[CBAdvertisementDataLocalNameKey] = [NSString stringWithUTF8String:name->c_str()];
     }
 
-    bool uuids_null;
-    err = js_is_null(env, argv[2], &uuids_null);
-    assert(err == 0);
-
-    if (!uuids_null) {
+    if (service_uuids) {
       uint32_t len;
-      err = js_get_array_length(env, argv[2], &len);
+      err = js_get_array_length(env, static_cast<js_value_t *>(*service_uuids), &len);
       assert(err == 0);
 
-      NSMutableArray<CBUUID *> *serviceUUIDs = [NSMutableArray arrayWithCapacity:len];
+      NSMutableArray<CBUUID *> *uuids = [NSMutableArray arrayWithCapacity:len];
 
       for (uint32_t i = 0; i < len; i++) {
-        js_value_t *element;
-        err = js_get_element(env, argv[2], i, &element);
+        js_external_t<CBUUID> ext;
+        err = js_get_element(env, *service_uuids, i, ext);
         assert(err == 0);
 
-        void *uuid_handle;
-        err = js_get_value_external(env, element, &uuid_handle);
+        CBUUID *uuid;
+        err = js_get_value(env, ext, uuid);
         assert(err == 0);
 
-        [serviceUUIDs addObject:(__bridge CBUUID *) uuid_handle];
+        [uuids addObject:uuid];
       }
 
-      advertisementData[CBAdvertisementDataServiceUUIDsKey] = serviceUUIDs;
+      advertisementData[CBAdvertisementDataServiceUUIDsKey] = uuids;
     }
 
     [server->manager startAdvertising:advertisementData];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_stop_advertising(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_server_stop_advertising(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
 
     [server->manager stopAdvertising];
   }
-
-  return NULL;
 }
 
 static std::string
@@ -1886,206 +1840,157 @@ bare_bluetooth_apple_request_data(
   }
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_respond_to_request(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 4;
-  js_value_t *argv[4];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 4);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  void *request_handle;
-  err = js_get_value_external(env, argv[1], &request_handle);
-  assert(err == 0);
-
-  int32_t result_code;
-  err = js_get_value_int32(env, argv[2], &result_code);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_server_respond_to_request(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle,
+  js_external_t<CBATTRequest> request_handle,
+  int32_t result_code,
+  std::optional<js_uint8array_t> data
+) {
   @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
-    CBATTRequest *request = (__bridge CBATTRequest *) request_handle;
-
-    bool data_null;
-    err = js_is_null(env, argv[3], &data_null);
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
     assert(err == 0);
 
-    if (!data_null) {
-      uint8_t *data;
-      size_t data_len;
-      err = js_get_typedarray_info(env, argv[3], NULL, (void **) &data, &data_len, NULL, NULL);
+    CBATTRequest *request;
+    err = js_get_value(env, request_handle, request);
+    assert(err == 0);
+
+    if (data) {
+      uint8_t *buf;
+      size_t len;
+      err = js_get_typedarray_info(env, *data, buf, len);
       assert(err == 0);
 
-      request.value = [NSData dataWithBytes:data length:data_len];
+      request.value = [NSData dataWithBytes:buf length:len];
     }
 
-    [server->manager respondToRequest:request withResult:(CBATTError) result_code];
-  }
-
-  return NULL;
-}
-
-static js_value_t *
-bare_bluetooth_apple_server_update_value(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 3;
-  js_value_t *argv[3];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 3);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  void *char_handle;
-  err = js_get_value_external(env, argv[1], &char_handle);
-  assert(err == 0);
-
-  @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
-    CBMutableCharacteristic *characteristic = (__bridge CBMutableCharacteristic *) char_handle;
-
-    uint8_t *data;
-    size_t data_len;
-    err = js_get_typedarray_info(env, argv[2], NULL, (void **) &data, &data_len, NULL, NULL);
-    assert(err == 0);
-
-    NSData *nsdata = [NSData dataWithBytes:data length:data_len];
-
-    BOOL success = [server->manager updateValue:nsdata forCharacteristic:characteristic onSubscribedCentrals:nil];
-
-    js_value_t *result;
-    err = js_get_boolean(env, success, &result);
-    assert(err == 0);
-
-    return result;
+    [server->manager respondToRequest:request withResult:static_cast<CBATTError>(result_code)];
   }
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_publish_channel(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  bool encrypted;
-  err = js_get_value_bool(env, argv[1], &encrypted);
-  assert(err == 0);
-
+static bool
+bare_bluetooth_apple_server_update_value(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle,
+  js_external_t<CBMutableCharacteristic> char_handle,
+  js_uint8array_t data
+) {
   @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
+
+    CBMutableCharacteristic *characteristic;
+    err = js_get_value(env, char_handle, characteristic);
+    assert(err == 0);
+
+    uint8_t *buf;
+    size_t len;
+    err = js_get_typedarray_info(env, data, buf, len);
+    assert(err == 0);
+
+    NSData *nsdata = [NSData dataWithBytes:buf length:len];
+
+    return [server->manager updateValue:nsdata forCharacteristic:characteristic onSubscribedCentrals:nil];
+  }
+}
+
+static void
+bare_bluetooth_apple_server_publish_channel(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle,
+  bool encrypted
+) {
+  @autoreleasepool {
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
 
     [server->manager publishL2CAPChannelWithEncryption:encrypted];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_unpublish_channel(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  uint32_t psm;
-  err = js_get_value_uint32(env, argv[1], &psm);
-  assert(err == 0);
+static void
+bare_bluetooth_apple_server_unpublish_channel(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle,
+  uint32_t psm
+) {
   assert(psm <= UINT16_MAX);
 
   @autoreleasepool {
-    BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
 
-    [server->manager unpublishL2CAPChannel:(CBL2CAPPSM) psm];
+    [server->manager unpublishL2CAPChannel:static_cast<CBL2CAPPSM>(psm)];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_server_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
+static void
+bare_bluetooth_apple_server_remove_all_services(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle
+) {
+  @autoreleasepool {
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+    [server->manager removeAllServices];
+  }
+}
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
+static void
+bare_bluetooth_apple_server_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle
+) {
+  @autoreleasepool {
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
 
-  assert(argc == 1);
+    server->manager.delegate = nil;
 
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+    err = js_delete_reference(env, server->ctx);
+    assert(err == 0);
 
-  BareBluetoothAppleServer *server = (__bridge BareBluetoothAppleServer *) handle;
+    err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
+    assert(err == 0);
 
-  [server->manager stopAdvertising];
-  [server->manager removeAllServices];
-  server->manager.delegate = nil;
+    err = js_release_threadsafe_function(server->tsfn_channel_publish, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_delete_reference(env, server->ctx);
-  assert(err == 0);
+    err = js_release_threadsafe_function(server->tsfn_ready_to_update, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
-  assert(err == 0);
+    err = js_release_threadsafe_function(server->tsfn_unsubscribe, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_release_threadsafe_function(server->tsfn_channel_publish, js_threadsafe_function_release);
-  assert(err == 0);
+    err = js_release_threadsafe_function(server->tsfn_subscribe, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_release_threadsafe_function(server->tsfn_ready_to_update, js_threadsafe_function_release);
-  assert(err == 0);
+    err = js_release_threadsafe_function(server->tsfn_write_requests, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_release_threadsafe_function(server->tsfn_unsubscribe, js_threadsafe_function_release);
-  assert(err == 0);
+    err = js_release_threadsafe_function(server->tsfn_read_request, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_release_threadsafe_function(server->tsfn_subscribe, js_threadsafe_function_release);
-  assert(err == 0);
+    err = js_release_threadsafe_function(server->tsfn_add_service, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_release_threadsafe_function(server->tsfn_write_requests, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(server->tsfn_read_request, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(server->tsfn_add_service, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
-  assert(err == 0);
-
-  return NULL;
+    err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
+    assert(err == 0);
+  }
 }
 
 @interface BareBluetoothAppleCentral : NSObject <CBCentralManagerDelegate> {
@@ -3187,14 +3092,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("centralDestroy", bare_bluetooth_apple_central_destroy)
 
   V("serverInit", bare_bluetooth_apple_server_init)
-  V("serverAddService", bare_bluetooth_apple_server_add_service)
-  V("serverStartAdvertising", bare_bluetooth_apple_server_start_advertising)
-  V("serverStopAdvertising", bare_bluetooth_apple_server_stop_advertising)
-  V("serverRespondToRequest", bare_bluetooth_apple_server_respond_to_request)
-  V("serverUpdateValue", bare_bluetooth_apple_server_update_value)
-  V("serverDestroy", bare_bluetooth_apple_server_destroy)
-  V("serverPublishChannel", bare_bluetooth_apple_server_publish_channel)
-  V("serverUnpublishChannel", bare_bluetooth_apple_server_unpublish_channel)
 
   V("l2capInit", bare_bluetooth_apple_l2cap_init)
   V("l2capOpen", bare_bluetooth_apple_l2cap_open)
@@ -3245,6 +3142,17 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("createMutableCharacteristic", bare_bluetooth_apple_create_mutable_characteristic)
   V("createMutableService", bare_bluetooth_apple_create_mutable_service)
   V("serviceSetCharacteristics", bare_bluetooth_apple_service_set_characteristics)
+
+  // Server
+  V("serverAddService", bare_bluetooth_apple_server_add_service)
+  V("serverStartAdvertising", bare_bluetooth_apple_server_start_advertising)
+  V("serverStopAdvertising", bare_bluetooth_apple_server_stop_advertising)
+  V("serverRespondToRequest", bare_bluetooth_apple_server_respond_to_request)
+  V("serverUpdateValue", bare_bluetooth_apple_server_update_value)
+  V("serverRemoveAllServices", bare_bluetooth_apple_server_remove_all_services)
+  V("serverDestroy", bare_bluetooth_apple_server_destroy)
+  V("serverPublishChannel", bare_bluetooth_apple_server_publish_channel)
+  V("serverUnpublishChannel", bare_bluetooth_apple_server_unpublish_channel)
 
 #undef V
 
