@@ -1860,101 +1860,59 @@ bare_bluetooth_apple_server_stop_advertising(js_env_t *env, js_callback_info_t *
   return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_request_characteristic_uuid(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  js_value_t *result;
-
+static std::string
+bare_bluetooth_apple_request_characteristic_uuid(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<CBATTRequest> handle
+) {
   @autoreleasepool {
-    CBATTRequest *request = (__bridge CBATTRequest *) handle;
-
-    err = js_create_string_utf8(env, (const utf8_t *) request.characteristic.UUID.UUIDString.UTF8String, -1, &result);
+    CBATTRequest *request;
+    int err = js_get_value(env, handle, request);
     assert(err == 0);
-  }
 
-  return result;
+    return request.characteristic.UUID.UUIDString.UTF8String;
+  }
 }
 
-static js_value_t *
-bare_bluetooth_apple_request_offset(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  js_value_t *result;
-
+static int32_t
+bare_bluetooth_apple_request_offset(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<CBATTRequest> handle
+) {
   @autoreleasepool {
-    CBATTRequest *request = (__bridge CBATTRequest *) handle;
-
-    err = js_create_int32(env, (int32_t) request.offset, &result);
+    CBATTRequest *request;
+    int err = js_get_value(env, handle, request);
     assert(err == 0);
-  }
 
-  return result;
+    return static_cast<int32_t>(request.offset);
+  }
 }
 
-static js_value_t *
-bare_bluetooth_apple_request_data(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  js_value_t *result;
-
+static std::optional<js_uint8array_t>
+bare_bluetooth_apple_request_data(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<CBATTRequest> handle
+) {
   @autoreleasepool {
-    CBATTRequest *request = (__bridge CBATTRequest *) handle;
+    CBATTRequest *request;
+    int err = js_get_value(env, handle, request);
+    assert(err == 0);
+
     NSData *value = request.value;
 
     if (value && value.length > 0) {
-      void *buf;
-      js_value_t *arraybuffer;
-      err = js_create_arraybuffer(env, value.length, &buf, &arraybuffer);
+      js_uint8array_t result;
+      err = js_create_typedarray(env, static_cast<const uint8_t *>(value.bytes), value.length, result);
       assert(err == 0);
 
-      memcpy(buf, value.bytes, value.length);
-
-      err = js_create_typedarray(env, js_uint8array, value.length, arraybuffer, 0, &result);
-      assert(err == 0);
-    } else {
-      err = js_get_null(env, &result);
-      assert(err == 0);
+      return result;
     }
-  }
 
-  return result;
+    return std::nullopt;
+  }
 }
 
 static js_value_t *
@@ -3265,9 +3223,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("serverAddService", bare_bluetooth_apple_server_add_service)
   V("serverStartAdvertising", bare_bluetooth_apple_server_start_advertising)
   V("serverStopAdvertising", bare_bluetooth_apple_server_stop_advertising)
-  V("requestCharacteristicUuid", bare_bluetooth_apple_request_characteristic_uuid)
-  V("requestOffset", bare_bluetooth_apple_request_offset)
-  V("requestData", bare_bluetooth_apple_request_data)
   V("serverRespondToRequest", bare_bluetooth_apple_server_respond_to_request)
   V("serverUpdateValue", bare_bluetooth_apple_server_update_value)
   V("serverDestroy", bare_bluetooth_apple_server_destroy)
@@ -3313,6 +3268,11 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("characteristicProperties", bare_bluetooth_apple_characteristic_properties)
   V("serviceCharacteristicCount", bare_bluetooth_apple_service_characteristic_count)
   V("serviceCharacteristicAtIndex", bare_bluetooth_apple_service_characteristic_at_index)
+
+  // Request
+  V("requestCharacteristicUuid", bare_bluetooth_apple_request_characteristic_uuid)
+  V("requestOffset", bare_bluetooth_apple_request_offset)
+  V("requestData", bare_bluetooth_apple_request_data)
 
 #undef V
 
