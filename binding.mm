@@ -1070,7 +1070,7 @@ bare_bluetooth_apple_characteristic_properties(
     int err = js_get_value(env, handle, characteristic);
     assert(err == 0);
 
-    return (int32_t) characteristic.properties;
+    return static_cast<int32_t>(characteristic.properties);
   }
 }
 
