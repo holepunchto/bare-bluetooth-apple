@@ -165,6 +165,39 @@ test('server start and stop advertising', { skip: isCI }, async (t) => {
   })
 })
 
+test('server destroy cleans up gracefully', { skip: isCI }, async (t) => {
+  const server = new Server()
+
+  const state = await new Promise((resolve) => {
+    server.on('stateChange', resolve)
+  })
+
+  if (state !== 'poweredOn') {
+    t.comment('bluetooth not powered on: ' + state + ', skipping')
+    return
+  }
+
+  const characteristic = new Characteristic(CHAR_UUID, {
+    read: true,
+    value: new Uint8Array([0x01])
+  })
+
+  const service = new Service(SERVICE_UUID, [characteristic])
+
+  server.addService(service)
+
+  await new Promise((resolve) => {
+    server.on('serviceAdd', () => resolve())
+  })
+
+  server.startAdvertising({
+    name: 'BareTestDestroy',
+    serviceUUIDs: [SERVICE_UUID]
+  })
+
+  t.execution(() => server.destroy())
+})
+
 test('server multiple characteristics in one service', { skip: isCI }, async (t) => {
   const server = new Server()
   t.teardown(() => server.destroy())

@@ -1934,6 +1934,21 @@ bare_bluetooth_apple_server_unpublish_channel(
 }
 
 static void
+bare_bluetooth_apple_server_remove_all_services(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleServer> handle
+) {
+  @autoreleasepool {
+    BareBluetoothAppleServer *server;
+    int err = js_get_value(env, handle, server);
+    assert(err == 0);
+
+    [server->manager removeAllServices];
+  }
+}
+
+static void
 bare_bluetooth_apple_server_destroy(
   js_env_t *env,
   js_receiver_t,
@@ -1944,8 +1959,6 @@ bare_bluetooth_apple_server_destroy(
     int err = js_get_value(env, handle, server);
     assert(err == 0);
 
-    [server->manager stopAdvertising];
-    [server->manager removeAllServices];
     server->manager.delegate = nil;
 
     err = js_delete_reference(env, server->ctx);
@@ -3136,6 +3149,7 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("serverStopAdvertising", bare_bluetooth_apple_server_stop_advertising)
   V("serverRespondToRequest", bare_bluetooth_apple_server_respond_to_request)
   V("serverUpdateValue", bare_bluetooth_apple_server_update_value)
+  V("serverRemoveAllServices", bare_bluetooth_apple_server_remove_all_services)
   V("serverDestroy", bare_bluetooth_apple_server_destroy)
   V("serverPublishChannel", bare_bluetooth_apple_server_publish_channel)
   V("serverUnpublishChannel", bare_bluetooth_apple_server_unpublish_channel)
