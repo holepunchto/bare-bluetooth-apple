@@ -2305,188 +2305,134 @@ bare_bluetooth_apple_central_init(js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
-static js_value_t *
-bare_bluetooth_apple_central_start_scan(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1 || argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_central_start_scan(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle,
+  std::optional<js_array_t> uuids_array
+) {
   @autoreleasepool {
-    BareBluetoothAppleCentral *central = (__bridge BareBluetoothAppleCentral *) handle;
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
 
     NSArray<CBUUID *> *serviceUUIDs = nil;
 
-    if (argc == 2) {
-      bool is_null;
-      err = js_is_null(env, argv[1], &is_null);
+    if (uuids_array) {
+      uint32_t len;
+      err = js_get_array_length(env, static_cast<js_value_t *>(*uuids_array), &len);
       assert(err == 0);
 
-      if (!is_null) {
-        uint32_t len;
-        err = js_get_array_length(env, argv[1], &len);
+      NSMutableArray<CBUUID *> *uuids = [NSMutableArray arrayWithCapacity:len];
+
+      for (uint32_t i = 0; i < len; i++) {
+        js_external_t<CBUUID> ext;
+        err = js_get_element(env, *uuids_array, i, ext);
         assert(err == 0);
 
-        NSMutableArray<CBUUID *> *uuids = [NSMutableArray arrayWithCapacity:len];
+        CBUUID *uuid;
+        err = js_get_value(env, ext, uuid);
+        assert(err == 0);
 
-        for (uint32_t i = 0; i < len; i++) {
-          js_value_t *element;
-          err = js_get_element(env, argv[1], i, &element);
-          assert(err == 0);
-
-          void *uuid_handle;
-          err = js_get_value_external(env, element, &uuid_handle);
-          assert(err == 0);
-
-          [uuids addObject:(__bridge CBUUID *) uuid_handle];
-        }
-
-        serviceUUIDs = uuids;
+        [uuids addObject:uuid];
       }
+
+      serviceUUIDs = uuids;
     }
 
     NSDictionary *options = @{CBCentralManagerScanOptionAllowDuplicatesKey : @NO};
 
     [central->manager scanForPeripheralsWithServices:serviceUUIDs options:options];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_central_stop_scan(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_central_stop_scan(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleCentral *central = (__bridge BareBluetoothAppleCentral *) handle;
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
 
     [central->manager stopScan];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_central_connect(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *central_handle;
-  err = js_get_value_external(env, argv[0], &central_handle);
-  assert(err == 0);
-
-  void *peripheral_handle;
-  err = js_get_value_external(env, argv[1], &peripheral_handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_central_connect(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle,
+  js_external_t<CBPeripheral> peripheral_handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleCentral *central = (__bridge BareBluetoothAppleCentral *) central_handle;
-    CBPeripheral *peripheral = (__bridge CBPeripheral *) peripheral_handle;
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
+
+    CBPeripheral *peripheral;
+    err = js_get_value(env, peripheral_handle, peripheral);
+    assert(err == 0);
 
     [central->manager connectPeripheral:peripheral options:nil];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_central_disconnect(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *central_handle;
-  err = js_get_value_external(env, argv[0], &central_handle);
-  assert(err == 0);
-
-  void *peripheral_handle;
-  err = js_get_value_external(env, argv[1], &peripheral_handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_central_disconnect(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle,
+  js_external_t<CBPeripheral> peripheral_handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleCentral *central = (__bridge BareBluetoothAppleCentral *) central_handle;
-    CBPeripheral *peripheral = (__bridge CBPeripheral *) peripheral_handle;
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
+
+    CBPeripheral *peripheral;
+    err = js_get_value(env, peripheral_handle, peripheral);
+    assert(err == 0);
 
     [central->manager cancelPeripheralConnection:peripheral];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_central_destroy(js_env_t *env, js_callback_info_t *info) {
-  int err;
+static void
+bare_bluetooth_apple_central_destroy(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle
+) {
+  @autoreleasepool {
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
 
-  size_t argc = 1;
-  js_value_t *argv[1];
+    central->manager.delegate = nil;
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
+    err = js_delete_reference(env, central->ctx);
+    assert(err == 0);
 
-  assert(argc == 1);
+    err = js_release_threadsafe_function(central->tsfn_connect_fail, js_threadsafe_function_release);
+    assert(err == 0);
 
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+    err = js_release_threadsafe_function(central->tsfn_disconnect, js_threadsafe_function_release);
+    assert(err == 0);
 
-  BareBluetoothAppleCentral *central = (__bridge BareBluetoothAppleCentral *) handle;
+    err = js_release_threadsafe_function(central->tsfn_connect, js_threadsafe_function_release);
+    assert(err == 0);
 
-  [central->manager stopScan];
-  central->manager.delegate = nil;
+    err = js_release_threadsafe_function(central->tsfn_discover, js_threadsafe_function_release);
+    assert(err == 0);
 
-  err = js_delete_reference(env, central->ctx);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(central->tsfn_connect_fail, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(central->tsfn_disconnect, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(central->tsfn_connect, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(central->tsfn_discover, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(central->tsfn_state_change, js_threadsafe_function_release);
-  assert(err == 0);
-
-  return NULL;
+    err = js_release_threadsafe_function(central->tsfn_state_change, js_threadsafe_function_release);
+    assert(err == 0);
+  }
 }
 
 @interface BareBluetoothAppleL2CAPChannel : NSObject <NSStreamDelegate> {
@@ -3085,11 +3031,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   }
 
   V("centralInit", bare_bluetooth_apple_central_init)
-  V("centralStartScan", bare_bluetooth_apple_central_start_scan)
-  V("centralStopScan", bare_bluetooth_apple_central_stop_scan)
-  V("centralConnect", bare_bluetooth_apple_central_connect)
-  V("centralDisconnect", bare_bluetooth_apple_central_disconnect)
-  V("centralDestroy", bare_bluetooth_apple_central_destroy)
 
   V("serverInit", bare_bluetooth_apple_server_init)
 
@@ -3142,6 +3083,13 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("createMutableCharacteristic", bare_bluetooth_apple_create_mutable_characteristic)
   V("createMutableService", bare_bluetooth_apple_create_mutable_service)
   V("serviceSetCharacteristics", bare_bluetooth_apple_service_set_characteristics)
+
+  // Central
+  V("centralStartScan", bare_bluetooth_apple_central_start_scan)
+  V("centralStopScan", bare_bluetooth_apple_central_stop_scan)
+  V("centralConnect", bare_bluetooth_apple_central_connect)
+  V("centralDisconnect", bare_bluetooth_apple_central_disconnect)
+  V("centralDestroy", bare_bluetooth_apple_central_destroy)
 
   // Server
   V("serverAddService", bare_bluetooth_apple_server_add_service)
