@@ -6,7 +6,7 @@ find_package(cmake-harden REQUIRED PATHS node_modules/cmake-harden)
 
 project(bare_bluetooth_apple CXX OBJC)
 
-fetch_package("github:holepunchto/libjstl#06ee3ac")
+fetch_package("github:holepunchto/libjstl#6b78e1e")
 
 add_bare_module(bare_bluetooth_apple)
 
