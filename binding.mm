@@ -2862,159 +2862,98 @@ bare_bluetooth_apple_l2cap_init(js_env_t *env, js_callback_info_t *info) {
   return result;
 }
 
-static js_value_t *
-bare_bluetooth_apple_l2cap_open(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_l2cap_open(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleL2CAPChannel> handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleL2CAPChannel *l2cap = (__bridge BareBluetoothAppleL2CAPChannel *) handle;
+    BareBluetoothAppleL2CAPChannel *l2cap;
+    int err = js_get_value(env, handle, l2cap);
+    assert(err == 0);
 
     [l2cap open];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_l2cap_write(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 2;
-  js_value_t *argv[2];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 2);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  uint8_t *data;
-  size_t data_len;
-  err = js_get_typedarray_info(env, argv[1], NULL, (void **) &data, &data_len, NULL, NULL);
-  assert(err == 0);
-
+static int32_t
+bare_bluetooth_apple_l2cap_write(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleL2CAPChannel> handle,
+  js_uint8array_t buf
+) {
   @autoreleasepool {
-    BareBluetoothAppleL2CAPChannel *l2cap = (__bridge BareBluetoothAppleL2CAPChannel *) handle;
+    BareBluetoothAppleL2CAPChannel *l2cap;
+    int err = js_get_value(env, handle, l2cap);
+    assert(err == 0);
 
     if (atomic_load(&l2cap->destroyed) || !atomic_load(&l2cap->opened)) {
-      js_value_t *result;
-      err = js_create_int32(env, 0, &result);
-      assert(err == 0);
-      return result;
+      return 0;
     }
+
+    uint8_t *data;
+    size_t data_len;
+    err = js_get_typedarray_info(env, buf, data, data_len);
+    assert(err == 0);
 
     NSData *nsdata = [NSData dataWithBytes:data length:data_len];
     [l2cap performSelector:@selector(enqueueWrite:) onThread:l2cap->streamThread withObject:nsdata waitUntilDone:NO];
 
-    js_value_t *result;
-    err = js_create_int32(env, (int32_t) data_len, &result);
-    assert(err == 0);
-
-    return result;
+    return static_cast<int32_t>(data_len);
   }
 }
 
-static js_value_t *
-bare_bluetooth_apple_l2cap_end(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
+static void
+bare_bluetooth_apple_l2cap_end(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleL2CAPChannel> handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleL2CAPChannel *l2cap = (__bridge BareBluetoothAppleL2CAPChannel *) handle;
+    BareBluetoothAppleL2CAPChannel *l2cap;
+    int err = js_get_value(env, handle, l2cap);
+    assert(err == 0);
 
     [l2cap destroy];
   }
-
-  return NULL;
 }
 
-static js_value_t *
-bare_bluetooth_apple_l2cap_psm(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  js_value_t *result;
-
+static uint32_t
+bare_bluetooth_apple_l2cap_psm(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleL2CAPChannel> handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleL2CAPChannel *l2cap = (__bridge BareBluetoothAppleL2CAPChannel *) handle;
-
-    err = js_create_uint32(env, (uint32_t) l2cap->channel.PSM, &result);
+    BareBluetoothAppleL2CAPChannel *l2cap;
+    int err = js_get_value(env, handle, l2cap);
     assert(err == 0);
-  }
 
-  return result;
+    return static_cast<uint32_t>(l2cap->channel.PSM);
+  }
 }
 
-static js_value_t *
-bare_bluetooth_apple_l2cap_peer(js_env_t *env, js_callback_info_t *info) {
-  int err;
-
-  size_t argc = 1;
-  js_value_t *argv[1];
-
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
-  assert(err == 0);
-
-  assert(argc == 1);
-
-  void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
-
-  js_value_t *result;
-
+static std::optional<std::string>
+bare_bluetooth_apple_l2cap_peer(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleL2CAPChannel> handle
+) {
   @autoreleasepool {
-    BareBluetoothAppleL2CAPChannel *l2cap = (__bridge BareBluetoothAppleL2CAPChannel *) handle;
+    BareBluetoothAppleL2CAPChannel *l2cap;
+    int err = js_get_value(env, handle, l2cap);
+    assert(err == 0);
+
     CBPeer *peer = l2cap->channel.peer;
 
     if (peer) {
-      NSString *uuid = peer.identifier.UUIDString;
-      err = js_create_string_utf8(env, (const utf8_t *) uuid.UTF8String, -1, &result);
-      assert(err == 0);
-    } else {
-      err = js_get_null(env, &result);
-      assert(err == 0);
+      return std::string(peer.identifier.UUIDString.UTF8String);
     }
-  }
 
-  return result;
+    return std::nullopt;
+  }
 }
 
 static js_value_t *
@@ -3035,11 +2974,6 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("serverInit", bare_bluetooth_apple_server_init)
 
   V("l2capInit", bare_bluetooth_apple_l2cap_init)
-  V("l2capOpen", bare_bluetooth_apple_l2cap_open)
-  V("l2capWrite", bare_bluetooth_apple_l2cap_write)
-  V("l2capEnd", bare_bluetooth_apple_l2cap_end)
-  V("l2capPsm", bare_bluetooth_apple_l2cap_psm)
-  V("l2capPeer", bare_bluetooth_apple_l2cap_peer)
 
 #undef V
 
@@ -3101,6 +3035,13 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("serverDestroy", bare_bluetooth_apple_server_destroy)
   V("serverPublishChannel", bare_bluetooth_apple_server_publish_channel)
   V("serverUnpublishChannel", bare_bluetooth_apple_server_unpublish_channel)
+
+  // L2CAP
+  V("l2capOpen", bare_bluetooth_apple_l2cap_open)
+  V("l2capWrite", bare_bluetooth_apple_l2cap_write)
+  V("l2capEnd", bare_bluetooth_apple_l2cap_end)
+  V("l2capPsm", bare_bluetooth_apple_l2cap_psm)
+  V("l2capPeer", bare_bluetooth_apple_l2cap_peer)
 
 #undef V
 
