@@ -109,6 +109,29 @@ test('scan deduplicates peripherals by id', { skip: isCI }, async (t) => {
   t.ok(result.same, 'same object reference for duplicate peripheral id')
 })
 
+test('central destroy cleans up gracefully', { skip: isCI }, async (t) => {
+  const central = new Central()
+
+  const state = await new Promise((resolve) => {
+    central.on('stateChange', resolve)
+  })
+
+  if (state !== 'poweredOn') {
+    t.comment('bluetooth not powered on: ' + state + ', skipping')
+    return
+  }
+
+  central.startScan()
+
+  const peripheral = await new Promise((resolve) => {
+    central.on('discover', resolve)
+  })
+
+  t.ok(peripheral, 'discovered a peripheral before destroy')
+
+  t.execution(() => central.destroy())
+})
+
 test('filtered scan with non-existent service UUID finds nothing', { skip: isCI }, async (t) => {
   const central = new Central()
   t.teardown(() => central.destroy())
