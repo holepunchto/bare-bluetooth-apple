@@ -313,13 +313,13 @@ bare_bluetooth_apple_peripheral__on_finalize(js_env_t *env, bare_bluetooth_apple
   delete peripheral;
 }
 
-using bare_bluetooth_apple_peripheral__on_services_discover_fn = js_function_t<void, uint32_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_characteristics_discover_fn = js_function_t<void, js_object_t, uint32_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_read_fn = js_function_t<void, js_object_t, js_object_t, js_object_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_write_fn = js_function_t<void, js_object_t, js_object_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_notify_fn = js_function_t<void, js_object_t, js_object_t, js_object_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_notify_state_fn = js_function_t<void, js_object_t, js_object_t, bool, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_channel_open_fn = js_function_t<void, js_object_t, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_services_discover_fn = js_function_t<void, js_receiver_t, uint32_t, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_characteristics_discover_fn = js_function_t<void, js_receiver_t, js_object_t, uint32_t, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_read_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_write_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_notify_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_notify_state_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, bool, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, js_object_t>;
 
 static void
 bare_bluetooth_apple_peripheral__on_services_discover(
@@ -339,23 +339,21 @@ bare_bluetooth_apple_peripheral__on_services_discover(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
+  uint32_t count = event->count;
 
-  err = js_create_uint32(env, event->count, &argv[0]);
-  assert(err == 0);
-
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[1]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[1]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), count, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -379,26 +377,25 @@ bare_bluetooth_apple_peripheral__on_characteristics_discover(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[3];
-
-  err = js_create_external(env, const_cast<void *>(event->service), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *service;
+  err = js_create_external(env, const_cast<void *>(event->service), bare_bluetooth_apple__on_bridged_release, NULL, &service);
   assert(err == 0);
 
-  err = js_create_uint32(env, event->count, &argv[1]);
-  assert(err == 0);
+  uint32_t count = event->count;
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[2]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[2]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 3, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(service), count, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -422,14 +419,13 @@ bare_bluetooth_apple_peripheral__on_read(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[4];
-
-  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *characteristic;
+  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &characteristic);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string uuid(event->uuid);
 
+  js_value_t *data;
   if (event->data && event->data_len > 0) {
     void *buf;
     js_value_t *arraybuffer;
@@ -438,28 +434,29 @@ bare_bluetooth_apple_peripheral__on_read(
 
     memcpy(buf, event->data, event->data_len);
 
-    err = js_create_typedarray(env, js_uint8array, event->data_len, arraybuffer, 0, &argv[2]);
+    err = js_create_typedarray(env, js_uint8array, event->data_len, arraybuffer, 0, &data);
     assert(err == 0);
 
     delete[] reinterpret_cast<uint8_t *>(event->data);
   } else {
-    err = js_get_null(env, &argv[2]);
+    err = js_get_null(env, &data);
     assert(err == 0);
   }
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[3]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[3]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   free(event->uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 4, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(data), js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -483,27 +480,26 @@ bare_bluetooth_apple_peripheral__on_write(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[3];
-
-  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *characteristic;
+  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &characteristic);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string uuid(event->uuid);
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[2]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[2]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   free(event->uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 3, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -527,14 +523,13 @@ bare_bluetooth_apple_peripheral__on_notify(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[4];
-
-  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *characteristic;
+  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &characteristic);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string uuid(event->uuid);
 
+  js_value_t *data;
   if (event->data && event->data_len > 0) {
     void *buf;
     js_value_t *arraybuffer;
@@ -543,28 +538,29 @@ bare_bluetooth_apple_peripheral__on_notify(
 
     memcpy(buf, event->data, event->data_len);
 
-    err = js_create_typedarray(env, js_uint8array, event->data_len, arraybuffer, 0, &argv[2]);
+    err = js_create_typedarray(env, js_uint8array, event->data_len, arraybuffer, 0, &data);
     assert(err == 0);
 
     delete[] reinterpret_cast<uint8_t *>(event->data);
   } else {
-    err = js_get_null(env, &argv[2]);
+    err = js_get_null(env, &data);
     assert(err == 0);
   }
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[3]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[3]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   free(event->uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 4, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(data), js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -588,30 +584,27 @@ bare_bluetooth_apple_peripheral__on_notify_state(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[4];
-
-  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *characteristic;
+  err = js_create_external(env, const_cast<void *>(event->characteristic), bare_bluetooth_apple__on_bridged_release, NULL, &characteristic);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string uuid(event->uuid);
+  bool is_notifying = event->is_notifying;
 
-  err = js_get_boolean(env, event->is_notifying, &argv[2]);
-  assert(err == 0);
-
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[3]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[3]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   free(event->uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 4, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, is_notifying, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -635,28 +628,28 @@ bare_bluetooth_apple_peripheral__on_channel_open(
   err = js_get_reference_value(env, wrapper->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
-
+  js_value_t *channel;
   if (event->channel) {
-    err = js_create_external(env, const_cast<void *>(event->channel), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+    err = js_create_external(env, const_cast<void *>(event->channel), bare_bluetooth_apple__on_bridged_release, NULL, &channel);
     assert(err == 0);
   } else {
-    err = js_get_null(env, &argv[0]);
+    err = js_get_null(env, &channel);
     assert(err == 0);
   }
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[1]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[1]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(channel), js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1329,14 +1322,14 @@ bare_bluetooth_apple_server__on_finalize(js_env_t *env, bare_bluetooth_apple_ser
 }
 
 using bare_bluetooth_apple_server__on_state_change_fn = js_function_t<void, js_receiver_t, int32_t>;
-using bare_bluetooth_apple_server__on_add_service_fn = js_function_t<void, js_object_t, std::string, js_object_t>;
-using bare_bluetooth_apple_server__on_read_request_fn = js_function_t<void, js_object_t>;
-using bare_bluetooth_apple_server__on_write_requests_fn = js_function_t<void, js_array_t>;
-using bare_bluetooth_apple_server__on_subscribe_fn = js_function_t<void, js_object_t, std::string>;
-using bare_bluetooth_apple_server__on_unsubscribe_fn = js_function_t<void, js_object_t, std::string>;
+using bare_bluetooth_apple_server__on_add_service_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t>;
+using bare_bluetooth_apple_server__on_read_request_fn = js_function_t<void, js_receiver_t, js_object_t>;
+using bare_bluetooth_apple_server__on_write_requests_fn = js_function_t<void, js_receiver_t, js_array_t>;
+using bare_bluetooth_apple_server__on_subscribe_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
+using bare_bluetooth_apple_server__on_unsubscribe_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
 using bare_bluetooth_apple_server__on_ready_to_update_fn = js_function_t<void, js_receiver_t>;
-using bare_bluetooth_apple_server__on_channel_publish_fn = js_function_t<void, uint32_t, js_object_t>;
-using bare_bluetooth_apple_server__on_channel_open_fn = js_function_t<void, js_object_t, js_object_t>;
+using bare_bluetooth_apple_server__on_channel_publish_fn = js_function_t<void, js_receiver_t, uint32_t, js_object_t>;
+using bare_bluetooth_apple_server__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, js_object_t>;
 
 static void
 bare_bluetooth_apple_server__on_state_change(
@@ -1383,27 +1376,26 @@ bare_bluetooth_apple_server__on_add_service(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[3];
-
-  err = js_create_external(env, const_cast<void *>(event->service), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *service;
+  err = js_create_external(env, const_cast<void *>(event->service), bare_bluetooth_apple__on_bridged_release, NULL, &service);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string uuid(event->uuid);
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[2]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[2]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   free(event->uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 3, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(service), uuid, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1427,14 +1419,13 @@ bare_bluetooth_apple_server__on_read_request(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[1];
-
-  err = js_create_external(env, const_cast<void *>(event->request), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *request;
+  err = js_create_external(env, const_cast<void *>(event->request), bare_bluetooth_apple__on_bridged_release, NULL, &request);
   assert(err == 0);
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 1, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(request));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1460,8 +1451,8 @@ bare_bluetooth_apple_server__on_write_requests(
 
   uint32_t count = event->count;
 
-  js_value_t *argv[1];
-  err = js_create_array_with_length(env, count, &argv[0]);
+  js_value_t *array;
+  err = js_create_array_with_length(env, count, &array);
   assert(err == 0);
 
   for (uint32_t i = 0; i < count; i++) {
@@ -1469,14 +1460,14 @@ bare_bluetooth_apple_server__on_write_requests(
     err = js_create_external(env, const_cast<void *>(event->requests[i]), bare_bluetooth_apple__on_bridged_release, NULL, &request_external);
     assert(err == 0);
 
-    err = js_set_element(env, argv[0], i, request_external);
+    err = js_set_element(env, array, i, request_external);
     assert(err == 0);
   }
 
   delete[] event->requests;
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 1, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_array_t(array));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1500,18 +1491,16 @@ bare_bluetooth_apple_server__on_subscribe(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
-
-  err = js_create_external(env, const_cast<void *>(event->central), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *central;
+  err = js_create_external(env, const_cast<void *>(event->central), bare_bluetooth_apple__on_bridged_release, NULL, &central);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->characteristic_uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string characteristic_uuid(event->characteristic_uuid);
 
   free(event->characteristic_uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(central), characteristic_uuid);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1535,18 +1524,16 @@ bare_bluetooth_apple_server__on_unsubscribe(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
-
-  err = js_create_external(env, const_cast<void *>(event->central), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *central;
+  err = js_create_external(env, const_cast<void *>(event->central), bare_bluetooth_apple__on_bridged_release, NULL, &central);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->characteristic_uuid), -1, &argv[1]);
-  assert(err == 0);
+  std::string characteristic_uuid(event->characteristic_uuid);
 
   free(event->characteristic_uuid);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(central), characteristic_uuid);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1594,23 +1581,21 @@ bare_bluetooth_apple_server__on_channel_publish(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
+  uint32_t psm = event->psm;
 
-  err = js_create_uint32(env, event->psm, &argv[0]);
-  assert(err == 0);
-
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[1]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[1]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), psm, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1634,28 +1619,28 @@ bare_bluetooth_apple_server__on_channel_open(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
-
+  js_value_t *channel;
   if (event->channel) {
-    err = js_create_external(env, const_cast<void *>(event->channel), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+    err = js_create_external(env, const_cast<void *>(event->channel), bare_bluetooth_apple__on_bridged_release, NULL, &channel);
     assert(err == 0);
   } else {
-    err = js_get_null(env, &argv[0]);
+    err = js_get_null(env, &channel);
     assert(err == 0);
   }
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[1]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[1]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(channel), js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2257,9 +2242,9 @@ bare_bluetooth_apple_central__on_finalize(js_env_t *env, bare_bluetooth_apple_ce
 }
 
 using bare_bluetooth_apple_central__on_state_change_fn = js_function_t<void, js_receiver_t, int32_t>;
-using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_object_t, std::string, js_object_t, int32_t>;
-using bare_bluetooth_apple_central__on_connect_fn = js_function_t<void, js_object_t, std::string>;
-using bare_bluetooth_apple_central__on_disconnect_fn = js_function_t<void, std::string, js_object_t>;
+using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, int32_t>;
+using bare_bluetooth_apple_central__on_connect_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
+using bare_bluetooth_apple_central__on_disconnect_fn = js_function_t<void, js_receiver_t, std::string, js_object_t>;
 using bare_bluetooth_apple_central__on_connect_fail_fn = js_function_t<void, js_receiver_t, std::string, std::string>;
 
 static void
@@ -2309,30 +2294,28 @@ bare_bluetooth_apple_central__on_discover(
   err = js_get_reference_value(env, central->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[4];
-
-  err = js_create_external(env, const_cast<void *>(event->peripheral), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *peripheral_ext;
+  err = js_create_external(env, const_cast<void *>(event->peripheral), bare_bluetooth_apple__on_bridged_release, NULL, &peripheral_ext);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->id), -1, &argv[1]);
-  assert(err == 0);
+  std::string id(event->id);
 
+  js_value_t *name;
   if (event->name) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->name), -1, &argv[2]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->name), -1, &name);
     assert(err == 0);
   } else {
-    err = js_get_null(env, &argv[2]);
+    err = js_get_null(env, &name);
     assert(err == 0);
   }
 
-  err = js_create_int32(env, event->rssi, &argv[3]);
-  assert(err == 0);
+  int32_t rssi = event->rssi;
 
   free(event->id);
   if (event->name) free(event->name);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 4, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, js_object_t(name), rssi);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2356,18 +2339,16 @@ bare_bluetooth_apple_central__on_connect(
   err = js_get_reference_value(env, central->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
-
-  err = js_create_external(env, const_cast<void *>(event->peripheral), bare_bluetooth_apple__on_bridged_release, NULL, &argv[0]);
+  js_value_t *peripheral_ext;
+  err = js_create_external(env, const_cast<void *>(event->peripheral), bare_bluetooth_apple__on_bridged_release, NULL, &peripheral_ext);
   assert(err == 0);
 
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->id), -1, &argv[1]);
-  assert(err == 0);
+  std::string id(event->id);
 
   free(event->id);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2391,25 +2372,22 @@ bare_bluetooth_apple_central__on_disconnect(
   err = js_get_reference_value(env, central->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[2];
-
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->id), -1, &argv[0]);
-  assert(err == 0);
-
+  std::string id(event->id);
   free(event->id);
 
+  js_value_t *error;
   if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &argv[1]);
+    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
     assert(err == 0);
     free(event->error);
   } else {
-    err = js_get_null(env, &argv[1]);
+    err = js_get_null(env, &error);
     assert(err == 0);
   }
 
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 2, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), id, js_object_t(error));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2859,7 +2837,7 @@ bare_bluetooth_apple_l2cap__on_finalize(js_env_t *env, bare_bluetooth_apple_l2ca
   delete l2cap;
 }
 
-using bare_bluetooth_apple_l2cap__on_data_fn = js_function_t<void, js_uint8array_t>;
+using bare_bluetooth_apple_l2cap__on_data_fn = js_function_t<void, js_receiver_t, js_uint8array_t>;
 using bare_bluetooth_apple_l2cap__on_drain_fn = js_function_t<void, js_receiver_t>;
 using bare_bluetooth_apple_l2cap__on_end_fn = js_function_t<void, js_receiver_t>;
 using bare_bluetooth_apple_l2cap__on_error_fn = js_function_t<void, js_receiver_t, std::string>;
@@ -2884,8 +2862,6 @@ bare_bluetooth_apple_l2cap__on_data(
   err = js_get_reference_value(env, channel->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *argv[1];
-
   void *buf;
   js_value_t *arraybuffer;
   err = js_create_arraybuffer(env, event->len, &buf, &arraybuffer);
@@ -2893,13 +2869,14 @@ bare_bluetooth_apple_l2cap__on_data(
 
   memcpy(buf, event->bytes, event->len);
 
-  err = js_create_typedarray(env, js_uint8array, event->len, arraybuffer, 0, &argv[0]);
+  js_value_t *typedarray;
+  err = js_create_typedarray(env, js_uint8array, event->len, arraybuffer, 0, &typedarray);
   assert(err == 0);
 
   delete[] reinterpret_cast<uint8_t *>(event->bytes);
   delete event;
 
-  js_call_function(env, receiver, static_cast<js_value_t *>(function), 1, argv, NULL);
+  js_call_function(env, function, js_receiver_t(receiver), js_uint8array_t(typedarray));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
