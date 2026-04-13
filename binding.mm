@@ -328,7 +328,7 @@ bare_bluetooth_apple_peripheral__on_services_discover(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_services_discover_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -366,7 +366,7 @@ bare_bluetooth_apple_peripheral__on_characteristics_discover(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_characteristics_discover_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -408,7 +408,7 @@ bare_bluetooth_apple_peripheral__on_read(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_read_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -469,7 +469,7 @@ bare_bluetooth_apple_peripheral__on_write(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_write_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -512,7 +512,7 @@ bare_bluetooth_apple_peripheral__on_notify(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_notify_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -573,7 +573,7 @@ bare_bluetooth_apple_peripheral__on_notify_state(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_notify_state_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -617,7 +617,7 @@ bare_bluetooth_apple_peripheral__on_channel_open(
   bare_bluetooth_apple_peripheral_t *peripheral,
   bare_bluetooth_apple_peripheral_channel_open_t *event
 ) {
-  BareBluetoothApplePeripheral *wrapper = peripheral->handle;
+  auto wrapper = peripheral->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1338,7 +1338,7 @@ bare_bluetooth_apple_server__on_state_change(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_state_change_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1365,7 +1365,7 @@ bare_bluetooth_apple_server__on_add_service(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_add_service_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1408,7 +1408,7 @@ bare_bluetooth_apple_server__on_read_request(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_read_request_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1438,7 +1438,7 @@ bare_bluetooth_apple_server__on_write_requests(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_write_requests_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1480,7 +1480,7 @@ bare_bluetooth_apple_server__on_subscribe(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_subscribe_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1513,7 +1513,7 @@ bare_bluetooth_apple_server__on_unsubscribe(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_unsubscribe_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1546,7 +1546,7 @@ bare_bluetooth_apple_server__on_ready_to_update(
   bare_bluetooth_apple_server_t *srv,
   void *data
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1570,7 +1570,7 @@ bare_bluetooth_apple_server__on_channel_publish(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_channel_publish_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -1608,7 +1608,7 @@ bare_bluetooth_apple_server__on_channel_open(
   bare_bluetooth_apple_server_t *srv,
   bare_bluetooth_apple_server_channel_open_t *event
 ) {
-  BareBluetoothAppleServer *server = srv->handle;
+  auto server = srv->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2254,7 +2254,7 @@ bare_bluetooth_apple_central__on_state_change(
   bare_bluetooth_apple_central_t *cen,
   bare_bluetooth_apple_central_state_change_t *event
 ) {
-  BareBluetoothAppleCentral *central = cen->handle;
+  auto central = cen->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2281,7 +2281,7 @@ bare_bluetooth_apple_central__on_discover(
   bare_bluetooth_apple_central_t *cen,
   bare_bluetooth_apple_central_discover_t *event
 ) {
-  BareBluetoothAppleCentral *central = cen->handle;
+  auto central = cen->handle;
   int err;
 
   if (!central->manager.isScanning) return;
@@ -2328,7 +2328,7 @@ bare_bluetooth_apple_central__on_connect(
   bare_bluetooth_apple_central_t *cen,
   bare_bluetooth_apple_central_connect_t *event
 ) {
-  BareBluetoothAppleCentral *central = cen->handle;
+  auto central = cen->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2361,7 +2361,7 @@ bare_bluetooth_apple_central__on_disconnect(
   bare_bluetooth_apple_central_t *cen,
   bare_bluetooth_apple_central_disconnect_t *event
 ) {
-  BareBluetoothAppleCentral *central = cen->handle;
+  auto central = cen->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2400,7 +2400,7 @@ bare_bluetooth_apple_central__on_connect_fail(
   bare_bluetooth_apple_central_t *cen,
   bare_bluetooth_apple_central_connect_fail_t *event
 ) {
-  BareBluetoothAppleCentral *central = cen->handle;
+  auto central = cen->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2851,7 +2851,7 @@ bare_bluetooth_apple_l2cap__on_data(
   bare_bluetooth_apple_l2cap_t *l2cap,
   bare_bluetooth_apple_l2cap_data_t *event
 ) {
-  BareBluetoothAppleL2CAPChannel *channel = l2cap->handle;
+  auto channel = l2cap->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2889,7 +2889,7 @@ bare_bluetooth_apple_l2cap__on_drain(
   bare_bluetooth_apple_l2cap_t *l2cap,
   void *data
 ) {
-  BareBluetoothAppleL2CAPChannel *channel = l2cap->handle;
+  auto channel = l2cap->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2913,7 +2913,7 @@ bare_bluetooth_apple_l2cap__on_end(
   bare_bluetooth_apple_l2cap_t *l2cap,
   void *data
 ) {
-  BareBluetoothAppleL2CAPChannel *channel = l2cap->handle;
+  auto channel = l2cap->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2937,7 +2937,7 @@ bare_bluetooth_apple_l2cap__on_error(
   bare_bluetooth_apple_l2cap_t *l2cap,
   bare_bluetooth_apple_l2cap_error_t *event
 ) {
-  BareBluetoothAppleL2CAPChannel *channel = l2cap->handle;
+  auto channel = l2cap->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -2966,7 +2966,7 @@ bare_bluetooth_apple_l2cap__on_close(
   bare_bluetooth_apple_l2cap_t *l2cap,
   void *data
 ) {
-  BareBluetoothAppleL2CAPChannel *channel = l2cap->handle;
+  auto channel = l2cap->handle;
   int err;
 
   js_handle_scope_t *scope;
@@ -3013,7 +3013,7 @@ bare_bluetooth_apple_l2cap__on_open(
   bare_bluetooth_apple_l2cap_t *l2cap,
   void *data
 ) {
-  BareBluetoothAppleL2CAPChannel *channel = l2cap->handle;
+  auto channel = l2cap->handle;
   int err;
 
   js_handle_scope_t *scope;
