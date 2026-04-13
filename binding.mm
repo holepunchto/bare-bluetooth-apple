@@ -8,129 +8,129 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 #import <Foundation/Foundation.h>
 
-typedef struct {
+struct bare_bluetooth_apple_external_t {
   CFTypeRef ref;
   char *uuid;
-} bare_bluetooth_apple_external_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_services_discover_t {
   uint32_t count;
   char *error;
-} bare_bluetooth_apple_peripheral_services_discover_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_characteristics_discover_t {
   CFTypeRef service;
   uint32_t count;
   char *error;
-} bare_bluetooth_apple_peripheral_characteristics_discover_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_read_t {
   CFTypeRef characteristic;
   char *uuid;
   void *data;
   size_t data_len;
   char *error;
-} bare_bluetooth_apple_peripheral_read_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_write_t {
   CFTypeRef characteristic;
   char *uuid;
   char *error;
-} bare_bluetooth_apple_peripheral_write_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_notify_t {
   CFTypeRef characteristic;
   char *uuid;
   void *data;
   size_t data_len;
   char *error;
-} bare_bluetooth_apple_peripheral_notify_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_notify_state_t {
   CFTypeRef characteristic;
   char *uuid;
   bool is_notifying;
   char *error;
-} bare_bluetooth_apple_peripheral_notify_state_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_peripheral_channel_open_t {
   CFTypeRef channel;
   char *error;
-} bare_bluetooth_apple_peripheral_channel_open_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_state_change_t {
   int32_t state;
-} bare_bluetooth_apple_server_state_change_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_add_service_t {
   CFTypeRef service;
   char *uuid;
   char *error;
-} bare_bluetooth_apple_server_add_service_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_read_request_t {
   CFTypeRef request;
-} bare_bluetooth_apple_server_read_request_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_write_requests_t {
   uint32_t count;
   CFTypeRef *requests;
-} bare_bluetooth_apple_server_write_requests_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_subscribe_t {
   CFTypeRef central;
   char *characteristic_uuid;
-} bare_bluetooth_apple_server_subscribe_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_unsubscribe_t {
   CFTypeRef central;
   char *characteristic_uuid;
-} bare_bluetooth_apple_server_unsubscribe_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_channel_publish_t {
   uint16_t psm;
   char *error;
-} bare_bluetooth_apple_server_channel_publish_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_server_channel_open_t {
   CFTypeRef channel;
   char *error;
-} bare_bluetooth_apple_server_channel_open_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_central_state_change_t {
   int32_t state;
-} bare_bluetooth_apple_central_state_change_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_central_discover_t {
   CFTypeRef peripheral;
   char *id;
   char *name;
   int32_t rssi;
-} bare_bluetooth_apple_central_discover_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_central_connect_t {
   CFTypeRef peripheral;
   char *id;
-} bare_bluetooth_apple_central_connect_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_central_disconnect_t {
   char *id;
   char *error;
-} bare_bluetooth_apple_central_disconnect_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_central_connect_fail_t {
   char *id;
   char *error;
-} bare_bluetooth_apple_central_connect_fail_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_l2cap_data_t {
   void *bytes;
   size_t len;
-} bare_bluetooth_apple_l2cap_data_t;
+};
 
-typedef struct {
+struct bare_bluetooth_apple_l2cap_error_t {
   char *message;
-} bare_bluetooth_apple_l2cap_error_t;
+};
 
 @interface BareBluetoothApplePeripheral : NSObject <CBPeripheralDelegate> {
 @public
