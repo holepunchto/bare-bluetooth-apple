@@ -2171,7 +2171,10 @@ bare_bluetooth_apple_server_destroy(
   if (!event) abort();
   event->state = static_cast<int32_t>(central.state);
 
-  js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    delete event;
+  }
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2191,7 +2194,13 @@ bare_bluetooth_apple_server_destroy(
 
   event->rssi = RSSI.intValue;
 
-  js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    CFBridgingRelease(event->peripheral);
+    free(event->id);
+    if (event->name) free(event->name);
+    delete event;
+  }
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2202,7 +2211,12 @@ bare_bluetooth_apple_server_destroy(
   event->peripheral = CFBridgingRetain(peripheral);
   event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
 
-  js_call_threadsafe_function(tsfn_connect, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_connect, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    CFBridgingRelease(event->peripheral);
+    free(event->id);
+    delete event;
+  }
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2214,7 +2228,12 @@ bare_bluetooth_apple_server_destroy(
   event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_disconnect, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_disconnect, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    free(event->id);
+    if (event->error) free(event->error);
+    delete event;
+  }
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2226,7 +2245,12 @@ bare_bluetooth_apple_server_destroy(
   event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown connection failure");
 
-  js_call_threadsafe_function(tsfn_connect_fail, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_connect_fail, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    free(event->id);
+    free(event->error);
+    delete event;
+  }
 }
 
 @end
