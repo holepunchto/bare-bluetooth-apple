@@ -162,7 +162,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->count = error ? 0 : static_cast<uint32_t>(p.services.count);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_services_discover, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_services_discover, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -175,7 +176,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->count = error ? 0 : static_cast<uint32_t>(service.characteristics.count);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_characteristics_discover, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_characteristics_discover, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -201,7 +203,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
       event->data_len = 0;
     }
 
-    js_call_threadsafe_function(tsfn_notify, event, js_threadsafe_function_nonblocking);
+    int err = js_call_threadsafe_function(tsfn_notify, event, js_threadsafe_function_nonblocking);
+    assert(err == 0);
   } else {
     auto event = new bare_bluetooth_apple_peripheral_read_t;
     if (!event) abort();
@@ -229,7 +232,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
       event->error = NULL;
     }
 
-    js_call_threadsafe_function(tsfn_read, event, js_threadsafe_function_nonblocking);
+    int err = js_call_threadsafe_function(tsfn_read, event, js_threadsafe_function_nonblocking);
+    assert(err == 0);
   }
 }
 
@@ -243,7 +247,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_write, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_write, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -257,7 +262,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->is_notifying = characteristic.isNotifying;
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_notify_state, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_notify_state, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -269,7 +275,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->channel = l2capChannel ? CFBridgingRetain(l2capChannel) : NULL;
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 @end
@@ -1214,7 +1221,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   if (!event) abort();
   event->state = static_cast<int32_t>(peripheral.state);
 
-  js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -1227,7 +1235,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   event->uuid = strdup(service.UUID.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_add_service, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_add_service, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -1237,7 +1246,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
 
   event->request = CFBridgingRetain(request);
 
-  js_call_threadsafe_function(tsfn_read_request, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_read_request, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -1254,7 +1264,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
     event->requests[i] = CFBridgingRetain(requests[i]);
   }
 
-  js_call_threadsafe_function(tsfn_write_requests, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_write_requests, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -1266,7 +1277,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   event->central = CFBridgingRetain(central);
   event->characteristic_uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
 
-  js_call_threadsafe_function(tsfn_subscribe, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_subscribe, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -1278,7 +1290,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   event->central = CFBridgingRetain(central);
   event->characteristic_uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
 
-  js_call_threadsafe_function(tsfn_unsubscribe, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_unsubscribe, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral {
@@ -1294,7 +1307,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   event->psm = static_cast<uint16_t>(PSM);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_channel_publish, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_channel_publish, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -1306,7 +1320,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   event->channel = l2capChannel ? CFBridgingRetain(l2capChannel) : NULL;
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 @end
@@ -2171,7 +2186,8 @@ bare_bluetooth_apple_server_destroy(
   if (!event) abort();
   event->state = static_cast<int32_t>(central.state);
 
-  js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2191,7 +2207,8 @@ bare_bluetooth_apple_server_destroy(
 
   event->rssi = RSSI.intValue;
 
-  js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2202,7 +2219,8 @@ bare_bluetooth_apple_server_destroy(
   event->peripheral = CFBridgingRetain(peripheral);
   event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
 
-  js_call_threadsafe_function(tsfn_connect, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_connect, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2214,7 +2232,8 @@ bare_bluetooth_apple_server_destroy(
   event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_disconnect, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_disconnect, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)centralManager:(CBCentralManager *)central
@@ -2226,7 +2245,8 @@ bare_bluetooth_apple_server_destroy(
   event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown connection failure");
 
-  js_call_threadsafe_function(tsfn_connect_fail, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_connect_fail, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 @end
@@ -2284,7 +2304,13 @@ bare_bluetooth_apple_central__on_discover(
   auto central = cen->handle;
   int err;
 
-  if (!central->manager.isScanning) return;
+  if (!central->manager.isScanning) {
+    CFBridgingRelease(event->peripheral);
+    free(event->id);
+    if (event->name) free(event->name);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -2778,7 +2804,8 @@ bare_bluetooth_apple_central_destroy(
       event->bytes = new uint8_t[total];
       std::memcpy(event->bytes, buffer.data(), total);
 
-      js_call_threadsafe_function(tsfn_data, event, js_threadsafe_function_nonblocking);
+      int err = js_call_threadsafe_function(tsfn_data, event, js_threadsafe_function_nonblocking);
+      assert(err == 0);
     }
 
     break;
@@ -2807,7 +2834,8 @@ bare_bluetooth_apple_central_destroy(
     if (!event) abort();
     event->message = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown stream error");
 
-    js_call_threadsafe_function(tsfn_error, event, js_threadsafe_function_nonblocking);
+    int err = js_call_threadsafe_function(tsfn_error, event, js_threadsafe_function_nonblocking);
+    assert(err == 0);
 
     break;
   }
