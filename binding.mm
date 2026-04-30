@@ -2887,7 +2887,11 @@ bare_bluetooth_apple_central_destroy(
       event->bytes = new uint8_t[total];
       std::memcpy(event->bytes, buffer.data(), total);
 
-      js_call_threadsafe_function(tsfn_data, event, js_threadsafe_function_nonblocking);
+      int err = js_call_threadsafe_function(tsfn_data, event, js_threadsafe_function_nonblocking);
+      if (err != 0) {
+        delete[] reinterpret_cast<uint8_t *>(event->bytes);
+        delete event;
+      }
     }
 
     break;
@@ -2916,7 +2920,11 @@ bare_bluetooth_apple_central_destroy(
     if (!event) abort();
     event->message = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown stream error");
 
-    js_call_threadsafe_function(tsfn_error, event, js_threadsafe_function_nonblocking);
+    int err = js_call_threadsafe_function(tsfn_error, event, js_threadsafe_function_nonblocking);
+    if (err != 0) {
+      free(event->message);
+      delete event;
+    }
 
     break;
   }
