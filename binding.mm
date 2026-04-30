@@ -162,7 +162,11 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->count = error ? 0 : static_cast<uint32_t>(p.services.count);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_services_discover, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_services_discover, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    if (event->error) free(event->error);
+    delete event;
+  }
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -175,7 +179,12 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->count = error ? 0 : static_cast<uint32_t>(service.characteristics.count);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_characteristics_discover, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_characteristics_discover, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    CFBridgingRelease(event->service);
+    if (event->error) free(event->error);
+    delete event;
+  }
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -201,7 +210,14 @@ struct bare_bluetooth_apple_l2cap_error_t {
       event->data_len = 0;
     }
 
-    js_call_threadsafe_function(tsfn_notify, event, js_threadsafe_function_nonblocking);
+    int err = js_call_threadsafe_function(tsfn_notify, event, js_threadsafe_function_nonblocking);
+    if (err != 0) {
+      CFBridgingRelease(event->characteristic);
+      free(event->uuid);
+      if (event->error) free(event->error);
+      if (event->data) delete[] reinterpret_cast<uint8_t *>(event->data);
+      delete event;
+    }
   } else {
     auto event = new bare_bluetooth_apple_peripheral_read_t;
     if (!event) abort();
@@ -229,7 +245,14 @@ struct bare_bluetooth_apple_l2cap_error_t {
       event->error = NULL;
     }
 
-    js_call_threadsafe_function(tsfn_read, event, js_threadsafe_function_nonblocking);
+    int err = js_call_threadsafe_function(tsfn_read, event, js_threadsafe_function_nonblocking);
+    if (err != 0) {
+      CFBridgingRelease(event->characteristic);
+      free(event->uuid);
+      if (event->error) free(event->error);
+      if (event->data) delete[] reinterpret_cast<uint8_t *>(event->data);
+      delete event;
+    }
   }
 }
 
@@ -243,7 +266,13 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_write, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_write, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    CFBridgingRelease(event->characteristic);
+    free(event->uuid);
+    if (event->error) free(event->error);
+    delete event;
+  }
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -257,7 +286,13 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->is_notifying = characteristic.isNotifying;
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_notify_state, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_notify_state, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    CFBridgingRelease(event->characteristic);
+    free(event->uuid);
+    if (event->error) free(event->error);
+    delete event;
+  }
 }
 
 - (void)peripheral:(CBPeripheral *)p
@@ -269,7 +304,12 @@ struct bare_bluetooth_apple_l2cap_error_t {
   event->channel = l2capChannel ? CFBridgingRetain(l2capChannel) : NULL;
   event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
 
-  js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
+  int err = js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
+  if (err != 0) {
+    if (event->channel) CFBridgingRelease(event->channel);
+    if (event->error) free(event->error);
+    delete event;
+  }
 }
 
 @end
