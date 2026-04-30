@@ -2284,7 +2284,13 @@ bare_bluetooth_apple_central__on_discover(
   auto central = cen->handle;
   int err;
 
-  if (!central->manager.isScanning) return;
+  if (!central->manager.isScanning) {
+    CFBridgingRelease(event->peripheral);
+    free(event->id);
+    if (event->name) free(event->name);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
