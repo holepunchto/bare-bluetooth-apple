@@ -1206,6 +1206,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
 
   CBPeripheralManager *manager;
   dispatch_queue_t queue;
+  uv_async_t *cleanup_async;
 }
 
 @end
@@ -1661,6 +1662,50 @@ bare_bluetooth_apple_server__on_channel_open(
   assert(err == 0);
 }
 
+static void
+bare_bluetooth_apple_server__on_cleanup_close(uv_handle_t *handle) {
+  CFBridgingRelease(handle->data);
+  delete handle;
+}
+
+static void
+bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
+  auto server = (__bridge BareBluetoothAppleServer *) async->data;
+  int err;
+
+  err = js_delete_reference(server->env, server->ctx);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_channel_publish, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_ready_to_update, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_unsubscribe, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_subscribe, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_write_requests, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_read_request, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_add_service, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
+  assert(err == 0);
+
+  uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_server__on_cleanup_close);
+}
+
 static js_external_t<BareBluetoothAppleServer>
 bare_bluetooth_apple_server_init(
   js_env_t *env,
@@ -1758,6 +1803,16 @@ bare_bluetooth_apple_server_init(
 
     handle->queue = dispatch_queue_create("bare.bluetooth.server", DISPATCH_QUEUE_SERIAL);
     handle->manager = [[CBPeripheralManager alloc] initWithDelegate:handle queue:handle->queue];
+
+    uv_loop_t *loop;
+    err = js_get_env_loop(env, &loop);
+    assert(err == 0);
+
+    handle->cleanup_async = new uv_async_t;
+    err = uv_async_init(loop, handle->cleanup_async, bare_bluetooth_apple_server__on_cleanup);
+    assert(err == 0);
+
+    handle->cleanup_async->data = const_cast<void *>(CFBridgingRetain(handle));
 
     js_external_t<BareBluetoothAppleServer> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleServer>>(env, static_cast<BareBluetoothAppleServer *>(CFBridgingRetain(handle)), result);
@@ -2127,38 +2182,9 @@ bare_bluetooth_apple_server_destroy(
 
     server->manager.delegate = nil;
 
-    dispatch_sync(server->queue, ^{
-                  });
-
-    err = js_delete_reference(env, server->ctx);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_channel_publish, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_ready_to_update, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_unsubscribe, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_subscribe, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_write_requests, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_read_request, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_add_service, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
-    assert(err == 0);
+    dispatch_async(server->queue, ^{
+      uv_async_send(server->cleanup_async);
+    });
   }
 }
 
