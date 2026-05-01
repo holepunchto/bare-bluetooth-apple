@@ -2127,6 +2127,8 @@ bare_bluetooth_apple_server_destroy(
 
     server->manager.delegate = nil;
 
+    dispatch_sync(server->queue, ^{});
+
     err = js_delete_reference(env, server->ctx);
     assert(err == 0);
 
@@ -2629,6 +2631,8 @@ bare_bluetooth_apple_central_destroy(
     assert(err == 0);
 
     central->manager.delegate = nil;
+
+    dispatch_sync(central->queue, ^{});
 
     err = js_delete_reference(env, central->ctx);
     assert(err == 0);
