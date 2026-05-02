@@ -76,7 +76,11 @@ Emitted with `state` when the Bluetooth state changes.
 
 #### `event: 'discover'`
 
-Emitted with `peripheral` when a peripheral is discovered during scanning. The `peripheral` object has `handle`, `id`, `name`, and `rssi` properties.
+Emitted when a peripheral is discovered during scanning. The listener receives a `peripheral` object.
+
+The `peripheral` object has `handle`, `id`, `name`, `rssi`, and `serviceData` properties. `rssi` is the signal strength reported with the most recent advertisement packet. `serviceData` is an object mapping service UUIDs to `Uint8Array` data, or `null` if no service data was advertised in this packet.
+
+The same `peripheral` reference is reused across discover events for a given `id`; its `rssi` and `serviceData` are updated in place to reflect the latest packet.
 
 #### `event: 'connect'`
 
@@ -204,6 +208,10 @@ The unique identifier of the peripheral.
 #### `peripheral.name`
 
 The advertised name of the peripheral.
+
+#### `peripheral.serviceData`
+
+A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral before connect or `null`. Service data is only in advertisement packets, so this value never updates after connect.
 
 #### `peripheral.discoverServices([serviceUUIDs])`
 

@@ -7,6 +7,7 @@ export interface PeripheralOptions {
   connectHandle?: ArrayBuffer
   id?: string
   name?: string
+  serviceData?: { [uuid: string]: Uint8Array } | null
 }
 
 export interface PeripheralEventMap extends EventMap {
@@ -34,6 +35,9 @@ export default class Peripheral extends EventEmitter<PeripheralEventMap> {
 
   /** The peripheral name, if available */
   readonly name: string | null
+
+  /** Service data captured from the most recent advertisement seen before connect, or null */
+  readonly serviceData: { [uuid: string]: Uint8Array } | null
 
   discoverServices(serviceUUIDs?: string[]): void
   discoverCharacteristics(service: string, characteristicUUIDs?: string[]): void
