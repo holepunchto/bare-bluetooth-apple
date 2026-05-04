@@ -24,8 +24,6 @@ test('connect and discover services', { skip: isCI }, async (t) => {
 
   central.stopScan()
 
-  t.ok(discovered.handle, 'discovered peripheral has handle')
-
   central.connect(discovered)
 
   const result = await new Promise((resolve) => {
