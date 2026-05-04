@@ -689,7 +689,7 @@ bare_bluetooth_apple_peripheral__on_cleanup_close(uv_handle_t *handle) {
 
 static void
 bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
-  auto wrapper = (__bridge BareBluetoothApplePeripheral *) async->data;
+  auto wrapper = static_cast<BareBluetoothApplePeripheral *>(async->data);
   int err;
 
   err = js_delete_reference(wrapper->env, wrapper->ctx);
@@ -1723,7 +1723,7 @@ bare_bluetooth_apple_server__on_cleanup_close(uv_handle_t *handle) {
 
 static void
 bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
-  auto server = (__bridge BareBluetoothAppleServer *) async->data;
+  auto server = static_cast<BareBluetoothAppleServer *>(async->data);
   int err;
 
   err = js_delete_reference(server->env, server->ctx);
@@ -2524,7 +2524,7 @@ bare_bluetooth_apple_central__on_cleanup_close(uv_handle_t *handle) {
 
 static void
 bare_bluetooth_apple_central__on_cleanup(uv_async_t *async) {
-  auto central = (__bridge BareBluetoothAppleCentral *) async->data;
+  auto central = static_cast<BareBluetoothAppleCentral *>(async->data);
   int err;
 
   err = js_delete_reference(central->env, central->ctx);
