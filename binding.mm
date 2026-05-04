@@ -133,6 +133,24 @@ struct bare_bluetooth_apple_l2cap_error_t {
   char *message;
 };
 
+@interface BareBluetoothAppleCentral : NSObject <CBCentralManagerDelegate> {
+@public
+  js_env_t *env;
+  bool destroyed;
+  js_ref_t *ctx;
+  js_threadsafe_function_t *tsfn_state_change;
+  js_threadsafe_function_t *tsfn_discover;
+  js_threadsafe_function_t *tsfn_connect;
+  js_threadsafe_function_t *tsfn_disconnect;
+  js_threadsafe_function_t *tsfn_connect_fail;
+
+  CBCentralManager *manager;
+  dispatch_queue_t queue;
+  uv_async_t *cleanup_async;
+}
+
+@end
+
 @interface BareBluetoothApplePeripheral : NSObject <CBPeripheralDelegate> {
 @public
   js_env_t *env;
@@ -147,6 +165,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   js_threadsafe_function_t *tsfn_channel_open;
 
   CBPeripheral *peripheral;
+  dispatch_queue_t queue;
+  uv_async_t *cleanup_async;
 }
 
 @end
@@ -663,11 +683,50 @@ bare_bluetooth_apple_peripheral__on_channel_open(
   assert(err == 0);
 }
 
+static void
+bare_bluetooth_apple_peripheral__on_cleanup_close(uv_handle_t *handle) {
+  CFBridgingRelease(handle->data);
+  delete handle;
+}
+
+static void
+bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
+  auto wrapper = static_cast<BareBluetoothApplePeripheral *>(async->data);
+  int err;
+
+  err = js_release_threadsafe_function(wrapper->tsfn_services_discover, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_characteristics_discover, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_read, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_write, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_notify, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_notify_state, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_channel_open, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_delete_reference(wrapper->env, wrapper->ctx);
+  assert(err == 0);
+
+  uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_peripheral__on_cleanup_close);
+}
+
 static js_external_t<BareBluetoothApplePeripheral>
 bare_bluetooth_apple_peripheral_init(
   js_env_t *env,
   js_receiver_t,
   js_external_t<CBPeripheral> peripheral_handle,
+  js_external_t<BareBluetoothAppleCentral> central_handle,
   js_object_t context,
   bare_bluetooth_apple_peripheral__on_services_discover_fn onServicesDiscover,
   bare_bluetooth_apple_peripheral__on_characteristics_discover_fn onCharacteristicsDiscover,
@@ -685,9 +744,14 @@ bare_bluetooth_apple_peripheral_init(
     err = js_get_value(env, peripheral_handle, peripheral);
     assert(err == 0);
 
+    BareBluetoothAppleCentral *central;
+    err = js_get_value(env, central_handle, central);
+    assert(err == 0);
+
     handle->env = env;
     handle->destroyed = false;
     handle->peripheral = peripheral;
+    handle->queue = central->queue;
 
     err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);
@@ -750,6 +814,16 @@ bare_bluetooth_apple_peripheral_init(
 
     handle->peripheral.delegate = handle;
 
+    uv_loop_t *loop;
+    err = js_get_env_loop(env, &loop);
+    assert(err == 0);
+
+    handle->cleanup_async = new uv_async_t;
+    err = uv_async_init(loop, handle->cleanup_async, bare_bluetooth_apple_peripheral__on_cleanup);
+    assert(err == 0);
+
+    handle->cleanup_async->data = const_cast<void *>(CFBridgingRetain(handle));
+
     js_external_t<BareBluetoothApplePeripheral> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothApplePeripheral>>(
       env,
@@ -768,40 +842,20 @@ bare_bluetooth_apple_peripheral_destroy(
   js_receiver_t,
   js_external_t<BareBluetoothApplePeripheral> handle
 ) {
-  int err;
+  @autoreleasepool {
+    BareBluetoothApplePeripheral *wrapper;
+    int err = js_get_value(env, handle, wrapper);
+    assert(err == 0);
 
-  BareBluetoothApplePeripheral *wrapper;
-  err = js_get_value(env, handle, wrapper);
-  assert(err == 0);
+    if (wrapper->destroyed) return;
 
-  if (wrapper->destroyed) return;
+    wrapper->destroyed = true;
+    wrapper->peripheral.delegate = nil;
 
-  wrapper->destroyed = true;
-  wrapper->peripheral.delegate = nil;
-
-  err = js_delete_reference(env, wrapper->ctx);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_channel_open, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_notify_state, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_notify, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_write, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_read, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_characteristics_discover, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_services_discover, js_threadsafe_function_release);
-  assert(err == 0);
+    dispatch_async(wrapper->queue, ^{
+      uv_async_send(wrapper->cleanup_async);
+    });
+  }
 }
 
 static std::string
@@ -1194,6 +1248,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
 @interface BareBluetoothAppleServer : NSObject <CBPeripheralManagerDelegate> {
 @public
   js_env_t *env;
+  bool destroyed;
   js_ref_t *ctx;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_add_service;
@@ -1207,6 +1262,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
 
   CBPeripheralManager *manager;
   dispatch_queue_t queue;
+  uv_async_t *cleanup_async;
 }
 
 @end
@@ -1214,6 +1270,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
 @implementation BareBluetoothAppleServer
 
 - (void)dealloc {
+  [manager release];
+  dispatch_release(queue);
   [super dealloc];
 }
 
@@ -1662,6 +1720,50 @@ bare_bluetooth_apple_server__on_channel_open(
   assert(err == 0);
 }
 
+static void
+bare_bluetooth_apple_server__on_cleanup_close(uv_handle_t *handle) {
+  CFBridgingRelease(handle->data);
+  delete handle;
+}
+
+static void
+bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
+  auto server = static_cast<BareBluetoothAppleServer *>(async->data);
+  int err;
+
+  err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_channel_publish, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_ready_to_update, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_unsubscribe, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_subscribe, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_write_requests, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_read_request, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_add_service, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_delete_reference(server->env, server->ctx);
+  assert(err == 0);
+
+  uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_server__on_cleanup_close);
+}
+
 static js_external_t<BareBluetoothAppleServer>
 bare_bluetooth_apple_server_init(
   js_env_t *env,
@@ -1681,6 +1783,7 @@ bare_bluetooth_apple_server_init(
     BareBluetoothAppleServer *handle = [[BareBluetoothAppleServer alloc] init];
 
     handle->env = env;
+    handle->destroyed = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);
@@ -1759,6 +1862,16 @@ bare_bluetooth_apple_server_init(
 
     handle->queue = dispatch_queue_create("bare.bluetooth.server", DISPATCH_QUEUE_SERIAL);
     handle->manager = [[CBPeripheralManager alloc] initWithDelegate:handle queue:handle->queue];
+
+    uv_loop_t *loop;
+    err = js_get_env_loop(env, &loop);
+    assert(err == 0);
+
+    handle->cleanup_async = new uv_async_t;
+    err = uv_async_init(loop, handle->cleanup_async, bare_bluetooth_apple_server__on_cleanup);
+    assert(err == 0);
+
+    handle->cleanup_async->data = const_cast<void *>(CFBridgingRetain(handle));
 
     js_external_t<BareBluetoothAppleServer> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleServer>>(env, static_cast<BareBluetoothAppleServer *>(CFBridgingRetain(handle)), result);
@@ -2126,59 +2239,22 @@ bare_bluetooth_apple_server_destroy(
     int err = js_get_value(env, handle, server);
     assert(err == 0);
 
+    if (server->destroyed) return;
+
+    server->destroyed = true;
     server->manager.delegate = nil;
 
-    err = js_delete_reference(env, server->ctx);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_channel_publish, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_ready_to_update, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_unsubscribe, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_subscribe, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_write_requests, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_read_request, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_add_service, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
-    assert(err == 0);
+    dispatch_async(server->queue, ^{
+      uv_async_send(server->cleanup_async);
+    });
   }
 }
-
-@interface BareBluetoothAppleCentral : NSObject <CBCentralManagerDelegate> {
-@public
-  js_env_t *env;
-  js_ref_t *ctx;
-  js_threadsafe_function_t *tsfn_state_change;
-  js_threadsafe_function_t *tsfn_discover;
-  js_threadsafe_function_t *tsfn_connect;
-  js_threadsafe_function_t *tsfn_disconnect;
-  js_threadsafe_function_t *tsfn_connect_fail;
-
-  CBCentralManager *manager;
-  dispatch_queue_t queue;
-}
-
-@end
 
 @implementation BareBluetoothAppleCentral
 
 - (void)dealloc {
+  [manager release];
+  dispatch_release(queue);
   [super dealloc];
 }
 
@@ -2482,6 +2558,38 @@ bare_bluetooth_apple_central__on_connect_fail(
   assert(err == 0);
 }
 
+static void
+bare_bluetooth_apple_central__on_cleanup_close(uv_handle_t *handle) {
+  CFBridgingRelease(handle->data);
+  delete handle;
+}
+
+static void
+bare_bluetooth_apple_central__on_cleanup(uv_async_t *async) {
+  auto central = static_cast<BareBluetoothAppleCentral *>(async->data);
+  int err;
+
+  err = js_release_threadsafe_function(central->tsfn_connect_fail, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(central->tsfn_disconnect, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(central->tsfn_connect, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(central->tsfn_discover, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(central->tsfn_state_change, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_delete_reference(central->env, central->ctx);
+  assert(err == 0);
+
+  uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_central__on_cleanup_close);
+}
+
 static js_external_t<BareBluetoothAppleCentral>
 bare_bluetooth_apple_central_init(
   js_env_t *env,
@@ -2497,6 +2605,7 @@ bare_bluetooth_apple_central_init(
     BareBluetoothAppleCentral *handle = [[BareBluetoothAppleCentral alloc] init];
 
     handle->env = env;
+    handle->destroyed = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);
@@ -2543,6 +2652,16 @@ bare_bluetooth_apple_central_init(
 
     handle->queue = dispatch_queue_create("bare.bluetooth.central", DISPATCH_QUEUE_SERIAL);
     handle->manager = [[CBCentralManager alloc] initWithDelegate:handle queue:handle->queue];
+
+    uv_loop_t *loop;
+    err = js_get_env_loop(env, &loop);
+    assert(err == 0);
+
+    handle->cleanup_async = new uv_async_t;
+    err = uv_async_init(loop, handle->cleanup_async, bare_bluetooth_apple_central__on_cleanup);
+    assert(err == 0);
+
+    handle->cleanup_async->data = const_cast<void *>(CFBridgingRetain(handle));
 
     js_external_t<BareBluetoothAppleCentral> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleCentral>>(env, static_cast<BareBluetoothAppleCentral *>(CFBridgingRetain(handle)), result);
@@ -2634,18 +2753,18 @@ bare_bluetooth_apple_central_disconnect(
   js_env_t *env,
   js_receiver_t,
   js_external_t<BareBluetoothAppleCentral> handle,
-  js_external_t<CBPeripheral> peripheral_handle
+  js_external_t<BareBluetoothApplePeripheral> peripheral_handle
 ) {
   @autoreleasepool {
     BareBluetoothAppleCentral *central;
     int err = js_get_value(env, handle, central);
     assert(err == 0);
 
-    CBPeripheral *peripheral;
-    err = js_get_value(env, peripheral_handle, peripheral);
+    BareBluetoothApplePeripheral *wrapper;
+    err = js_get_value(env, peripheral_handle, wrapper);
     assert(err == 0);
 
-    [central->manager cancelPeripheralConnection:peripheral];
+    [central->manager cancelPeripheralConnection:wrapper->peripheral];
   }
 }
 
@@ -2660,25 +2779,14 @@ bare_bluetooth_apple_central_destroy(
     int err = js_get_value(env, handle, central);
     assert(err == 0);
 
+    if (central->destroyed) return;
+
+    central->destroyed = true;
     central->manager.delegate = nil;
 
-    err = js_delete_reference(env, central->ctx);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(central->tsfn_connect_fail, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(central->tsfn_disconnect, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(central->tsfn_connect, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(central->tsfn_discover, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(central->tsfn_state_change, js_threadsafe_function_release);
-    assert(err == 0);
+    dispatch_async(central->queue, ^{
+      uv_async_send(central->cleanup_async);
+    });
   }
 }
 
@@ -2716,6 +2824,8 @@ bare_bluetooth_apple_central_destroy(
 @implementation BareBluetoothAppleL2CAPChannel
 
 - (void)dealloc {
+  [streamThread release];
+  [writeQueue release];
   [super dealloc];
 }
 
@@ -3040,9 +3150,6 @@ bare_bluetooth_apple_l2cap__on_close(
   js_call_function(env, function, js_receiver_t(receiver));
 
   if (!channel->finalized.exchange(true)) {
-    err = js_delete_reference(env, channel->ctx);
-    assert(err == 0);
-
     err = js_release_threadsafe_function(channel->tsfn_open, js_threadsafe_function_release);
     assert(err == 0);
 
@@ -3059,6 +3166,9 @@ bare_bluetooth_apple_l2cap__on_close(
     assert(err == 0);
 
     err = js_release_threadsafe_function(channel->tsfn_data, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_delete_reference(env, channel->ctx);
     assert(err == 0);
   }
 
