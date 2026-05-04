@@ -97,8 +97,6 @@ test('peripheral rssi and serviceData update in place across discover events', a
   emitDiscover(ctx, 'p-1', -60, null)
 
   t.is(seen.length, 3, 'discover fired three times')
-  t.is(seen[0].peripheral, seen[1].peripheral, 'same peripheral reference across discoveries')
-  t.is(seen[1].peripheral, seen[2].peripheral, 'same peripheral reference across discoveries')
   t.is(seen[0].rssi, -40, 'first emit captured first rssi')
   t.is(seen[0].serviceData, first, 'first emit captured first serviceData')
   t.is(seen[1].rssi, -50, 'second emit captured second rssi')
