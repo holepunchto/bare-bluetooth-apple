@@ -2710,18 +2710,18 @@ bare_bluetooth_apple_central_disconnect(
   js_env_t *env,
   js_receiver_t,
   js_external_t<BareBluetoothAppleCentral> handle,
-  js_external_t<CBPeripheral> peripheral_handle
+  js_external_t<BareBluetoothApplePeripheral> peripheral_handle
 ) {
   @autoreleasepool {
     BareBluetoothAppleCentral *central;
     int err = js_get_value(env, handle, central);
     assert(err == 0);
 
-    CBPeripheral *peripheral;
-    err = js_get_value(env, peripheral_handle, peripheral);
+    BareBluetoothApplePeripheral *wrapper;
+    err = js_get_value(env, peripheral_handle, wrapper);
     assert(err == 0);
 
-    [central->manager cancelPeripheralConnection:peripheral];
+    [central->manager cancelPeripheralConnection:wrapper->peripheral];
   }
 }
 

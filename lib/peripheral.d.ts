@@ -6,7 +6,6 @@ import L2CAPChannel from './channel'
 
 export interface PeripheralOptions {
   central?: Central
-  connectHandle?: ArrayBuffer
   id?: string
   name?: string
 }
