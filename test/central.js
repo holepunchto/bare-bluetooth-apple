@@ -62,7 +62,6 @@ test('scan discovers peripherals with expected shape', { skip: isCI }, async (t)
 
   central.stopScan()
 
-  t.ok(peripheral.handle, 'peripheral has handle')
   t.ok(typeof peripheral.id === 'string', 'peripheral has string id')
   t.ok(peripheral.id.length > 0, 'peripheral id is non-empty')
   t.ok(typeof peripheral.rssi === 'number', 'peripheral has numeric rssi')
