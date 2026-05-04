@@ -135,6 +135,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @interface BareBluetoothAppleCentral : NSObject <CBCentralManagerDelegate> {
 @public
   js_env_t *env;
+  bool destroyed;
   js_ref_t *ctx;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_discover;
@@ -1246,6 +1247,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
 @interface BareBluetoothAppleServer : NSObject <CBPeripheralManagerDelegate> {
 @public
   js_env_t *env;
+  bool destroyed;
   js_ref_t *ctx;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_add_service;
@@ -1778,6 +1780,7 @@ bare_bluetooth_apple_server_init(
     BareBluetoothAppleServer *handle = [[BareBluetoothAppleServer alloc] init];
 
     handle->env = env;
+    handle->destroyed = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);
@@ -2233,6 +2236,9 @@ bare_bluetooth_apple_server_destroy(
     int err = js_get_value(env, handle, server);
     assert(err == 0);
 
+    if (server->destroyed) return;
+
+    server->destroyed = true;
     server->manager.delegate = nil;
 
     dispatch_async(server->queue, ^{
@@ -2563,6 +2569,7 @@ bare_bluetooth_apple_central_init(
     BareBluetoothAppleCentral *handle = [[BareBluetoothAppleCentral alloc] init];
 
     handle->env = env;
+    handle->destroyed = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);
@@ -2736,6 +2743,9 @@ bare_bluetooth_apple_central_destroy(
     int err = js_get_value(env, handle, central);
     assert(err == 0);
 
+    if (central->destroyed) return;
+
+    central->destroyed = true;
     central->manager.delegate = nil;
 
     dispatch_async(central->queue, ^{
