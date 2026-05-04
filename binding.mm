@@ -2792,6 +2792,8 @@ bare_bluetooth_apple_central_destroy(
 @implementation BareBluetoothAppleL2CAPChannel
 
 - (void)dealloc {
+  [streamThread release];
+  [writeQueue release];
   [super dealloc];
 }
 
@@ -3116,9 +3118,6 @@ bare_bluetooth_apple_l2cap__on_close(
   js_call_function(env, function, js_receiver_t(receiver));
 
   if (!channel->finalized.exchange(true)) {
-    err = js_delete_reference(env, channel->ctx);
-    assert(err == 0);
-
     err = js_release_threadsafe_function(channel->tsfn_open, js_threadsafe_function_release);
     assert(err == 0);
 
@@ -3135,6 +3134,9 @@ bare_bluetooth_apple_l2cap__on_close(
     assert(err == 0);
 
     err = js_release_threadsafe_function(channel->tsfn_data, js_threadsafe_function_release);
+    assert(err == 0);
+
+    err = js_delete_reference(env, channel->ctx);
     assert(err == 0);
   }
 
