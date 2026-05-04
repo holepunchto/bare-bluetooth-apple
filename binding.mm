@@ -693,9 +693,6 @@ bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
   auto wrapper = static_cast<BareBluetoothApplePeripheral *>(async->data);
   int err;
 
-  err = js_delete_reference(wrapper->env, wrapper->ctx);
-  assert(err == 0);
-
   err = js_release_threadsafe_function(wrapper->tsfn_services_discover, js_threadsafe_function_release);
   assert(err == 0);
 
@@ -715,6 +712,9 @@ bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
   assert(err == 0);
 
   err = js_release_threadsafe_function(wrapper->tsfn_channel_open, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_delete_reference(wrapper->env, wrapper->ctx);
   assert(err == 0);
 
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_peripheral__on_cleanup_close);
@@ -1728,9 +1728,6 @@ bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
   auto server = static_cast<BareBluetoothAppleServer *>(async->data);
   int err;
 
-  err = js_delete_reference(server->env, server->ctx);
-  assert(err == 0);
-
   err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
   assert(err == 0);
 
@@ -1756,6 +1753,9 @@ bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
   assert(err == 0);
 
   err = js_release_threadsafe_function(server->tsfn_state_change, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_delete_reference(server->env, server->ctx);
   assert(err == 0);
 
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_server__on_cleanup_close);
@@ -2533,9 +2533,6 @@ bare_bluetooth_apple_central__on_cleanup(uv_async_t *async) {
   auto central = static_cast<BareBluetoothAppleCentral *>(async->data);
   int err;
 
-  err = js_delete_reference(central->env, central->ctx);
-  assert(err == 0);
-
   err = js_release_threadsafe_function(central->tsfn_connect_fail, js_threadsafe_function_release);
   assert(err == 0);
 
@@ -2549,6 +2546,9 @@ bare_bluetooth_apple_central__on_cleanup(uv_async_t *async) {
   assert(err == 0);
 
   err = js_release_threadsafe_function(central->tsfn_state_change, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_delete_reference(central->env, central->ctx);
   assert(err == 0);
 
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_central__on_cleanup_close);
