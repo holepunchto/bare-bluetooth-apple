@@ -695,25 +695,25 @@ bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
   err = js_delete_reference(wrapper->env, wrapper->ctx);
   assert(err == 0);
 
-  err = js_release_threadsafe_function(wrapper->tsfn_channel_open, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_notify_state, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_notify, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_write, js_threadsafe_function_release);
-  assert(err == 0);
-
-  err = js_release_threadsafe_function(wrapper->tsfn_read, js_threadsafe_function_release);
+  err = js_release_threadsafe_function(wrapper->tsfn_services_discover, js_threadsafe_function_release);
   assert(err == 0);
 
   err = js_release_threadsafe_function(wrapper->tsfn_characteristics_discover, js_threadsafe_function_release);
   assert(err == 0);
 
-  err = js_release_threadsafe_function(wrapper->tsfn_services_discover, js_threadsafe_function_release);
+  err = js_release_threadsafe_function(wrapper->tsfn_read, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_write, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_notify, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_notify_state, js_threadsafe_function_release);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(wrapper->tsfn_channel_open, js_threadsafe_function_release);
   assert(err == 0);
 
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_peripheral__on_cleanup_close);
