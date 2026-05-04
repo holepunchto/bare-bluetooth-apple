@@ -1269,6 +1269,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
 @implementation BareBluetoothAppleServer
 
 - (void)dealloc {
+  [manager release];
+  dispatch_release(queue);
   [super dealloc];
 }
 
@@ -2250,6 +2252,8 @@ bare_bluetooth_apple_server_destroy(
 @implementation BareBluetoothAppleCentral
 
 - (void)dealloc {
+  [manager release];
+  dispatch_release(queue);
   [super dealloc];
 }
 
