@@ -135,7 +135,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @interface BareBluetoothAppleCentral : NSObject <CBCentralManagerDelegate> {
 @public
   js_env_t *env;
-  bool destroyed;
+  std::atomic<bool> destroyed;
   js_ref_t *ctx;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_discover;
@@ -153,7 +153,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @interface BareBluetoothApplePeripheral : NSObject <CBPeripheralDelegate> {
 @public
   js_env_t *env;
-  bool destroyed;
+  std::atomic<bool> destroyed;
   js_ref_t *ctx;
   js_threadsafe_function_t *tsfn_services_discover;
   js_threadsafe_function_t *tsfn_characteristics_discover;
@@ -846,9 +846,8 @@ bare_bluetooth_apple_peripheral_destroy(
     int err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
-    if (wrapper->destroyed) return;
+    if (wrapper->destroyed.exchange(true)) return;
 
-    wrapper->destroyed = true;
     wrapper->peripheral.delegate = nil;
 
     dispatch_async(wrapper->queue, ^{
@@ -1247,7 +1246,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
 @interface BareBluetoothAppleServer : NSObject <CBPeripheralManagerDelegate> {
 @public
   js_env_t *env;
-  bool destroyed;
+  std::atomic<bool> destroyed;
   js_ref_t *ctx;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_add_service;
@@ -2238,9 +2237,8 @@ bare_bluetooth_apple_server_destroy(
     int err = js_get_value(env, handle, server);
     assert(err == 0);
 
-    if (server->destroyed) return;
+    if (server->destroyed.exchange(true)) return;
 
-    server->destroyed = true;
     server->manager.delegate = nil;
 
     dispatch_async(server->queue, ^{
@@ -2747,9 +2745,8 @@ bare_bluetooth_apple_central_destroy(
     int err = js_get_value(env, handle, central);
     assert(err == 0);
 
-    if (central->destroyed) return;
+    if (central->destroyed.exchange(true)) return;
 
-    central->destroyed = true;
     central->manager.delegate = nil;
 
     dispatch_async(central->queue, ^{
