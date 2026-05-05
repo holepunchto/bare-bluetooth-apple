@@ -33,7 +33,7 @@ test('state property tracks emitted state', { skip: isCI }, async (t) => {
 
 test('scan discovers peripherals with expected shape', { skip: isCI }, async (t) => {
   using central = new Central()
-  if (!(await waitForPoweredOn(central))) return t.comment('bluetooth not powered on, skipping')
+  await waitForPoweredOn(central)
 
   central.startScan()
 
@@ -55,7 +55,7 @@ test(
   { skip: isCI },
   async (t) => {
     using central = new Central()
-    if (!(await waitForPoweredOn(central))) return t.comment('bluetooth not powered on, skipping')
+    await waitForPoweredOn(central)
 
     central.startScan()
 
@@ -79,7 +79,7 @@ test(
 
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   using central = new Central()
-  if (!(await waitForPoweredOn(central))) return t.comment('bluetooth not powered on, skipping')
+  await waitForPoweredOn(central)
 
   central.startScan()
 
@@ -92,7 +92,7 @@ test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
 
 test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async (t) => {
   using central = new Central()
-  if (!(await waitForPoweredOn(central))) return t.comment('bluetooth not powered on, skipping')
+  await waitForPoweredOn(central)
 
   central.startScan(['00000000-0000-0000-0000-000000000000'])
 
@@ -119,8 +119,9 @@ test('exports state constants', (t) => {
 // Helpers
 
 async function waitForPoweredOn(central) {
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
+  await new Promise((resolve) => {
+    central.on('stateChange', (state) => {
+      if (state === 'poweredOn') resolve()
+    })
   })
-  return state === 'poweredOn'
 }
