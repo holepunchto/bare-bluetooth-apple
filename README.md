@@ -11,9 +11,9 @@ npm i bare-bluetooth-apple
 ```js
 const bluetooth = require('bare-bluetooth-apple')
 
-const server = new bluetooth.Server()
+const manager = new bluetooth.PeripheralManager()
 
-server.on('stateChange', (state) => {
+manager.on('stateChange', (state) => {
   if (state !== 'poweredOn') return
 
   const char = new bluetooth.Characteristic('01230001-0000-1000-8000-00805F9B34FB', {
@@ -22,21 +22,21 @@ server.on('stateChange', (state) => {
   })
 
   const service = new bluetooth.Service('01230000-0000-1000-8000-00805F9B34FB', [char])
-  server.addService(service)
+  manager.addService(service)
 })
 
-server.on('serviceAdd', (uuid, error) => {
+manager.on('serviceAdd', (uuid, error) => {
   if (error) return
 
-  server.startAdvertising({
+  manager.startAdvertising({
     name: 'MyDevice',
     serviceUUIDs: ['01230000-0000-1000-8000-00805F9B34FB']
   })
 })
 
-server.on('writeRequest', (requests) => {
+manager.on('writeRequest', (requests) => {
   // Handle incoming write requests
-  server.respondToRequest(requests[0], bluetooth.Server.ATT_SUCCESS, null)
+  manager.respondToRequest(requests[0], bluetooth.PeripheralManager.ATT_SUCCESS, null)
 })
 ```
 
@@ -94,21 +94,21 @@ Emitted with `peripheral` and `error` when a peripheral disconnects.
 
 Emitted with `id` and `error` when a connection attempt fails.
 
-#### `const server = new Server()`
+#### `const manager = new PeripheralManager()`
 
-Create a new BLE peripheral manager (server). The server advertises services and handles read/write requests from centrals.
+Create a new BLE peripheral manager. Advertises services and handles read/write requests from centrals.
 
-#### `server.state`
+#### `manager.state`
 
 The current Bluetooth state. One of `'unknown'`, `'resetting'`, `'unsupported'`, `'unauthorized'`, `'poweredOff'`, or `'poweredOn'`.
 
-#### `server.addService(service)`
+#### `manager.addService(service)`
 
-Add a `service` to the server. The service and its characteristics will be registered with the system.
+Add a `service` to the manager. The service and its characteristics will be registered with the system.
 
-#### `server.startAdvertising([options])`
+#### `manager.startAdvertising([options])`
 
-Start advertising the server.
+Start advertising.
 
 Options include:
 
@@ -119,19 +119,19 @@ options = {
 }
 ```
 
-#### `server.stopAdvertising()`
+#### `manager.stopAdvertising()`
 
 Stop advertising.
 
-#### `server.respondToRequest(request, result[, data])`
+#### `manager.respondToRequest(request, result[, data])`
 
 Respond to a read or write `request` with the given ATT `result` code. Optionally include `data` for read responses.
 
-#### `server.updateValue(characteristic, data)`
+#### `manager.updateValue(characteristic, data)`
 
 Update the value of a `characteristic` and notify subscribed centrals. Returns `true` if the update was sent successfully.
 
-#### `server.publishChannel([options])`
+#### `manager.publishChannel([options])`
 
 Publish an L2CAP channel.
 
@@ -143,13 +143,13 @@ options = {
 }
 ```
 
-#### `server.unpublishChannel(psm)`
+#### `manager.unpublishChannel(psm)`
 
 Unpublish a previously published L2CAP channel identified by `psm`.
 
-#### `server.destroy()`
+#### `manager.destroy()`
 
-Destroy the server and release all resources.
+Destroy the manager and release all resources.
 
 #### `event: 'stateChange'`
 
@@ -177,7 +177,7 @@ Emitted with `centralHandle` and `characteristicUuid` when a central unsubscribe
 
 #### `event: 'readyToUpdate'`
 
-Emitted when the server is ready to send another update after a previous `updateValue()` returned `false`.
+Emitted when the manager is ready to send another update after a previous `updateValue()` returned `false`.
 
 #### `event: 'channelPublish'`
 
@@ -335,7 +335,7 @@ The static value of the characteristic, or `null`.
 
 #### `const channel = new L2CAPChannel(channelHandle)`
 
-An L2CAP channel, obtained through the `'channelOpen'` event on `Server` or `Peripheral`. Extends `Duplex` from `bare-stream` and supports standard readable and writable stream operations.
+An L2CAP channel, obtained through the `'channelOpen'` event on `PeripheralManager` or `Peripheral`. Extends `Duplex` from `bare-stream` and supports standard readable and writable stream operations.
 
 #### `channel.psm`
 
@@ -347,55 +347,55 @@ The peer identifier of the channel.
 
 ### Constants
 
-#### `Server.STATE_UNKNOWN`
+#### `PeripheralManager.STATE_UNKNOWN`
 
-#### `Server.STATE_POWERED_ON`
+#### `PeripheralManager.STATE_POWERED_ON`
 
-#### `Server.STATE_POWERED_OFF`
+#### `PeripheralManager.STATE_POWERED_OFF`
 
-#### `Server.STATE_RESETTING`
+#### `PeripheralManager.STATE_RESETTING`
 
-#### `Server.STATE_UNAUTHORIZED`
+#### `PeripheralManager.STATE_UNAUTHORIZED`
 
-#### `Server.STATE_UNSUPPORTED`
+#### `PeripheralManager.STATE_UNSUPPORTED`
 
 Bluetooth state constants.
 
-#### `Server.PROPERTY_READ`
+#### `PeripheralManager.PROPERTY_READ`
 
-#### `Server.PROPERTY_WRITE_WITHOUT_RESPONSE`
+#### `PeripheralManager.PROPERTY_WRITE_WITHOUT_RESPONSE`
 
-#### `Server.PROPERTY_WRITE`
+#### `PeripheralManager.PROPERTY_WRITE`
 
-#### `Server.PROPERTY_NOTIFY`
+#### `PeripheralManager.PROPERTY_NOTIFY`
 
-#### `Server.PROPERTY_INDICATE`
+#### `PeripheralManager.PROPERTY_INDICATE`
 
 Characteristic property flags.
 
-#### `Server.PERMISSION_READABLE`
+#### `PeripheralManager.PERMISSION_READABLE`
 
-#### `Server.PERMISSION_WRITEABLE`
+#### `PeripheralManager.PERMISSION_WRITEABLE`
 
-#### `Server.PERMISSION_READ_ENCRYPTED`
+#### `PeripheralManager.PERMISSION_READ_ENCRYPTED`
 
-#### `Server.PERMISSION_WRITE_ENCRYPTED`
+#### `PeripheralManager.PERMISSION_WRITE_ENCRYPTED`
 
 Characteristic permission flags.
 
-#### `Server.ATT_SUCCESS`
+#### `PeripheralManager.ATT_SUCCESS`
 
-#### `Server.ATT_INVALID_HANDLE`
+#### `PeripheralManager.ATT_INVALID_HANDLE`
 
-#### `Server.ATT_READ_NOT_PERMITTED`
+#### `PeripheralManager.ATT_READ_NOT_PERMITTED`
 
-#### `Server.ATT_WRITE_NOT_PERMITTED`
+#### `PeripheralManager.ATT_WRITE_NOT_PERMITTED`
 
-#### `Server.ATT_INSUFFICIENT_RESOURCES`
+#### `PeripheralManager.ATT_INSUFFICIENT_RESOURCES`
 
-#### `Server.ATT_UNLIKELY_ERROR`
+#### `PeripheralManager.ATT_UNLIKELY_ERROR`
 
-ATT result codes for use with `server.respondToRequest()`.
+ATT result codes for use with `manager.respondToRequest()`.
 
 ## License
 

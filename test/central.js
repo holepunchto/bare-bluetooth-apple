@@ -2,37 +2,112 @@ const test = require('brittle')
 const Central = require('../lib/central')
 const { isCI } = require('./helpers')
 
-test('central emits stateChange on init', { skip: isCI }, async (t) => {
-  const central = new Central()
-  t.teardown(() => central.destroy())
+test('initial state is unknown', { skip: isCI }, (t) => {
+  using central = new Central()
+  t.is(central.state, 'unknown')
+})
+
+test('emits stateChange on init', { skip: isCI }, async (t) => {
+  using central = new Central()
 
   const state = await new Promise((resolve) => {
     central.on('stateChange', resolve)
   })
 
-  t.ok(typeof state === 'string', 'state is a string')
   t.ok(
     ['poweredOn', 'poweredOff', 'resetting', 'unauthorized', 'unsupported', 'unknown'].includes(
       state
-    ),
-    'state is a valid value: ' + state
+    )
   )
 })
 
-test('central tracks state property', { skip: isCI }, async (t) => {
-  const central = new Central()
-  t.teardown(() => central.destroy())
-
-  t.is(central.state, 'unknown', 'initial state is unknown')
+test('state property tracks emitted state', { skip: isCI }, async (t) => {
+  using central = new Central()
 
   const state = await new Promise((resolve) => {
     central.on('stateChange', resolve)
   })
 
-  t.is(central.state, state, 'state property matches emitted state')
+  t.is(central.state, state)
 })
 
-test('central exports state constants', (t) => {
+test('scan discovers peripherals with expected shape', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  central.startScan()
+
+  const peripheral = await new Promise((resolve) => {
+    central.on('discover', resolve)
+  })
+
+  central.stopScan()
+
+  t.ok(typeof peripheral.id === 'string')
+  t.ok(peripheral.id.length > 0)
+  t.ok(typeof peripheral.rssi === 'number')
+  t.ok(peripheral.rssi < 0)
+  t.ok(peripheral.name === null || typeof peripheral.name === 'string')
+})
+
+test(
+  'repeated discover for same id reuses the same object reference',
+  { skip: isCI },
+  async (t) => {
+    using central = new Central()
+    await waitForPoweredOn(central)
+
+    central.startScan()
+
+    const same = await new Promise((resolve) => {
+      const seen = new Map()
+
+      central.on('discover', (peripheral) => {
+        if (seen.has(peripheral.id)) {
+          resolve(peripheral === seen.get(peripheral.id))
+          return
+        }
+        seen.set(peripheral.id, peripheral)
+      })
+    })
+
+    central.stopScan()
+
+    t.ok(same)
+  }
+)
+
+test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  central.startScan()
+
+  await new Promise((resolve) => {
+    central.on('discover', resolve)
+  })
+
+  t.execution(() => central.destroy())
+})
+
+test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  central.startScan(['00000000-0000-0000-0000-000000000000'])
+
+  let found = false
+  central.on('discover', () => {
+    found = true
+  })
+
+  await new Promise((resolve) => setTimeout(resolve, 3000))
+
+  central.stopScan()
+  t.absent(found)
+})
+
+test('exports state constants', (t) => {
   t.is(Central.STATE_UNKNOWN, 0)
   t.is(Central.STATE_RESETTING, 1)
   t.is(Central.STATE_UNSUPPORTED, 2)
@@ -41,124 +116,12 @@ test('central exports state constants', (t) => {
   t.is(Central.STATE_POWERED_ON, 5)
 })
 
-test('scan discovers peripherals with expected shape', { skip: isCI }, async (t) => {
-  const central = new Central()
-  t.teardown(() => central.destroy())
+// Helpers
 
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
-  })
-
-  if (state !== 'poweredOn') {
-    t.comment('bluetooth not powered on: ' + state + ', skipping')
-    return
-  }
-
-  central.startScan()
-
-  const peripheral = await new Promise((resolve) => {
-    central.on('discover', resolve)
-  })
-
-  central.stopScan()
-
-  t.ok(typeof peripheral.id === 'string', 'peripheral has string id')
-  t.ok(peripheral.id.length > 0, 'peripheral id is non-empty')
-  t.ok(peripheral.name === null || typeof peripheral.name === 'string', 'name is string or null')
-  t.ok(typeof peripheral.rssi === 'number', 'peripheral has numeric rssi')
-  t.ok(peripheral.rssi < 0, 'peripheral rssi is negative')
-  t.ok(
-    peripheral.serviceData === null || typeof peripheral.serviceData === 'object',
-    'peripheral serviceData is object or null'
-  )
-})
-
-test('scan deduplicates peripherals by id', { skip: isCI }, async (t) => {
-  const central = new Central()
-  t.teardown(() => central.destroy())
-
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
-  })
-
-  if (state !== 'poweredOn') {
-    t.comment('bluetooth not powered on, skipping')
-    return
-  }
-
-  central.startScan()
-
-  const result = await new Promise((resolve) => {
-    const seen = new Map()
-    let count = 0
-
-    central.on('discover', (peripheral) => {
-      if (seen.has(peripheral.id)) {
-        resolve({ same: peripheral === seen.get(peripheral.id) })
-        return
-      }
-
-      seen.set(peripheral.id, peripheral)
-      count++
-
-      if (count > 100) {
-        resolve({ same: false })
-      }
+async function waitForPoweredOn(central) {
+  await new Promise((resolve) => {
+    central.on('stateChange', (state) => {
+      if (state === 'poweredOn') resolve()
     })
   })
-
-  central.stopScan()
-
-  t.ok(result.same, 'same object reference for duplicate peripheral id')
-})
-
-test('central destroy cleans up gracefully', { skip: isCI }, async (t) => {
-  const central = new Central()
-
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
-  })
-
-  if (state !== 'poweredOn') {
-    t.comment('bluetooth not powered on: ' + state + ', skipping')
-    return
-  }
-
-  central.startScan()
-
-  const peripheral = await new Promise((resolve) => {
-    central.on('discover', resolve)
-  })
-
-  t.ok(peripheral, 'discovered a peripheral before destroy')
-
-  t.execution(() => central.destroy())
-})
-
-test('filtered scan with non-existent service UUID finds nothing', { skip: isCI }, async (t) => {
-  const central = new Central()
-  t.teardown(() => central.destroy())
-
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
-  })
-
-  if (state !== 'poweredOn') {
-    t.comment('bluetooth not powered on, skipping')
-    return
-  }
-
-  central.startScan(['00000000-0000-0000-0000-000000000000'])
-
-  let found = false
-
-  central.on('discover', () => {
-    found = true
-  })
-
-  await new Promise((resolve) => setTimeout(resolve, 3000))
-
-  central.stopScan()
-
-  t.absent(found, 'no peripherals discovered with non-existent service UUID')
-})
+}

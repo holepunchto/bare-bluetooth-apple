@@ -30,7 +30,7 @@ export interface WriteRequest {
   data: Uint8Array
 }
 
-export interface ServerEventMap extends EventMap {
+export interface PeripheralManagerEventMap extends EventMap {
   stateChange: [state: BluetoothState]
   addService: [uuid: string, error?: string]
   channelPublish: [psm: number, error?: string]
@@ -43,9 +43,9 @@ export interface ServerEventMap extends EventMap {
 }
 
 /**
- * Bluetooth Server - peripheral server for GATT services and L2CAP channels
+ * Bluetooth PeripheralManager - peripheral server for GATT services and L2CAP channels
  */
-declare class Server extends EventEmitter<ServerEventMap> {
+declare class PeripheralManager extends EventEmitter<PeripheralManagerEventMap> {
   constructor()
 
   /** The current Bluetooth adapter state */
@@ -90,4 +90,4 @@ declare class Server extends EventEmitter<ServerEventMap> {
   static readonly ATT_UNLIKELY_ERROR: number
 }
 
-export default Server
+export default PeripheralManager
