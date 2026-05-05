@@ -1,5 +1,5 @@
 const test = require('brittle')
-const Server = require('../lib/server')
+const PeripheralManager = require('../lib/peripheral-manager')
 const Service = require('../lib/service')
 const Characteristic = require('../lib/characteristic')
 const { isCI } = require('./helpers')
@@ -7,12 +7,12 @@ const { isCI } = require('./helpers')
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789ABC'
 const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
 
-test('server emits stateChange on init', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager emits stateChange on init', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   t.ok(typeof state === 'string', 'state is a string')
@@ -24,48 +24,54 @@ test('server emits stateChange on init', { skip: isCI }, async (t) => {
   )
 })
 
-test('server tracks state property', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager tracks state property', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
-  t.is(server.state, 'unknown', 'initial state is unknown')
+  t.is(manager.state, 'unknown', 'initial state is unknown')
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
-  t.is(server.state, state, 'state property matches emitted state')
+  t.is(manager.state, state, 'state property matches emitted state')
 })
 
-test('server exports state constants', (t) => {
-  t.is(Server.STATE_UNKNOWN, 0)
-  t.is(Server.STATE_RESETTING, 1)
-  t.is(Server.STATE_UNSUPPORTED, 2)
-  t.is(Server.STATE_UNAUTHORIZED, 3)
-  t.is(Server.STATE_POWERED_OFF, 4)
-  t.is(Server.STATE_POWERED_ON, 5)
+test('manager exports state constants', (t) => {
+  t.is(PeripheralManager.STATE_UNKNOWN, 0)
+  t.is(PeripheralManager.STATE_RESETTING, 1)
+  t.is(PeripheralManager.STATE_UNSUPPORTED, 2)
+  t.is(PeripheralManager.STATE_UNAUTHORIZED, 3)
+  t.is(PeripheralManager.STATE_POWERED_OFF, 4)
+  t.is(PeripheralManager.STATE_POWERED_ON, 5)
 })
 
-test('server exports permission constants', (t) => {
-  t.is(Server.PERMISSION_READABLE, 0x01)
-  t.is(Server.PERMISSION_WRITEABLE, 0x02)
-  t.is(Server.PERMISSION_READ_ENCRYPTED, 0x04)
-  t.is(Server.PERMISSION_WRITE_ENCRYPTED, 0x08)
+test('manager exports permission constants', (t) => {
+  t.is(PeripheralManager.PERMISSION_READABLE, 0x01)
+  t.is(PeripheralManager.PERMISSION_WRITEABLE, 0x02)
+  t.is(PeripheralManager.PERMISSION_READ_ENCRYPTED, 0x04)
+  t.is(PeripheralManager.PERMISSION_WRITE_ENCRYPTED, 0x08)
 })
 
-test('server exports ATT result constants', (t) => {
-  t.is(Server.ATT_SUCCESS, 0)
-  t.ok(typeof Server.ATT_INVALID_HANDLE === 'number', 'ATT_INVALID_HANDLE is number')
-  t.ok(typeof Server.ATT_READ_NOT_PERMITTED === 'number', 'ATT_READ_NOT_PERMITTED is number')
-  t.ok(typeof Server.ATT_WRITE_NOT_PERMITTED === 'number', 'ATT_WRITE_NOT_PERMITTED is number')
+test('manager exports ATT result constants', (t) => {
+  t.is(PeripheralManager.ATT_SUCCESS, 0)
+  t.ok(typeof PeripheralManager.ATT_INVALID_HANDLE === 'number', 'ATT_INVALID_HANDLE is number')
+  t.ok(
+    typeof PeripheralManager.ATT_READ_NOT_PERMITTED === 'number',
+    'ATT_READ_NOT_PERMITTED is number'
+  )
+  t.ok(
+    typeof PeripheralManager.ATT_WRITE_NOT_PERMITTED === 'number',
+    'ATT_WRITE_NOT_PERMITTED is number'
+  )
 })
 
-test('server add service with static value', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager add service with static value', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -80,10 +86,10 @@ test('server add service with static value', { skip: isCI }, async (t) => {
 
   const service = new Service(SERVICE_UUID, [characteristic])
 
-  server.addService(service)
+  manager.addService(service)
 
   const [uuid, error] = await new Promise((resolve) => {
-    server.on('serviceAdd', (uuid, error) => {
+    manager.on('serviceAdd', (uuid, error) => {
       resolve([uuid, error])
     })
   })
@@ -92,12 +98,12 @@ test('server add service with static value', { skip: isCI }, async (t) => {
   t.is(uuid, SERVICE_UUID, 'service uuid matches')
 })
 
-test('server add service with dynamic characteristic', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager add service with dynamic characteristic', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -115,10 +121,10 @@ test('server add service with dynamic characteristic', { skip: isCI }, async (t)
   const serviceUuid = 'BBBBBBBB-CCCC-DDDD-EEEE-FFFFFFFFFFFF'
   const service = new Service(serviceUuid, [characteristic])
 
-  server.addService(service)
+  manager.addService(service)
 
   const [uuid, error] = await new Promise((resolve) => {
-    server.on('serviceAdd', (uuid, error) => {
+    manager.on('serviceAdd', (uuid, error) => {
       resolve([uuid, error])
     })
   })
@@ -127,12 +133,12 @@ test('server add service with dynamic characteristic', { skip: isCI }, async (t)
   t.is(uuid, serviceUuid, 'dynamic service uuid matches')
 })
 
-test('server start and stop advertising', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager start and stop advertising', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -147,29 +153,29 @@ test('server start and stop advertising', { skip: isCI }, async (t) => {
 
   const service = new Service(SERVICE_UUID, [characteristic])
 
-  server.addService(service)
+  manager.addService(service)
 
   await new Promise((resolve) => {
-    server.on('serviceAdd', () => resolve())
+    manager.on('serviceAdd', () => resolve())
   })
 
   t.execution(() => {
-    server.startAdvertising({
+    manager.startAdvertising({
       name: 'BareTestAdv',
       serviceUUIDs: [SERVICE_UUID]
     })
   })
 
   t.execution(() => {
-    server.stopAdvertising()
+    manager.stopAdvertising()
   })
 })
 
-test('server destroy cleans up gracefully', { skip: isCI }, async (t) => {
-  const server = new Server()
+test('manager destroy cleans up gracefully', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -184,26 +190,26 @@ test('server destroy cleans up gracefully', { skip: isCI }, async (t) => {
 
   const service = new Service(SERVICE_UUID, [characteristic])
 
-  server.addService(service)
+  manager.addService(service)
 
   await new Promise((resolve) => {
-    server.on('serviceAdd', () => resolve())
+    manager.on('serviceAdd', () => resolve())
   })
 
-  server.startAdvertising({
+  manager.startAdvertising({
     name: 'BareTestDestroy',
     serviceUUIDs: [SERVICE_UUID]
   })
 
-  t.execution(() => server.destroy())
+  t.execution(() => manager.destroy())
 })
 
-test('server multiple characteristics in one service', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager multiple characteristics in one service', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -225,10 +231,10 @@ test('server multiple characteristics in one service', { skip: isCI }, async (t)
   const serviceUuid = 'CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC'
   const service = new Service(serviceUuid, [charA, charB])
 
-  server.addService(service)
+  manager.addService(service)
 
   const [uuid, error] = await new Promise((resolve) => {
-    server.on('serviceAdd', (uuid, error) => {
+    manager.on('serviceAdd', (uuid, error) => {
       resolve([uuid, error])
     })
   })
