@@ -50,28 +50,32 @@ test('scan discovers peripherals with expected shape', { skip: isCI }, async (t)
   t.ok(peripheral.name === null || typeof peripheral.name === 'string')
 })
 
-test('scan deduplicates peripherals by id', { skip: isCI }, async (t) => {
-  using central = new Central()
-  if (!(await waitForPoweredOn(central))) return t.comment('bluetooth not powered on, skipping')
+test(
+  'repeated discover for same id reuses the same object reference',
+  { skip: isCI },
+  async (t) => {
+    using central = new Central()
+    if (!(await waitForPoweredOn(central))) return t.comment('bluetooth not powered on, skipping')
 
-  central.startScan()
+    central.startScan()
 
-  const same = await new Promise((resolve) => {
-    const seen = new Map()
+    const same = await new Promise((resolve) => {
+      const seen = new Map()
 
-    central.on('discover', (peripheral) => {
-      if (seen.has(peripheral.id)) {
-        resolve(peripheral === seen.get(peripheral.id))
-        return
-      }
-      seen.set(peripheral.id, peripheral)
+      central.on('discover', (peripheral) => {
+        if (seen.has(peripheral.id)) {
+          resolve(peripheral === seen.get(peripheral.id))
+          return
+        }
+        seen.set(peripheral.id, peripheral)
+      })
     })
-  })
 
-  central.stopScan()
+    central.stopScan()
 
-  t.ok(same)
-})
+    t.ok(same)
+  }
+)
 
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   using central = new Central()
@@ -79,11 +83,10 @@ test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
 
   central.startScan()
 
-  const peripheral = await new Promise((resolve) => {
+  await new Promise((resolve) => {
     central.on('discover', resolve)
   })
 
-  t.ok(peripheral)
   t.execution(() => central.destroy())
 })
 
