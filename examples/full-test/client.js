@@ -27,6 +27,10 @@ function scan() {
       peripheral.rssi
     )
 
+    if (peripheral.serviceData) {
+      console.log(peripheral.serviceData)
+    }
+
     central.stopScan()
     console.log('connecting...')
     central.connect(peripheral)

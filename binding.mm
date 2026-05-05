@@ -2420,26 +2420,25 @@ bare_bluetooth_apple_central__on_discover(
   js_value_t *service_data;
   if (event->service_data) {
     NSDictionary<CBUUID *, NSData *> *sd = (__bridge NSDictionary *) event->service_data;
-    err = js_create_object(env, &service_data);
+
+    js_object_t obj;
+    err = js_create_object(env, obj);
     assert(err == 0);
+
     for (CBUUID *key in sd) {
       NSData *value = sd[key];
       NSString *uuid_str = key.UUIDString;
 
-      js_value_t *arraybuffer;
-      void *buf;
-      err = js_create_arraybuffer(env, value.length, &buf, &arraybuffer);
-      assert(err == 0);
-      if (value.length > 0) memcpy(buf, value.bytes, value.length);
-
-      js_value_t *u8;
-      err = js_create_typedarray(env, js_uint8array, value.length, arraybuffer, 0, &u8);
+      js_typedarray_t<uint8_t> u8;
+      err = js_create_typedarray<uint8_t>(env, static_cast<const uint8_t *>(value.bytes), value.length, u8);
       assert(err == 0);
 
-      err = js_set_named_property(env, service_data, uuid_str.UTF8String, u8);
+      err = js_set_property(env, obj, uuid_str.UTF8String, u8);
       assert(err == 0);
     }
     CFRelease(event->service_data);
+
+    service_data = static_cast<js_value_t *>(obj);
   } else {
     err = js_get_null(env, &service_data);
     assert(err == 0);
