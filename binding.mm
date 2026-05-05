@@ -826,7 +826,7 @@ bare_bluetooth_apple_peripheral_init(
     js_external_t<BareBluetoothApplePeripheral> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothApplePeripheral>>(
       env,
-      static_cast<BareBluetoothApplePeripheral *>(CFBridgingRetain(handle)),
+      handle,
       result
     );
     assert(err == 0);
@@ -1873,7 +1873,7 @@ bare_bluetooth_apple_server_init(
     handle->cleanup_async->data = const_cast<void *>(CFBridgingRetain(handle));
 
     js_external_t<BareBluetoothAppleServer> result;
-    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleServer>>(env, static_cast<BareBluetoothAppleServer *>(CFBridgingRetain(handle)), result);
+    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleServer>>(env, handle, result);
     assert(err == 0);
 
     return result;
@@ -2632,7 +2632,7 @@ bare_bluetooth_apple_central_init(
     handle->cleanup_async->data = const_cast<void *>(CFBridgingRetain(handle));
 
     js_external_t<BareBluetoothAppleCentral> result;
-    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleCentral>>(env, static_cast<BareBluetoothAppleCentral *>(CFBridgingRetain(handle)), result);
+    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleCentral>>(env, handle, result);
     assert(err == 0);
 
     return result;
@@ -3248,7 +3248,7 @@ bare_bluetooth_apple_l2cap_init(
     assert(err == 0);
 
     js_external_t<BareBluetoothAppleL2CAPChannel> result;
-    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleL2CAPChannel>>(env, static_cast<BareBluetoothAppleL2CAPChannel *>(CFBridgingRetain(handle)), result);
+    err = js_create_external<bare_bluetooth_apple__release_bridged<BareBluetoothAppleL2CAPChannel>>(env, handle, result);
     assert(err == 0);
 
     return result;
