@@ -2,13 +2,6 @@ const test = require('brittle')
 const Central = require('../lib/central')
 const { isCI } = require('./helpers')
 
-async function waitForPoweredOn(central) {
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
-  })
-  return state === 'poweredOn'
-}
-
 test('initial state is unknown', { skip: isCI }, (t) => {
   using central = new Central()
   t.is(central.state, 'unknown')
@@ -21,7 +14,6 @@ test('emits stateChange on init', { skip: isCI }, async (t) => {
     central.on('stateChange', resolve)
   })
 
-  t.ok(typeof state === 'string')
   t.ok(
     ['poweredOn', 'poweredOff', 'resetting', 'unauthorized', 'unsupported', 'unknown'].includes(
       state
@@ -37,15 +29,6 @@ test('state property tracks emitted state', { skip: isCI }, async (t) => {
   })
 
   t.is(central.state, state)
-})
-
-test('exports state constants', (t) => {
-  t.is(Central.STATE_UNKNOWN, 0)
-  t.is(Central.STATE_RESETTING, 1)
-  t.is(Central.STATE_UNSUPPORTED, 2)
-  t.is(Central.STATE_UNAUTHORIZED, 3)
-  t.is(Central.STATE_POWERED_OFF, 4)
-  t.is(Central.STATE_POWERED_ON, 5)
 })
 
 test('scan discovers peripherals with expected shape', { skip: isCI }, async (t) => {
@@ -120,3 +103,21 @@ test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async
   central.stopScan()
   t.absent(found)
 })
+
+test('exports state constants', (t) => {
+  t.is(Central.STATE_UNKNOWN, 0)
+  t.is(Central.STATE_RESETTING, 1)
+  t.is(Central.STATE_UNSUPPORTED, 2)
+  t.is(Central.STATE_UNAUTHORIZED, 3)
+  t.is(Central.STATE_POWERED_OFF, 4)
+  t.is(Central.STATE_POWERED_ON, 5)
+})
+
+// Helpers
+
+async function waitForPoweredOn(central) {
+  const state = await new Promise((resolve) => {
+    central.on('stateChange', resolve)
+  })
+  return state === 'poweredOn'
+}
