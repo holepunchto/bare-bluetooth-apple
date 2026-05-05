@@ -1,13 +1,13 @@
 const test = require('brittle')
-const Server = require('../lib/server')
+const PeripheralManager = require('../lib/peripheral-manager')
 const { isCI } = require('./helpers')
 
-test('server publish L2CAP channel returns PSM', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager publish L2CAP channel returns PSM', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -15,10 +15,10 @@ test('server publish L2CAP channel returns PSM', { skip: isCI }, async (t) => {
     return
   }
 
-  server.publishChannel()
+  manager.publishChannel()
 
   const [psm, error] = await new Promise((resolve) => {
-    server.on('channelPublish', (psm, error) => {
+    manager.on('channelPublish', (psm, error) => {
       resolve([psm, error])
     })
   })
@@ -27,15 +27,15 @@ test('server publish L2CAP channel returns PSM', { skip: isCI }, async (t) => {
   t.ok(typeof psm === 'number', 'psm is a number')
   t.ok(psm > 0, 'psm is positive: ' + psm)
 
-  server.unpublishChannel(psm)
+  manager.unpublishChannel(psm)
 })
 
-test('server publish multiple L2CAP channels', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager publish multiple L2CAP channels', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -43,10 +43,10 @@ test('server publish multiple L2CAP channels', { skip: isCI }, async (t) => {
     return
   }
 
-  server.publishChannel()
+  manager.publishChannel()
 
   const [psm1, error1] = await new Promise((resolve) => {
-    server.on('channelPublish', (psm, error) => {
+    manager.on('channelPublish', (psm, error) => {
       resolve([psm, error])
     })
   })
@@ -54,10 +54,10 @@ test('server publish multiple L2CAP channels', { skip: isCI }, async (t) => {
   t.absent(error1, 'no error publishing first channel')
   t.ok(psm1 > 0, 'first psm is positive: ' + psm1)
 
-  server.publishChannel()
+  manager.publishChannel()
 
   const [psm2, error2] = await new Promise((resolve) => {
-    server.once('channelPublish', (psm, error) => {
+    manager.once('channelPublish', (psm, error) => {
       resolve([psm, error])
     })
   })
@@ -66,16 +66,16 @@ test('server publish multiple L2CAP channels', { skip: isCI }, async (t) => {
   t.ok(psm2 > 0, 'second psm is positive: ' + psm2)
   t.not(psm1, psm2, 'psms are different')
 
-  server.unpublishChannel(psm1)
-  server.unpublishChannel(psm2)
+  manager.unpublishChannel(psm1)
+  manager.unpublishChannel(psm2)
 })
 
-test('server publish encrypted L2CAP channel', { skip: isCI }, async (t) => {
-  const server = new Server()
-  t.teardown(() => server.destroy())
+test('manager publish encrypted L2CAP channel', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  t.teardown(() => manager.destroy())
 
   const state = await new Promise((resolve) => {
-    server.on('stateChange', resolve)
+    manager.on('stateChange', resolve)
   })
 
   if (state !== 'poweredOn') {
@@ -83,10 +83,10 @@ test('server publish encrypted L2CAP channel', { skip: isCI }, async (t) => {
     return
   }
 
-  server.publishChannel({ encrypted: true })
+  manager.publishChannel({ encrypted: true })
 
   const [psm, error] = await new Promise((resolve) => {
-    server.on('channelPublish', (psm, error) => {
+    manager.on('channelPublish', (psm, error) => {
       resolve([psm, error])
     })
   })
@@ -94,5 +94,5 @@ test('server publish encrypted L2CAP channel', { skip: isCI }, async (t) => {
   t.absent(error, 'no error publishing encrypted channel')
   t.ok(psm > 0, 'encrypted channel psm is positive: ' + psm)
 
-  server.unpublishChannel(psm)
+  manager.unpublishChannel(psm)
 })
