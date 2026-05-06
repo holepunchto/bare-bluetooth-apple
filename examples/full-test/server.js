@@ -7,7 +7,7 @@ const CHAR_WRITE_UUID = '01230000-0002-1000-8000-00805F9B34FB'
 const CHAR_NOTIFY_UUID = '01230000-0003-1000-8000-00805F9B34FB'
 const CHAR_PSM_UUID = '01230000-0004-1000-8000-00805F9B34FB'
 
-const server = new bluetooth.Server()
+const manager = new bluetooth.PeripheralManager()
 
 let notifyCounter = 0
 let notifyInterval = null
@@ -15,7 +15,7 @@ let l2capPsm = null
 let psmCharacteristic = null
 const subscribedCentrals = new Set()
 
-server.on('stateChange', (state) => {
+manager.on('stateChange', (state) => {
   console.log('state:', state)
 
   if (state !== 'poweredOn') {
@@ -49,9 +49,9 @@ server.on('stateChange', (state) => {
     psmCharacteristic
   ])
 
-  server.addService(service)
+  manager.addService(service)
 
-  server.on('serviceAdd', (uuid, error) => {
+  manager.on('serviceAdd', (uuid, error) => {
     if (error) {
       console.log('failed to add service:', error)
       return
@@ -59,10 +59,10 @@ server.on('stateChange', (state) => {
 
     console.log('service added:', uuid)
 
-    server.publishChannel()
+    manager.publishChannel()
   })
 
-  server.on('channelPublish', (psm, error) => {
+  manager.on('channelPublish', (psm, error) => {
     if (error) {
       console.log('failed to publish L2CAP channel:', error)
       return
@@ -71,7 +71,7 @@ server.on('stateChange', (state) => {
     l2capPsm = psm
     console.log('L2CAP channel published, PSM:', psm)
 
-    server.startAdvertising({
+    manager.startAdvertising({
       name: 'BareTest',
       serviceUUIDs: [SERVICE_UUID]
     })
@@ -80,7 +80,7 @@ server.on('stateChange', (state) => {
     console.log('on the client run `bare examples/full-test/client.js`')
   })
 
-  server.on('readRequest', (request) => {
+  manager.on('readRequest', (request) => {
     console.log('read request for:', request.characteristicUuid, 'offset:', request.offset)
 
     let value = null
@@ -99,20 +99,20 @@ server.on('stateChange', (state) => {
       value = value.slice(request.offset)
     }
 
-    server.respondToRequest(request, bluetooth.Server.ATT_SUCCESS, value)
+    manager.respondToRequest(request, bluetooth.manager.ATT_SUCCESS, value)
   })
 
-  server.on('writeRequest', (requests) => {
+  manager.on('writeRequest', (requests) => {
     for (const request of requests) {
       console.log('write request for:', request.characteristicUuid)
       console.log('data:', request.data)
       console.log('as string:', new TextDecoder().decode(request.data))
     }
 
-    server.respondToRequest(requests[0], bluetooth.Server.ATT_SUCCESS, null)
+    manager.respondToRequest(requests[0], bluetooth.manager.ATT_SUCCESS, null)
   })
 
-  server.on('subscribe', (centralHandle, characteristicUuid) => {
+  manager.on('subscribe', (centralHandle, characteristicUuid) => {
     console.log('central subscribed to:', characteristicUuid)
     subscribedCentrals.add(centralHandle)
 
@@ -121,7 +121,7 @@ server.on('stateChange', (state) => {
         notifyCounter = (notifyCounter + 1) % 256
         const value = new Uint8Array([notifyCounter])
 
-        const sent = server.updateValue(notifyChar, value)
+        const sent = manager.updateValue(notifyChar, value)
         if (sent) {
           console.log('notification sent:', notifyCounter)
         } else {
@@ -131,7 +131,7 @@ server.on('stateChange', (state) => {
     }
   })
 
-  server.on('unsubscribe', (centralHandle, characteristicUuid) => {
+  manager.on('unsubscribe', (centralHandle, characteristicUuid) => {
     console.log('central unsubscribed from:', characteristicUuid)
     subscribedCentrals.delete(centralHandle)
 
@@ -142,11 +142,11 @@ server.on('stateChange', (state) => {
     }
   })
 
-  server.on('readyToUpdate', () => {
+  manager.on('readyToUpdate', () => {
     console.log('ready to send more notifications')
   })
 
-  server.on('channelOpen', (channel, error) => {
+  manager.on('channelOpen', (channel, error) => {
     if (error) {
       console.log('L2CAP channel error:', error)
       return
@@ -192,11 +192,11 @@ Bare.on('exit', () => {
     clearInterval(notifyInterval)
   }
 
-  server.stopAdvertising()
+  manager.stopAdvertising()
 
   if (l2capPsm !== null) {
-    server.unpublishChannel(l2capPsm)
+    manager.unpublishChannel(l2capPsm)
   }
 
-  server.destroy()
+  manager.destroy()
 })

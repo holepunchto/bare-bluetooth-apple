@@ -106,6 +106,7 @@ struct bare_bluetooth_apple_central_discover_t {
   char *id;
   char *name;
   int32_t rssi;
+  CFTypeRef service_data;
 };
 
 struct bare_bluetooth_apple_central_connect_t {
@@ -2283,6 +2284,9 @@ bare_bluetooth_apple_server_destroy(
 
   event->rssi = RSSI.intValue;
 
+  NSDictionary *sd = advertisementData[CBAdvertisementDataServiceDataKey];
+  event->service_data = (sd && sd.count > 0) ? CFBridgingRetain(sd) : NULL;
+
   int err = js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
 }
@@ -2338,7 +2342,7 @@ bare_bluetooth_apple_central__on_finalize(js_env_t *env, bare_bluetooth_apple_ce
 }
 
 using bare_bluetooth_apple_central__on_state_change_fn = js_function_t<void, js_receiver_t, int32_t>;
-using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, int32_t>;
+using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, int32_t, js_object_t>;
 using bare_bluetooth_apple_central__on_connect_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
 using bare_bluetooth_apple_central__on_disconnect_fn = js_function_t<void, js_receiver_t, std::string, js_object_t>;
 using bare_bluetooth_apple_central__on_connect_fail_fn = js_function_t<void, js_receiver_t, std::string, std::string>;
@@ -2413,11 +2417,38 @@ bare_bluetooth_apple_central__on_discover(
 
   int32_t rssi = event->rssi;
 
+  js_value_t *service_data;
+  if (event->service_data) {
+    NSDictionary<CBUUID *, NSData *> *sd = (__bridge NSDictionary *) event->service_data;
+
+    js_object_t obj;
+    err = js_create_object(env, obj);
+    assert(err == 0);
+
+    for (CBUUID *key in sd) {
+      NSData *value = sd[key];
+      NSString *uuid_str = key.UUIDString;
+
+      js_typedarray_t<uint8_t> u8;
+      err = js_create_typedarray<uint8_t>(env, static_cast<const uint8_t *>(value.bytes), value.length, u8);
+      assert(err == 0);
+
+      err = js_set_property(env, obj, uuid_str.UTF8String, u8);
+      assert(err == 0);
+    }
+    CFRelease(event->service_data);
+
+    service_data = static_cast<js_value_t *>(obj);
+  } else {
+    err = js_get_null(env, &service_data);
+    assert(err == 0);
+  }
+
   free(event->id);
   if (event->name) free(event->name);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, js_object_t(name), rssi);
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, js_object_t(name), rssi, js_object_t(service_data));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
