@@ -10,7 +10,6 @@ export type BluetoothState =
   | 'poweredOn'
 
 export interface DiscoveredPeripheral {
-  handle: ArrayBuffer
   id: string
   name: string | null
   rssi: number
@@ -20,7 +19,7 @@ export interface DiscoveredPeripheral {
 export interface CentralEventMap extends EventMap {
   stateChange: [state: BluetoothState]
   discover: [peripheral: DiscoveredPeripheral]
-  connect: [peripheral: Peripheral, error?: string]
+  connect: [peripheral: Peripheral]
   disconnect: [peripheral: Peripheral | null, error?: string]
   connectFail: [id: string, error: string]
 }

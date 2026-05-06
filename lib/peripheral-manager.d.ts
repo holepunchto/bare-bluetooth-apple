@@ -28,15 +28,16 @@ export interface ReadRequest {
 export interface WriteRequest {
   characteristicUuid: string
   data: Uint8Array
+  offset: number
 }
 
 export interface PeripheralManagerEventMap extends EventMap {
   stateChange: [state: BluetoothState]
-  addService: [uuid: string, error?: string]
+  serviceAdd: [uuid: string, error?: string]
   channelPublish: [psm: number, error?: string]
   channelOpen: [channel: L2CAPChannel | null, error?: string]
   readRequest: [request: ReadRequest]
-  writeRequests: [requests: WriteRequest[]]
+  writeRequest: [requests: WriteRequest[]]
   subscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
   unsubscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
   readyToUpdate: []
