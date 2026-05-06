@@ -1,6 +1,5 @@
 require('./test/characteristic')
 require('./test/central')
-require('./test/l2cap')
 require('./test/peripheral')
 require('./test/peripheral-manager')
 require('./test/service')
