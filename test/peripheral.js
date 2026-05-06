@@ -1,101 +1,78 @@
-const test = require('brittle')
+const { test, hook } = require('brittle')
 const Central = require('../lib/central')
 const Peripheral = require('../lib/peripheral')
 const { isCI } = require('./helpers')
 
-test('connect and discover services', { skip: isCI }, async (t) => {
-  const central = new Central()
-  t.teardown(() => central.destroy())
+let central = null
+let peripheral = null
 
-  const state = await new Promise((resolve) => {
-    central.on('stateChange', resolve)
-  })
-
-  if (state !== 'poweredOn') {
-    t.comment('bluetooth not powered on: ' + state + ', skipping')
-    return
-  }
+hook('setup: connect to nearby peripheral', { skip: isCI, timeout: 30000 }, async (t) => {
+  central = new Central()
+  await waitForPoweredOn(central)
 
   central.startScan()
 
-  const discovered = await new Promise((resolve) => {
-    central.on('discover', resolve)
-  })
+  while (true) {
+    const discovered = await new Promise((resolve) => {
+      central.once('discover', resolve)
+    })
 
-  central.stopScan()
+    central.stopScan()
+    central.connect(discovered)
 
-  central.connect(discovered)
+    peripheral = await new Promise((resolve) => {
+      central.once('connect', resolve)
+      central.once('connectFail', () => resolve(null))
+      setTimeout(() => resolve(null), 5000)
+    })
 
-  const result = await new Promise((resolve) => {
-    central.on('connect', (peripheral) => resolve({ peripheral }))
-    central.on('connectFail', () => resolve({ failed: true }))
-    setTimeout(() => resolve({ timeout: true }), 10000)
-  })
+    if (peripheral) break
 
-  if (result.timeout || result.failed) {
-    t.comment('could not connect to nearby peripheral, skipping')
-    return
+    central.startScan()
   }
 
-  const peripheral = result.peripheral
+  t.ok(peripheral instanceof Peripheral)
+})
 
-  t.ok(peripheral instanceof Peripheral, 'connect emits a Peripheral instance')
-  t.teardown(() => {
-    peripheral.destroy()
-  })
+test('peripheral has a string id', { skip: isCI }, (t) => {
+  t.ok(typeof peripheral.id === 'string')
+})
 
-  t.ok(typeof peripheral.id === 'string', 'peripheral id is string')
-
+test('discover services', { skip: isCI, timeout: 15000 }, async (t) => {
   peripheral.discoverServices()
 
-  const servicesResult = await new Promise((resolve) => {
-    peripheral.on('servicesDiscover', (services, error) => {
-      resolve({ services, error })
-    })
-    setTimeout(() => resolve({ timeout: true }), 10000)
+  const [services, error] = await new Promise((resolve) => {
+    peripheral.on('servicesDiscover', (services, error) => resolve([services, error]))
   })
 
-  if (servicesResult.timeout) {
-    t.comment('service discovery timed out (device may not respond to unknown centrals), skipping')
-    return
-  }
+  t.absent(error)
+  t.ok(services.length > 0)
+  t.ok(typeof services[0].uuid === 'string')
+})
 
-  const { services, error: servicesError } = servicesResult
+test('discover characteristics', { skip: isCI, timeout: 15000 }, async (t) => {
+  peripheral.discoverServices()
 
-  t.absent(servicesError, 'no error discovering services')
-  t.ok(Array.isArray(services), 'services is array')
-  t.ok(services.length > 0, 'at least one service discovered')
-
-  const service = services[0]
-  t.ok(typeof service.uuid === 'string', 'service has uuid')
-  t.ok(service.uuid.length > 0, 'service uuid is non-empty')
-
-  peripheral.discoverCharacteristics(service)
-
-  const charsResult = await new Promise((resolve) => {
-    peripheral.on('characteristicsDiscover', (svc, chars, error) => {
-      resolve({ service: svc, characteristics: chars, error })
-    })
-    setTimeout(() => resolve({ timeout: true }), 10000)
+  const [services] = await new Promise((resolve) => {
+    peripheral.on('servicesDiscover', (services, error) => resolve([services, error]))
   })
 
-  if (charsResult.timeout) {
-    t.comment('characteristic discovery timed out, skipping')
-    return
-  }
+  peripheral.discoverCharacteristics(services[0])
 
-  const { service: discoveredService, characteristics, error: charsError } = charsResult
+  const [, characteristics, error] = await new Promise((resolve) => {
+    peripheral.on('characteristicsDiscover', (svc, chars, error) => resolve([svc, chars, error]))
+  })
 
-  t.absent(charsError, 'no error discovering characteristics')
-  t.ok(discoveredService !== null, 'characteristicsDiscover includes service')
-  t.is(discoveredService, service, 'characteristicsDiscover service matches requested service')
-  t.ok(Array.isArray(characteristics), 'characteristics is array')
+  t.absent(error)
+  t.ok(characteristics.length > 0)
+  t.ok(typeof characteristics[0].uuid === 'string')
+  t.ok(typeof characteristics[0].properties === 'number')
+})
 
-  if (characteristics.length > 0) {
-    const char = characteristics[0]
-    t.ok(typeof char.uuid === 'string', 'characteristic has uuid')
-    t.ok(typeof char.properties === 'number', 'characteristic has properties bitmask')
-  }
+hook('teardown: disconnect', { skip: isCI }, (t) => {
+  if (peripheral) peripheral.destroy()
+  if (central) central.destroy()
+  t.pass()
 })
 
 test('peripheral property constants', (t) => {
@@ -105,3 +82,13 @@ test('peripheral property constants', (t) => {
   t.is(Peripheral.PROPERTY_NOTIFY, 0x10)
   t.is(Peripheral.PROPERTY_INDICATE, 0x20)
 })
+
+// Helpers
+
+async function waitForPoweredOn(central) {
+  await new Promise((resolve) => {
+    central.on('stateChange', (state) => {
+      if (state === 'poweredOn') resolve()
+    })
+  })
+}
