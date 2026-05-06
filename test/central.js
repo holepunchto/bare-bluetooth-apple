@@ -1,6 +1,6 @@
 const test = require('brittle')
 const Central = require('../lib/central')
-const { isCI } = require('./helpers')
+const { isCI, waitForPoweredOn } = require('./helpers')
 
 test('initial state is unknown', { skip: isCI }, (t) => {
   using central = new Central()
@@ -115,13 +115,3 @@ test('exports state constants', (t) => {
   t.is(Central.STATE_POWERED_OFF, 4)
   t.is(Central.STATE_POWERED_ON, 5)
 })
-
-// Helpers
-
-async function waitForPoweredOn(central) {
-  await new Promise((resolve) => {
-    central.on('stateChange', (state) => {
-      if (state === 'poweredOn') resolve()
-    })
-  })
-}

@@ -3,7 +3,7 @@ const test = require('brittle')
 const PeripheralManager = require('../lib/peripheral-manager')
 const Service = require('../lib/service')
 const Characteristic = require('../lib/characteristic')
-const { isCI } = require('./helpers')
+const { isCI, waitForPoweredOn } = require('./helpers')
 
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789ABC'
 const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
@@ -200,14 +200,6 @@ test('publishChannel with encryption', { skip: isCI }, async (t) => {
 })
 
 // Helpers
-
-async function waitForPoweredOn(manager) {
-  await new Promise((resolve) => {
-    manager.on('stateChange', (state) => {
-      if (state === 'poweredOn') resolve()
-    })
-  })
-}
 
 async function waitForServiceAdd(manager) {
   await new Promise((resolve) => {
