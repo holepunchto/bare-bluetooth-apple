@@ -139,6 +139,66 @@ test('exports ATT result constants', (t) => {
   t.ok(typeof PeripheralManager.ATT_WRITE_NOT_PERMITTED === 'number')
 })
 
+test('publishChannel returns PSM', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.publishChannel()
+
+  const [psm, error] = await new Promise((resolve) => {
+    manager.on('channelPublish', (psm, error) => resolve([psm, error]))
+  })
+
+  t.absent(error)
+  t.ok(typeof psm === 'number')
+  t.ok(psm > 0)
+
+  manager.unpublishChannel(psm)
+})
+
+test('publishChannel multiple times returns distinct PSMs', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.publishChannel()
+
+  const [psm1, error1] = await new Promise((resolve) => {
+    manager.on('channelPublish', (psm, error) => resolve([psm, error]))
+  })
+
+  t.absent(error1)
+  t.ok(psm1 > 0)
+
+  manager.publishChannel()
+
+  const [psm2, error2] = await new Promise((resolve) => {
+    manager.once('channelPublish', (psm, error) => resolve([psm, error]))
+  })
+
+  t.absent(error2)
+  t.ok(psm2 > 0)
+  t.not(psm1, psm2)
+
+  manager.unpublishChannel(psm1)
+  manager.unpublishChannel(psm2)
+})
+
+test('publishChannel with encryption', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.publishChannel({ encrypted: true })
+
+  const [psm, error] = await new Promise((resolve) => {
+    manager.on('channelPublish', (psm, error) => resolve([psm, error]))
+  })
+
+  t.absent(error)
+  t.ok(psm > 0)
+
+  manager.unpublishChannel(psm)
+})
+
 // Helpers
 
 async function waitForPoweredOn(manager) {
