@@ -1,7 +1,7 @@
 const { test, hook } = require('brittle')
 const Central = require('../lib/central')
 const Peripheral = require('../lib/peripheral')
-const { isCI } = require('./helpers')
+const { isCI, waitForPoweredOn } = require('./helpers')
 
 let central = null
 let peripheral = null
@@ -82,13 +82,3 @@ test('peripheral property constants', (t) => {
   t.is(Peripheral.PROPERTY_NOTIFY, 0x10)
   t.is(Peripheral.PROPERTY_INDICATE, 0x20)
 })
-
-// Helpers
-
-async function waitForPoweredOn(central) {
-  await new Promise((resolve) => {
-    central.on('stateChange', (state) => {
-      if (state === 'poweredOn') resolve()
-    })
-  })
-}
