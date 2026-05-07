@@ -12,17 +12,17 @@ export interface PeripheralOptions {
 }
 
 export interface PeripheralEventMap extends EventMap {
-  servicesDiscover: [services: Service[] | null, error?: string]
+  servicesDiscover: [services: Service[] | null, error: string | null]
   characteristicsDiscover: [
-    service: string,
+    service: Service | null,
     characteristics: Characteristic[] | null,
-    error?: string
+    error: string | null
   ]
-  read: [characteristic: string, data: Uint8Array, error?: string]
-  write: [characteristic: string, error?: string]
-  notify: [characteristic: string, data: Uint8Array, error?: string]
-  notifyState: [characteristic: string, isNotifying: boolean, error?: string]
-  channelOpen: [channel: L2CAPChannel | null, error?: string]
+  read: [characteristic: Characteristic | null, data: Uint8Array, error: string | null]
+  write: [characteristic: Characteristic | null, error: string | null]
+  notify: [characteristic: Characteristic | null, data: Uint8Array, error: string | null]
+  notifyState: [characteristic: Characteristic | null, isNotifying: boolean, error: string | null]
+  channelOpen: [channel: L2CAPChannel | null, error: string | null]
 }
 
 /**
@@ -41,11 +41,11 @@ export default class Peripheral extends EventEmitter<PeripheralEventMap> {
   readonly serviceData: { [uuid: string]: Uint8Array } | null
 
   discoverServices(serviceUUIDs?: string[]): void
-  discoverCharacteristics(service: string, characteristicUUIDs?: string[]): void
-  read(characteristic: string): void
-  write(characteristic: string, data: Uint8Array, withResponse?: boolean): void
-  subscribe(characteristic: string): void
-  unsubscribe(characteristic: string): void
+  discoverCharacteristics(service: Service, characteristicUUIDs?: string[]): void
+  read(characteristic: Characteristic): void
+  write(characteristic: Characteristic, data: Uint8Array, withResponse?: boolean): void
+  subscribe(characteristic: Characteristic): void
+  unsubscribe(characteristic: Characteristic): void
   openL2CAPChannel(psm: number): void
   destroy(): void
 

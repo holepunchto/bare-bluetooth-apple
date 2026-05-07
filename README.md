@@ -78,7 +78,7 @@ Emitted with `state` when the Bluetooth state changes.
 
 Emitted when a peripheral is discovered during scanning. The listener receives a `peripheral` object.
 
-The `peripheral` object has `handle`, `id`, `name`, `rssi`, and `serviceData` properties. `rssi` is the signal strength reported with the most recent advertisement packet. `serviceData` is an object mapping service UUIDs to `Uint8Array` data, or `null` if no service data was advertised in this packet.
+The `peripheral` object has `id`, `name`, `rssi`, and `serviceData` properties. `rssi` is the signal strength reported with the most recent advertisement packet. `serviceData` is an object mapping service UUIDs to `Uint8Array` data, or `null` if no service data was advertised in this packet.
 
 The same `peripheral` reference is reused across discover events for a given `id`; its `rssi` and `serviceData` are updated in place to reflect the latest packet.
 
@@ -161,11 +161,11 @@ Emitted with `uuid` and `error` when a service has been added.
 
 #### `event: 'readRequest'`
 
-Emitted with `request` when a central reads a characteristic. The `request` object has `handle`, `characteristicUuid`, and `offset` properties.
+Emitted with `request` when a central reads a characteristic. The `request` object has `characteristicUuid` and `offset` properties.
 
 #### `event: 'writeRequest'`
 
-Emitted with `requests` when a central writes to a characteristic. Each request has `handle`, `characteristicUuid`, `data`, and `offset` properties.
+Emitted with `requests` when a central writes to a characteristic. Each request has `characteristicUuid`, `data`, and `offset` properties.
 
 #### `event: 'subscribe'`
 
@@ -189,17 +189,7 @@ Emitted with `channel` and `error` when an L2CAP channel is opened. The `channel
 
 #### `const peripheral = new Peripheral(peripheralHandle[, options])`
 
-Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central`.
-
-Options include:
-
-```js
-options = {
-  id: null,
-  name: null,
-  connectHandle: null
-}
-```
+Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` — not typically constructed directly.
 
 #### `peripheral.id`
 

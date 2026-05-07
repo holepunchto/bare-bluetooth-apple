@@ -7,7 +7,8 @@ export {
   AdvertisingOptions,
   ChannelOptions,
   ReadRequest,
-  WriteRequest
+  WriteRequest,
+  PeripheralManagerEventMap
 } from './lib/peripheral-manager'
-export { default as Central } from './lib/central'
-export { default as Peripheral, PeripheralOptions } from './lib/peripheral'
+export { default as Central, DiscoveredPeripheral, CentralEventMap } from './lib/central'
+export { default as Peripheral, PeripheralOptions, PeripheralEventMap } from './lib/peripheral'
