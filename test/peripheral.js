@@ -1,7 +1,7 @@
 const { test, hook } = require('brittle')
 const Central = require('../lib/central')
 const Peripheral = require('../lib/peripheral')
-const { isCI, waitForPoweredOn, hexdump } = require('./helpers')
+const { isCI, waitForPoweredOn } = require('./helpers')
 
 let central = null
 let peripheral = null
@@ -126,7 +126,12 @@ test('read readable characteristics', { skip: isCI, timeout: 60000 }, async (t) 
 
       readCount++
 
-      t.comment('    ' + (data && data.length > 0 ? hexdump(data) : 'empty'))
+      t.comment(
+        '    ' +
+          (data && data.length > 0
+            ? Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString('hex')
+            : 'empty')
+      )
     }
   }
 
