@@ -14,6 +14,7 @@ export type BluetoothState =
 export interface AdvertisingOptions {
   name?: string
   serviceUUIDs?: string[]
+  serviceData?: { [uuid: string]: Uint8Array }
 }
 
 export interface ChannelOptions {
