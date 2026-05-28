@@ -115,9 +115,12 @@ Options include:
 ```js
 options = {
   name: null,
-  serviceUUIDs: null
+  serviceUUIDs: null,
+  serviceData: null
 }
 ```
+
+`serviceData` is an object mapping service UUID strings to `Uint8Array` values. When set, the advertised data will include the given service data, which can be read by scanning centrals without connecting.
 
 #### `manager.stopAdvertising()`
 

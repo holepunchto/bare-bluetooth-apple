@@ -18,9 +18,9 @@ export interface PeripheralEventMap extends EventMap {
     characteristics: Characteristic[] | null,
     error: string | null
   ]
-  read: [characteristic: Characteristic | null, data: Uint8Array, error: string | null]
+  read: [characteristic: Characteristic | null, data: Uint8Array | null, error: string | null]
   write: [characteristic: Characteristic | null, error: string | null]
-  notify: [characteristic: Characteristic | null, data: Uint8Array, error: string | null]
+  notify: [characteristic: Characteristic | null, data: Uint8Array | null, error: string | null]
   notifyState: [characteristic: Characteristic | null, isNotifying: boolean, error: string | null]
   channelOpen: [channel: L2CAPChannel | null, error: string | null]
 }
