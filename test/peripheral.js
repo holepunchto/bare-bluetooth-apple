@@ -1,7 +1,7 @@
 const { test, hook } = require('brittle')
 const Central = require('../lib/central')
 const Peripheral = require('../lib/peripheral')
-const { isCI, waitForPoweredOn } = require('./helpers')
+const { isCI, waitForPoweredOn, hexdump } = require('./helpers')
 
 let central = null
 let peripheral = null
@@ -126,17 +126,7 @@ test('read readable characteristics', { skip: isCI, timeout: 60000 }, async (t) 
 
       readCount++
 
-      if (data && data.length > 0) {
-        const hex = Array.from(data)
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join(' ')
-        const ascii = Array.from(data)
-          .map((b) => (b >= 0x20 && b < 0x7f ? String.fromCharCode(b) : '.'))
-          .join('')
-        t.comment('    ' + data.length + ' bytes: [' + hex + '] "' + ascii + '"')
-      } else {
-        t.comment('    empty')
-      }
+      t.comment('    ' + (data && data.length > 0 ? hexdump(data) : 'empty'))
     }
   }
 
