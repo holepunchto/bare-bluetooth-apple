@@ -133,6 +133,22 @@ test('read readable characteristics', { skip: isCI, timeout: 60000 }, async (t) 
   t.ok(readCount >= 0, 'enumerated all characteristics')
 })
 
+test('peripheral property constants', (t) => {
+  t.is(Peripheral.PROPERTY_READ, 0x02)
+  t.is(Peripheral.PROPERTY_WRITE_WITHOUT_RESPONSE, 0x04)
+  t.is(Peripheral.PROPERTY_WRITE, 0x08)
+  t.is(Peripheral.PROPERTY_NOTIFY, 0x10)
+  t.is(Peripheral.PROPERTY_INDICATE, 0x20)
+})
+
+hook('teardown: disconnect', { skip: isCI }, (t) => {
+  if (peripheral) peripheral.destroy()
+  if (central) central.destroy()
+  t.pass()
+})
+
+// Helpers
+
 function describeProperties(props) {
   const flags = []
   if (props & Peripheral.PROPERTY_READ) flags.push('read')
@@ -142,17 +158,3 @@ function describeProperties(props) {
   if (props & Peripheral.PROPERTY_INDICATE) flags.push('indicate')
   return flags.join(', ')
 }
-
-hook('teardown: disconnect', { skip: isCI }, (t) => {
-  if (peripheral) peripheral.destroy()
-  if (central) central.destroy()
-  t.pass()
-})
-
-test('peripheral property constants', (t) => {
-  t.is(Peripheral.PROPERTY_READ, 0x02)
-  t.is(Peripheral.PROPERTY_WRITE_WITHOUT_RESPONSE, 0x04)
-  t.is(Peripheral.PROPERTY_WRITE, 0x08)
-  t.is(Peripheral.PROPERTY_NOTIFY, 0x10)
-  t.is(Peripheral.PROPERTY_INDICATE, 0x20)
-})
