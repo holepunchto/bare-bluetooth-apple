@@ -2011,7 +2011,8 @@ bare_bluetooth_apple_server_start_advertising(
   js_receiver_t,
   js_external_t<BareBluetoothAppleServer> handle,
   std::optional<std::string> name,
-  std::optional<js_array_t> service_uuids
+  std::optional<js_array_t> service_uuids, // TODO: use std::vector
+  std::optional<js_object_t> service_data
 ) {
   @autoreleasepool {
     BareBluetoothAppleServer *server;
@@ -2044,6 +2045,44 @@ bare_bluetooth_apple_server_start_advertising(
       }
 
       advertisementData[CBAdvertisementDataServiceUUIDsKey] = uuids;
+    }
+
+    if (service_data) {
+      js_value_t *keys;
+      err = js_get_property_names(env, static_cast<js_value_t *>(*service_data), &keys);
+      assert(err == 0);
+
+      uint32_t key_count;
+      err = js_get_array_length(env, keys, &key_count);
+      assert(err == 0);
+
+      NSMutableDictionary<CBUUID *, NSData *> *sd = [NSMutableDictionary dictionaryWithCapacity:key_count];
+
+      for (uint32_t i = 0; i < key_count; i++) {
+        js_value_t *key;
+        err = js_get_element(env, keys, i, &key);
+        assert(err == 0);
+
+        std::string uuid_str;
+        err = js_get_value(env, js_string_t(key), uuid_str);
+        assert(err == 0);
+
+        js_typedarray_t<uint8_t> value;
+        err = js_get_property(env, *service_data, uuid_str.c_str(), value);
+        assert(err == 0);
+
+        uint8_t *buf;
+        size_t buf_len;
+        err = js_get_typedarray_info(env, value, buf, buf_len);
+        assert(err == 0);
+
+        CBUUID *uuid = [CBUUID UUIDWithString:[NSString stringWithUTF8String:uuid_str.c_str()]];
+        NSData *data = [NSData dataWithBytes:buf length:buf_len];
+
+        sd[uuid] = data;
+      }
+
+      advertisementData[CBAdvertisementDataServiceDataKey] = sd;
     }
 
     [server->manager startAdvertising:advertisementData];

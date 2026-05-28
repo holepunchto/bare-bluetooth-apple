@@ -104,6 +104,29 @@ test('startAdvertising and stopAdvertising do not throw', { skip: isCI }, async 
   })
 })
 
+test('startAdvertising with serviceData does not throw', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.addService(createSimpleService())
+  await waitForServiceAdd(manager)
+
+  t.execution(() => {
+    manager.startAdvertising({
+      name: 'BareTest',
+      serviceUUIDs: [SERVICE_UUID],
+      serviceData: { [SERVICE_UUID]: new Uint8Array([0xca, 0xfe]) }
+    })
+  })
+
+  t.execution(() => {
+    manager.stopAdvertising()
+  })
+})
+
+// Same-process BLE round-trip is not supported by CoreBluetooth on macOS.
+// Use two separate processes or devices to test serviceData end-to-end.
+
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   using manager = new PeripheralManager()
   await waitForPoweredOn(manager)
