@@ -2425,6 +2425,7 @@ bare_bluetooth_apple_central__on_discover(
 
   if (!central->manager.isScanning) {
     CFBridgingRelease(event->peripheral);
+    if (event->service_data) CFRelease(event->service_data);
     free(event->id);
     if (event->name) free(event->name);
     delete event;
