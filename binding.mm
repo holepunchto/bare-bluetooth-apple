@@ -174,6 +174,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @implementation BareBluetoothApplePeripheral
 
 - (void)dealloc {
+  [peripheral release];
   [super dealloc];
 }
 
@@ -750,7 +751,7 @@ bare_bluetooth_apple_peripheral_init(
 
     handle->env = env;
     handle->destroyed = false;
-    handle->peripheral = peripheral;
+    handle->peripheral = [peripheral retain];
     handle->queue = central->queue;
 
     err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
