@@ -1005,6 +1005,12 @@ bare_bluetooth_apple_peripheral_write(
     err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
+    if (offset > data.size() || size > data.size() - offset) {
+      err = js_throw_range_errorf(env, nullptr, "Write range [%llu, %llu) is out of bounds for buffer of length %zu", offset, offset + size, data.size());
+      assert(err == 0);
+      return;
+    }
+
     NSData *nsdata = [NSData dataWithBytes:&data[offset] length:size];
 
     CBCharacteristicWriteType type = with_response
