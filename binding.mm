@@ -174,6 +174,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @implementation BareBluetoothApplePeripheral
 
 - (void)dealloc {
+  [peripheral release];
   [super dealloc];
 }
 
@@ -750,7 +751,7 @@ bare_bluetooth_apple_peripheral_init(
 
     handle->env = env;
     handle->destroyed = false;
-    handle->peripheral = peripheral;
+    handle->peripheral = [peripheral retain];
     handle->queue = central->queue;
 
     err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
@@ -1004,6 +1005,12 @@ bare_bluetooth_apple_peripheral_write(
     CBCharacteristic *characteristic;
     err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
+
+    if (offset > data.size() || size > data.size() - offset) {
+      err = js_throw_range_errorf(env, nullptr, "Write range [%llu, %llu) is out of bounds for buffer of length %zu", offset, offset + size, data.size());
+      assert(err == 0);
+      return;
+    }
 
     NSData *nsdata = [NSData dataWithBytes:&data[offset] length:size];
 
@@ -2425,6 +2432,7 @@ bare_bluetooth_apple_central__on_discover(
 
   if (!central->manager.isScanning) {
     CFBridgingRelease(event->peripheral);
+    if (event->service_data) CFRelease(event->service_data);
     free(event->id);
     if (event->name) free(event->name);
     delete event;
