@@ -1114,9 +1114,16 @@ bare_bluetooth_apple_peripheral_service_at_index(
     int err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
+    js_external_t<CBService> result;
+
+    if (index >= wrapper->peripheral.services.count) {
+      err = js_throw_range_errorf(env, nullptr, "Service index %u is out of bounds for %lu service(s)", index, static_cast<unsigned long>(wrapper->peripheral.services.count));
+      assert(err == 0);
+      return result;
+    }
+
     CBService *service = wrapper->peripheral.services[index];
 
-    js_external_t<CBService> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<CBService>>(
       env,
       static_cast<CBService *>(CFBridgingRetain(service)),
@@ -1239,9 +1246,16 @@ bare_bluetooth_apple_service_characteristic_at_index(
     int err = js_get_value(env, handle, service);
     assert(err == 0);
 
+    js_external_t<CBCharacteristic> result;
+
+    if (index >= service.characteristics.count) {
+      err = js_throw_range_errorf(env, nullptr, "Characteristic index %u is out of bounds for %lu characteristic(s)", index, static_cast<unsigned long>(service.characteristics.count));
+      assert(err == 0);
+      return result;
+    }
+
     CBCharacteristic *characteristic = service.characteristics[index];
 
-    js_external_t<CBCharacteristic> result;
     err = js_create_external<bare_bluetooth_apple__release_bridged<CBCharacteristic>>(
       env,
       static_cast<CBCharacteristic *>(CFBridgingRetain(characteristic)),
