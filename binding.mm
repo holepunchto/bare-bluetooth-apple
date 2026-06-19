@@ -1929,6 +1929,8 @@ bare_bluetooth_apple_create_mutable_characteristic(
     );
     assert(err == 0);
 
+    [characteristic release];
+
     return result;
   }
 }
@@ -1955,6 +1957,8 @@ bare_bluetooth_apple_create_mutable_service(
     );
 
     assert(err == 0);
+
+    [service release];
 
     return result;
   }
