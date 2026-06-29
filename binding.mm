@@ -97,6 +97,10 @@ struct bare_bluetooth_apple_server_channel_open_t {
   char *error;
 };
 
+struct bare_bluetooth_apple_server_advertise_error_t {
+  char *error;
+};
+
 struct bare_bluetooth_apple_central_state_change_t {
   int32_t state;
 };
@@ -1282,6 +1286,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   js_threadsafe_function_t *tsfn_ready_to_update;
   js_threadsafe_function_t *tsfn_channel_publish;
   js_threadsafe_function_t *tsfn_channel_open;
+  js_threadsafe_function_t *tsfn_advertise_error;
 
   CBPeripheralManager *manager;
   dispatch_queue_t queue;
@@ -1304,6 +1309,19 @@ bare_bluetooth_apple_service_characteristic_at_index(
   event->state = static_cast<int32_t>(peripheral.state);
 
   int err = js_call_threadsafe_function(tsfn_state_change, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
+}
+
+- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral
+                                       error:(NSError *)error {
+  if (!error) return;
+
+  auto event = new bare_bluetooth_apple_server_advertise_error_t;
+  if (!event) abort();
+
+  event->error = strdup(error.localizedDescription.UTF8String);
+
+  int err = js_call_threadsafe_function(tsfn_advertise_error, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
 }
 
@@ -1427,6 +1445,7 @@ using bare_bluetooth_apple_server__on_unsubscribe_fn = js_function_t<void, js_re
 using bare_bluetooth_apple_server__on_ready_to_update_fn = js_function_t<void, js_receiver_t>;
 using bare_bluetooth_apple_server__on_channel_publish_fn = js_function_t<void, js_receiver_t, uint32_t, js_object_t>;
 using bare_bluetooth_apple_server__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, js_object_t>;
+using bare_bluetooth_apple_server__on_advertise_error_fn = js_function_t<void, js_receiver_t, js_object_t>;
 
 static void
 bare_bluetooth_apple_server__on_state_change(
@@ -1699,6 +1718,37 @@ bare_bluetooth_apple_server__on_channel_publish(
 }
 
 static void
+bare_bluetooth_apple_server__on_advertise_error(
+  js_env_t *env,
+  bare_bluetooth_apple_server__on_advertise_error_fn function,
+  bare_bluetooth_apple_server_t *srv,
+  bare_bluetooth_apple_server_advertise_error_t *event
+) {
+  auto server = srv->handle;
+  int err;
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *receiver;
+  err = js_get_reference_value(env, server->ctx, &receiver);
+  assert(err == 0);
+
+  js_value_t *error;
+  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
+  assert(err == 0);
+  free(event->error);
+
+  delete event;
+
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(error));
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
+}
+
+static void
 bare_bluetooth_apple_server__on_channel_open(
   js_env_t *env,
   bare_bluetooth_apple_server__on_channel_open_fn function,
@@ -1754,6 +1804,9 @@ bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
   auto server = static_cast<BareBluetoothAppleServer *>(async->data);
   int err;
 
+  err = js_release_threadsafe_function(server->tsfn_advertise_error, js_threadsafe_function_release);
+  assert(err == 0);
+
   err = js_release_threadsafe_function(server->tsfn_channel_open, js_threadsafe_function_release);
   assert(err == 0);
 
@@ -1800,7 +1853,8 @@ bare_bluetooth_apple_server_init(
   bare_bluetooth_apple_server__on_unsubscribe_fn on_unsubscribe,
   bare_bluetooth_apple_server__on_ready_to_update_fn on_ready_to_update,
   bare_bluetooth_apple_server__on_channel_publish_fn on_channel_publish,
-  bare_bluetooth_apple_server__on_channel_open_fn on_channel_open
+  bare_bluetooth_apple_server__on_channel_open_fn on_channel_open,
+  bare_bluetooth_apple_server__on_advertise_error_fn on_advertise_error
 ) {
   @autoreleasepool {
     BareBluetoothAppleServer *handle = [[BareBluetoothAppleServer alloc] init];
@@ -1881,6 +1935,14 @@ bare_bluetooth_apple_server_init(
       bare_bluetooth_apple_server__on_finalize,
       bare_bluetooth_apple_server_t,
       bare_bluetooth_apple_server_channel_open_t>(env, on_channel_open, 0, 1, channel_open_ctx, handle->tsfn_channel_open);
+    assert(err == 0);
+
+    auto *advertise_error_ctx = new bare_bluetooth_apple_server_t{(__bridge BareBluetoothAppleServer *) CFBridgingRetain(handle)};
+    err = js_create_threadsafe_function<
+      bare_bluetooth_apple_server__on_advertise_error,
+      bare_bluetooth_apple_server__on_finalize,
+      bare_bluetooth_apple_server_t,
+      bare_bluetooth_apple_server_advertise_error_t>(env, on_advertise_error, 0, 1, advertise_error_ctx, handle->tsfn_advertise_error);
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.server", DISPATCH_QUEUE_SERIAL);
