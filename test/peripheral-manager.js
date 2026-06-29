@@ -165,51 +165,55 @@ test('startAdvertising with multiple serviceData entries', { skip: isCI }, async
   })
 })
 
-test('startAdvertising does not emit advertiseError on success', { skip: isCI }, async (t) => {
+test('startAdvertising does not emit error on success', { skip: isCI }, async (t) => {
   using manager = new PeripheralManager()
   await waitForPoweredOn(manager)
 
   manager.addService(createSimpleService())
   await waitForServiceAdd(manager)
 
-  manager.on('advertiseError', (errorCode, error) => {
-    t.fail(`unexpected advertiseError: ${errorCode} ${error}`)
+  manager.on('error', (err) => {
+    t.fail(`unexpected error: ${err.code} ${err.message}`)
   })
 
   manager.startAdvertising({ name: 'BareTest', serviceUUIDs: [SERVICE_UUID] })
 
   await new Promise((resolve) => setTimeout(resolve, 500))
 
-  t.pass('no advertiseError emitted for valid advertising data')
+  t.pass('no error emitted for valid advertising data')
 
   manager.stopAdvertising()
 })
 
-test('advertiseError reports errorCode and error for invalid data', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
-  await waitForPoweredOn(manager)
+test(
+  'startAdvertising emits error with ADVERTISE_FAILED code for invalid data',
+  { skip: isCI },
+  async (t) => {
+    using manager = new PeripheralManager()
+    await waitForPoweredOn(manager)
 
-  manager.startAdvertising({
-    name: 'X'.repeat(256),
-    serviceUUIDs: [SERVICE_UUID]
-  })
+    manager.startAdvertising({
+      name: 'X'.repeat(256),
+      serviceUUIDs: [SERVICE_UUID]
+    })
 
-  const result = await Promise.race([
-    new Promise((resolve) => {
-      manager.on('advertiseError', (errorCode, error) => resolve({ errorCode, error }))
-    }),
-    new Promise((resolve) => setTimeout(() => resolve(null), 1000))
-  ])
+    const err = await Promise.race([
+      new Promise((resolve) => {
+        manager.on('error', resolve)
+      }),
+      new Promise((resolve) => setTimeout(() => resolve(null), 1000))
+    ])
 
-  if (result === null) {
-    t.pass('platform accepted the oversized payload; advertiseError not applicable here')
-  } else {
-    t.is(result.errorCode, 0)
-    t.ok(typeof result.error === 'string' && result.error.length > 0)
+    if (err === null) {
+      t.pass('platform accepted the oversized payload; error not applicable here')
+    } else {
+      t.is(err.code, 'ADVERTISE_FAILED')
+      t.ok(typeof err.message === 'string' && err.message.length > 0)
+    }
+
+    manager.stopAdvertising()
   }
-
-  manager.stopAdvertising()
-})
+)
 
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   using manager = new PeripheralManager()

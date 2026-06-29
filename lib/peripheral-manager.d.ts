@@ -34,7 +34,7 @@ export interface WriteRequest {
 
 export interface PeripheralManagerEventMap extends EventMap {
   stateChange: [state: BluetoothState]
-  advertiseError: [errorCode: number, error: string]
+  error: [error: Error]
   serviceAdd: [uuid: string, error?: string]
   channelPublish: [psm: number, error?: string]
   channelOpen: [channel: L2CAPChannel | null, error?: string]

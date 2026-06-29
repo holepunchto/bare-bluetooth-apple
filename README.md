@@ -34,8 +34,8 @@ manager.on('serviceAdd', (uuid, error) => {
   })
 })
 
-manager.on('advertiseError', (errorCode, error) => {
-  console.error('failed to start advertising:', error)
+manager.on('error', (err) => {
+  console.error('manager error:', err.code, err.message)
 })
 
 manager.on('writeRequest', (requests) => {
@@ -166,9 +166,9 @@ Emitted with `state` when the Bluetooth state changes.
 
 Emitted with `uuid` and `error` when a service has been added.
 
-#### `event: 'advertiseError'`
+#### `event: 'error'`
 
-Emitted with `errorCode` and `error` when advertising fails to start after `startAdvertising()`. `errorCode` is always `0` on Apple platforms, as CoreBluetooth only reports a descriptive `error` string and no numeric code.
+Emitted with an `Error` when an operation fails asynchronously, such as advertising failing to start after `startAdvertising()`. Use `err.code` to distinguish the kind of error, e.g. `'ADVERTISE_FAILED'`.
 
 #### `event: 'readRequest'`
 
