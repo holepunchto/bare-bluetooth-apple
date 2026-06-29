@@ -10,52 +10,52 @@
 
 struct bare_bluetooth_apple_external_t {
   CFTypeRef ref;
-  char *uuid;
+  std::string uuid;
 };
 
 struct bare_bluetooth_apple_peripheral_services_discover_t {
   uint32_t count;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_peripheral_characteristics_discover_t {
   CFTypeRef service;
   uint32_t count;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_peripheral_read_t {
   CFTypeRef characteristic;
-  char *uuid;
+  std::string uuid;
   void *data;
   size_t data_len;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_peripheral_write_t {
   CFTypeRef characteristic;
-  char *uuid;
-  char *error;
+  std::string uuid;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_peripheral_notify_t {
   CFTypeRef characteristic;
-  char *uuid;
+  std::string uuid;
   void *data;
   size_t data_len;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_peripheral_notify_state_t {
   CFTypeRef characteristic;
-  char *uuid;
+  std::string uuid;
   bool is_notifying;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_peripheral_channel_open_t {
   CFTypeRef channel;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_server_state_change_t {
@@ -64,8 +64,8 @@ struct bare_bluetooth_apple_server_state_change_t {
 
 struct bare_bluetooth_apple_server_add_service_t {
   CFTypeRef service;
-  char *uuid;
-  char *error;
+  std::string uuid;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_server_read_request_t {
@@ -79,26 +79,26 @@ struct bare_bluetooth_apple_server_write_requests_t {
 
 struct bare_bluetooth_apple_server_subscribe_t {
   CFTypeRef central;
-  char *characteristic_uuid;
+  std::string characteristic_uuid;
 };
 
 struct bare_bluetooth_apple_server_unsubscribe_t {
   CFTypeRef central;
-  char *characteristic_uuid;
+  std::string characteristic_uuid;
 };
 
 struct bare_bluetooth_apple_server_channel_publish_t {
   uint16_t psm;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_server_channel_open_t {
   CFTypeRef channel;
-  char *error;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_server_advertise_error_t {
-  char *error;
+  std::string error;
 };
 
 struct bare_bluetooth_apple_central_state_change_t {
@@ -107,25 +107,25 @@ struct bare_bluetooth_apple_central_state_change_t {
 
 struct bare_bluetooth_apple_central_discover_t {
   CFTypeRef peripheral;
-  char *id;
-  char *name;
+  std::string id;
+  std::optional<std::string> name;
   int32_t rssi;
   CFTypeRef service_data;
 };
 
 struct bare_bluetooth_apple_central_connect_t {
   CFTypeRef peripheral;
-  char *id;
+  std::string id;
 };
 
 struct bare_bluetooth_apple_central_disconnect_t {
-  char *id;
-  char *error;
+  std::string id;
+  std::optional<std::string> error;
 };
 
 struct bare_bluetooth_apple_central_connect_fail_t {
-  char *id;
-  char *error;
+  std::string id;
+  std::string error;
 };
 
 struct bare_bluetooth_apple_l2cap_data_t {
@@ -134,7 +134,7 @@ struct bare_bluetooth_apple_l2cap_data_t {
 };
 
 struct bare_bluetooth_apple_l2cap_error_t {
-  char *message;
+  std::string message;
 };
 
 @interface BareBluetoothAppleCentral : NSObject <CBCentralManagerDelegate> {
@@ -187,7 +187,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
   auto event = new bare_bluetooth_apple_peripheral_services_discover_t;
   if (!event) abort();
   event->count = error ? 0 : static_cast<uint32_t>(p.services.count);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_services_discover, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -201,7 +201,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
 
   event->service = CFBridgingRetain(service);
   event->count = error ? 0 : static_cast<uint32_t>(service.characteristics.count);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_characteristics_discover, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -215,8 +215,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
     if (!event) abort();
 
     event->characteristic = CFBridgingRetain(characteristic);
-    event->uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
-    event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+    event->uuid = characteristic.UUID.UUIDString.UTF8String;
+    if (error) event->error = error.localizedDescription.UTF8String;
 
     NSData *value = characteristic.value;
 
@@ -237,12 +237,12 @@ struct bare_bluetooth_apple_l2cap_error_t {
     if (!event) abort();
 
     event->characteristic = CFBridgingRetain(characteristic);
-    event->uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
+    event->uuid = characteristic.UUID.UUIDString.UTF8String;
 
     if (error) {
       event->data = NULL;
       event->data_len = 0;
-      event->error = strdup(error.localizedDescription.UTF8String);
+      event->error = error.localizedDescription.UTF8String;
     } else {
       NSData *value = characteristic.value;
 
@@ -255,8 +255,6 @@ struct bare_bluetooth_apple_l2cap_error_t {
         event->data = NULL;
         event->data_len = 0;
       }
-
-      event->error = NULL;
     }
 
     int err = js_call_threadsafe_function(tsfn_read, event, js_threadsafe_function_nonblocking);
@@ -271,8 +269,8 @@ struct bare_bluetooth_apple_l2cap_error_t {
   if (!event) abort();
 
   event->characteristic = CFBridgingRetain(characteristic);
-  event->uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  event->uuid = characteristic.UUID.UUIDString.UTF8String;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_write, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -285,9 +283,9 @@ struct bare_bluetooth_apple_l2cap_error_t {
   if (!event) abort();
 
   event->characteristic = CFBridgingRetain(characteristic);
-  event->uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
+  event->uuid = characteristic.UUID.UUIDString.UTF8String;
   event->is_notifying = characteristic.isNotifying;
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_notify_state, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -300,7 +298,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
   if (!event) abort();
 
   event->channel = l2capChannel ? CFBridgingRetain(l2capChannel) : NULL;
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -347,13 +345,13 @@ bare_bluetooth_apple_peripheral__on_finalize(js_env_t *env, bare_bluetooth_apple
   delete peripheral;
 }
 
-using bare_bluetooth_apple_peripheral__on_services_discover_fn = js_function_t<void, js_receiver_t, uint32_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_characteristics_discover_fn = js_function_t<void, js_receiver_t, js_object_t, uint32_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_read_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_write_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_notify_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_notify_state_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, bool, js_object_t>;
-using bare_bluetooth_apple_peripheral__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, js_object_t>;
+using bare_bluetooth_apple_peripheral__on_services_discover_fn = js_function_t<void, js_receiver_t, uint32_t, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_characteristics_discover_fn = js_function_t<void, js_receiver_t, js_object_t, uint32_t, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_read_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_write_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_notify_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_notify_state_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, bool, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, std::optional<std::string>>;
 
 static void
 bare_bluetooth_apple_peripheral__on_services_discover(
@@ -375,19 +373,11 @@ bare_bluetooth_apple_peripheral__on_services_discover(
 
   uint32_t count = event->count;
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), count, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), count, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -417,19 +407,11 @@ bare_bluetooth_apple_peripheral__on_characteristics_discover(
 
   uint32_t count = event->count;
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(service), count, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(service), count, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -477,20 +459,11 @@ bare_bluetooth_apple_peripheral__on_read(
     assert(err == 0);
   }
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
-  free(event->uuid);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(data), js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(data), error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -520,20 +493,11 @@ bare_bluetooth_apple_peripheral__on_write(
 
   std::string uuid(event->uuid);
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
-  free(event->uuid);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -581,20 +545,11 @@ bare_bluetooth_apple_peripheral__on_notify(
     assert(err == 0);
   }
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
-  free(event->uuid);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(data), js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, js_object_t(data), error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -625,20 +580,11 @@ bare_bluetooth_apple_peripheral__on_notify_state(
   std::string uuid(event->uuid);
   bool is_notifying = event->is_notifying;
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
-  free(event->uuid);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, is_notifying, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(characteristic), uuid, is_notifying, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -671,19 +617,11 @@ bare_bluetooth_apple_peripheral__on_channel_open(
     assert(err == 0);
   }
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(channel), js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(channel), error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1319,7 +1257,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   auto event = new bare_bluetooth_apple_server_advertise_error_t;
   if (!event) abort();
 
-  event->error = strdup(error.localizedDescription.UTF8String);
+  event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_advertise_error, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -1332,8 +1270,8 @@ bare_bluetooth_apple_service_characteristic_at_index(
   if (!event) abort();
 
   event->service = CFBridgingRetain(service);
-  event->uuid = strdup(service.UUID.UUIDString.UTF8String);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  event->uuid = service.UUID.UUIDString.UTF8String;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_add_service, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -1375,7 +1313,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   if (!event) abort();
 
   event->central = CFBridgingRetain(central);
-  event->characteristic_uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
+  event->characteristic_uuid = characteristic.UUID.UUIDString.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_subscribe, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -1388,7 +1326,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   if (!event) abort();
 
   event->central = CFBridgingRetain(central);
-  event->characteristic_uuid = strdup(characteristic.UUID.UUIDString.UTF8String);
+  event->characteristic_uuid = characteristic.UUID.UUIDString.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_unsubscribe, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -1405,7 +1343,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   if (!event) abort();
 
   event->psm = static_cast<uint16_t>(PSM);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_channel_publish, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -1418,7 +1356,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   if (!event) abort();
 
   event->channel = l2capChannel ? CFBridgingRetain(l2capChannel) : NULL;
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_channel_open, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -1437,15 +1375,15 @@ bare_bluetooth_apple_server__on_finalize(js_env_t *env, bare_bluetooth_apple_ser
 }
 
 using bare_bluetooth_apple_server__on_state_change_fn = js_function_t<void, js_receiver_t, int32_t>;
-using bare_bluetooth_apple_server__on_add_service_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t>;
+using bare_bluetooth_apple_server__on_add_service_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, std::optional<std::string>>;
 using bare_bluetooth_apple_server__on_read_request_fn = js_function_t<void, js_receiver_t, js_object_t>;
 using bare_bluetooth_apple_server__on_write_requests_fn = js_function_t<void, js_receiver_t, js_array_t>;
 using bare_bluetooth_apple_server__on_subscribe_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
 using bare_bluetooth_apple_server__on_unsubscribe_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
 using bare_bluetooth_apple_server__on_ready_to_update_fn = js_function_t<void, js_receiver_t>;
-using bare_bluetooth_apple_server__on_channel_publish_fn = js_function_t<void, js_receiver_t, uint32_t, js_object_t>;
-using bare_bluetooth_apple_server__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, js_object_t>;
-using bare_bluetooth_apple_server__on_advertise_error_fn = js_function_t<void, js_receiver_t, js_object_t>;
+using bare_bluetooth_apple_server__on_channel_publish_fn = js_function_t<void, js_receiver_t, uint32_t, std::optional<std::string>>;
+using bare_bluetooth_apple_server__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, std::optional<std::string>>;
+using bare_bluetooth_apple_server__on_advertise_error_fn = js_function_t<void, js_receiver_t, std::string>;
 
 static void
 bare_bluetooth_apple_server__on_state_change(
@@ -1498,20 +1436,11 @@ bare_bluetooth_apple_server__on_add_service(
 
   std::string uuid(event->uuid);
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
-  free(event->uuid);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(service), uuid, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(service), uuid, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1613,7 +1542,6 @@ bare_bluetooth_apple_server__on_subscribe(
 
   std::string characteristic_uuid(event->characteristic_uuid);
 
-  free(event->characteristic_uuid);
   delete event;
 
   js_call_function(env, function, js_receiver_t(receiver), js_object_t(central), characteristic_uuid);
@@ -1646,7 +1574,6 @@ bare_bluetooth_apple_server__on_unsubscribe(
 
   std::string characteristic_uuid(event->characteristic_uuid);
 
-  free(event->characteristic_uuid);
   delete event;
 
   js_call_function(env, function, js_receiver_t(receiver), js_object_t(central), characteristic_uuid);
@@ -1699,19 +1626,11 @@ bare_bluetooth_apple_server__on_channel_publish(
 
   uint32_t psm = event->psm;
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), psm, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), psm, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1735,14 +1654,11 @@ bare_bluetooth_apple_server__on_advertise_error(
   err = js_get_reference_value(env, server->ctx, &receiver);
   assert(err == 0);
 
-  js_value_t *error;
-  err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-  assert(err == 0);
-  free(event->error);
+  std::string error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -1775,19 +1691,11 @@ bare_bluetooth_apple_server__on_channel_open(
     assert(err == 0);
   }
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(channel), js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(channel), error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2405,10 +2313,10 @@ bare_bluetooth_apple_server_destroy(
   event->peripheral = CFBridgingRetain(peripheral);
 
   NSString *idString = peripheral.identifier.UUIDString;
-  event->id = strdup(idString.UTF8String);
+  event->id = idString.UTF8String;
 
   NSString *peripheralName = peripheral.name;
-  event->name = peripheralName ? strdup(peripheralName.UTF8String) : NULL;
+  if (peripheralName) event->name = peripheralName.UTF8String;
 
   event->rssi = RSSI.intValue;
 
@@ -2425,7 +2333,7 @@ bare_bluetooth_apple_server_destroy(
   if (!event) abort();
 
   event->peripheral = CFBridgingRetain(peripheral);
-  event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
+  event->id = peripheral.identifier.UUIDString.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_connect, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -2437,8 +2345,8 @@ bare_bluetooth_apple_server_destroy(
   auto event = new bare_bluetooth_apple_central_disconnect_t;
   if (!event) abort();
 
-  event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : NULL;
+  event->id = peripheral.identifier.UUIDString.UTF8String;
+  if (error) event->error = error.localizedDescription.UTF8String;
 
   int err = js_call_threadsafe_function(tsfn_disconnect, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -2450,8 +2358,8 @@ bare_bluetooth_apple_server_destroy(
   auto event = new bare_bluetooth_apple_central_connect_fail_t;
   if (!event) abort();
 
-  event->id = strdup(peripheral.identifier.UUIDString.UTF8String);
-  event->error = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown connection failure");
+  event->id = peripheral.identifier.UUIDString.UTF8String;
+  event->error = error ? error.localizedDescription.UTF8String : "Unknown connection failure";
 
   int err = js_call_threadsafe_function(tsfn_connect_fail, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
@@ -2470,9 +2378,9 @@ bare_bluetooth_apple_central__on_finalize(js_env_t *env, bare_bluetooth_apple_ce
 }
 
 using bare_bluetooth_apple_central__on_state_change_fn = js_function_t<void, js_receiver_t, int32_t>;
-using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, int32_t, js_object_t>;
+using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, std::optional<std::string>, int32_t, js_object_t>;
 using bare_bluetooth_apple_central__on_connect_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
-using bare_bluetooth_apple_central__on_disconnect_fn = js_function_t<void, js_receiver_t, std::string, js_object_t>;
+using bare_bluetooth_apple_central__on_disconnect_fn = js_function_t<void, js_receiver_t, std::string, std::optional<std::string>>;
 using bare_bluetooth_apple_central__on_connect_fail_fn = js_function_t<void, js_receiver_t, std::string, std::string>;
 
 static void
@@ -2515,8 +2423,6 @@ bare_bluetooth_apple_central__on_discover(
   if (!central->manager.isScanning) {
     CFBridgingRelease(event->peripheral);
     if (event->service_data) CFRelease(event->service_data);
-    free(event->id);
-    if (event->name) free(event->name);
     delete event;
     return;
   }
@@ -2535,14 +2441,7 @@ bare_bluetooth_apple_central__on_discover(
 
   std::string id(event->id);
 
-  js_value_t *name;
-  if (event->name) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->name), -1, &name);
-    assert(err == 0);
-  } else {
-    err = js_get_null(env, &name);
-    assert(err == 0);
-  }
+  std::optional<std::string> name = std::move(event->name);
 
   int32_t rssi = event->rssi;
 
@@ -2573,11 +2472,9 @@ bare_bluetooth_apple_central__on_discover(
     assert(err == 0);
   }
 
-  free(event->id);
-  if (event->name) free(event->name);
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, js_object_t(name), rssi, js_object_t(service_data));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, name, rssi, js_object_t(service_data));
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2607,7 +2504,6 @@ bare_bluetooth_apple_central__on_connect(
 
   std::string id(event->id);
 
-  free(event->id);
   delete event;
 
   js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id);
@@ -2635,21 +2531,12 @@ bare_bluetooth_apple_central__on_disconnect(
   assert(err == 0);
 
   std::string id(event->id);
-  free(event->id);
 
-  js_value_t *error;
-  if (event->error) {
-    err = js_create_string_utf8(env, reinterpret_cast<const utf8_t *>(event->error), -1, &error);
-    assert(err == 0);
-    free(event->error);
-  } else {
-    err = js_get_null(env, &error);
-    assert(err == 0);
-  }
+  std::optional<std::string> error = std::move(event->error);
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), id, js_object_t(error));
+  js_call_function(env, function, js_receiver_t(receiver), id, error);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -2676,8 +2563,6 @@ bare_bluetooth_apple_central__on_connect_fail(
   std::string id(event->id);
   std::string error(event->error);
 
-  free(event->id);
-  free(event->error);
   delete event;
 
   js_call_function(env, function, js_receiver_t(receiver), id, error);
@@ -3102,7 +2987,7 @@ bare_bluetooth_apple_central_destroy(
 
     auto event = new bare_bluetooth_apple_l2cap_error_t;
     if (!event) abort();
-    event->message = error ? strdup(error.localizedDescription.UTF8String) : strdup("Unknown stream error");
+    event->message = error ? error.localizedDescription.UTF8String : "Unknown stream error";
 
     int err = js_call_threadsafe_function(tsfn_error, event, js_threadsafe_function_nonblocking);
     assert(err == 0);
@@ -3248,7 +3133,6 @@ bare_bluetooth_apple_l2cap__on_error(
 
   std::string message(event->message);
 
-  free(event->message);
   delete event;
 
   js_call_function(env, function, js_receiver_t(receiver), message);
