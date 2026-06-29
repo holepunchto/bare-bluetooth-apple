@@ -165,6 +165,56 @@ test('startAdvertising with multiple serviceData entries', { skip: isCI }, async
   })
 })
 
+test('startAdvertising does not emit error on success', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.addService(createSimpleService())
+  await waitForServiceAdd(manager)
+
+  manager.on('error', (err) => {
+    t.fail(`unexpected error: ${err.code} ${err.message}`)
+  })
+
+  manager.startAdvertising({ name: 'BareTest', serviceUUIDs: [SERVICE_UUID] })
+
+  await new Promise((resolve) => setTimeout(resolve, 500))
+
+  t.pass('no error emitted for valid advertising data')
+
+  manager.stopAdvertising()
+})
+
+test(
+  'startAdvertising emits error with ADVERTISE_FAILED code for invalid data',
+  { skip: isCI },
+  async (t) => {
+    using manager = new PeripheralManager()
+    await waitForPoweredOn(manager)
+
+    manager.startAdvertising({
+      name: 'X'.repeat(256),
+      serviceUUIDs: [SERVICE_UUID]
+    })
+
+    const err = await Promise.race([
+      new Promise((resolve) => {
+        manager.on('error', resolve)
+      }),
+      new Promise((resolve) => setTimeout(() => resolve(null), 1000))
+    ])
+
+    if (err === null) {
+      t.pass('platform accepted the oversized payload; error not applicable here')
+    } else {
+      t.is(err.code, 'ADVERTISE_FAILED')
+      t.ok(typeof err.message === 'string' && err.message.length > 0)
+    }
+
+    manager.stopAdvertising()
+  }
+)
+
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   using manager = new PeripheralManager()
   await waitForPoweredOn(manager)

@@ -34,6 +34,10 @@ manager.on('serviceAdd', (uuid, error) => {
   })
 })
 
+manager.on('error', (err) => {
+  console.error('manager error:', err.code, err.message)
+})
+
 manager.on('writeRequest', (requests) => {
   // Handle incoming write requests
   manager.respondToRequest(requests[0], bluetooth.PeripheralManager.ATT_SUCCESS, null)
@@ -161,6 +165,10 @@ Emitted with `state` when the Bluetooth state changes.
 #### `event: 'serviceAdd'`
 
 Emitted with `uuid` and `error` when a service has been added.
+
+#### `event: 'error'`
+
+Emitted with an `Error` when an operation fails asynchronously, such as advertising failing to start after `startAdvertising()`. Use `err.code` to distinguish the kind of error, e.g. `'ADVERTISE_FAILED'`.
 
 #### `event: 'readRequest'`
 
