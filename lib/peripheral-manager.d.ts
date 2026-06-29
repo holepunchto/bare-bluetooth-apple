@@ -4,12 +4,7 @@ import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
 
 export type BluetoothState =
-  | 'unknown'
-  | 'resetting'
-  | 'unsupported'
-  | 'unauthorized'
-  | 'poweredOff'
-  | 'poweredOn'
+  'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
 
 export interface AdvertisingOptions {
   name?: string
