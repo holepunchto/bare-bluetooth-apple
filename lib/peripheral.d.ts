@@ -3,6 +3,7 @@ import Central from './central'
 import Service from './service'
 import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
+import BluetoothError from './errors'
 
 export interface PeripheralOptions {
   central?: Central
@@ -12,17 +13,14 @@ export interface PeripheralOptions {
 }
 
 export interface PeripheralEventMap extends EventMap {
-  servicesDiscover: [services: Service[] | null, error: string | null]
-  characteristicsDiscover: [
-    service: Service | null,
-    characteristics: Characteristic[] | null,
-    error: string | null
-  ]
-  read: [characteristic: Characteristic | null, data: Uint8Array | null, error: string | null]
-  write: [characteristic: Characteristic | null, error: string | null]
-  notify: [characteristic: Characteristic | null, data: Uint8Array | null, error: string | null]
-  notifyState: [characteristic: Characteristic | null, isNotifying: boolean, error: string | null]
-  channelOpen: [channel: L2CAPChannel | null, error: string | null]
+  error: [error: BluetoothError]
+  servicesDiscover: [services: Service[]]
+  characteristicsDiscover: [service: Service | null, characteristics: Characteristic[]]
+  read: [characteristic: Characteristic | null, data: Uint8Array | null]
+  write: [characteristic: Characteristic | null]
+  notify: [characteristic: Characteristic | null, data: Uint8Array | null]
+  notifyState: [characteristic: Characteristic | null, isNotifying: boolean]
+  channelOpen: [channel: L2CAPChannel]
 }
 
 /**
