@@ -91,6 +91,14 @@ test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   t.execution(() => central.destroy())
 })
 
+test('double destroy does not crash', { skip: isCI }, async (t) => {
+  const central = new Central()
+  await waitForPoweredOn(central)
+
+  central.destroy()
+  t.execution(() => central.destroy())
+})
+
 test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async (t) => {
   using central = new Central()
   await waitForPoweredOn(central)

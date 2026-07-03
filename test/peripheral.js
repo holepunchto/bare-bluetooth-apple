@@ -146,6 +146,14 @@ test('peripheral property constants', (t) => {
   t.is(Peripheral.PROPERTY_INDICATE, 0x20)
 })
 
+test('double destroy does not crash', { skip: isCI }, (t) => {
+  if (!peripheral) return t.pass('no peripheral connected')
+
+  peripheral.destroy()
+  t.execution(() => peripheral.destroy())
+  peripheral = null
+})
+
 hook('teardown: disconnect', { skip: isCI }, (t) => {
   if (peripheral) peripheral.destroy()
   if (central) central.destroy()

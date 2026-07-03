@@ -227,6 +227,14 @@ test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   t.execution(() => manager.destroy())
 })
 
+test('double destroy does not crash', { skip: isCI }, async (t) => {
+  const manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.destroy()
+  t.execution(() => manager.destroy())
+})
+
 test('exports state constants', (t) => {
   t.is(PeripheralManager.STATE_UNKNOWN, 0)
   t.is(PeripheralManager.STATE_RESETTING, 1)
