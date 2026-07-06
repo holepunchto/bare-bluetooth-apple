@@ -1,6 +1,6 @@
 const test = require('brittle')
 const Central = require('../lib/central')
-const { isCI, waitForPoweredOn } = require('./helpers')
+const { isCI, waitForPoweredOn, runTeardown } = require('./helpers')
 
 test('initial state is unknown', { skip: isCI }, (t) => {
   using central = new Central()
@@ -97,6 +97,25 @@ test('double destroy does not crash', { skip: isCI }, async (t) => {
 
   central.destroy()
   t.execution(() => central.destroy())
+})
+
+test('teardown on exit cleans up native resources', { skip: isCI }, (t) => {
+  const { status, signal } = runTeardown(`
+    const central = new Central()
+    central.startScan()
+  `)
+  t.is(status, 0, 'exited cleanly')
+  t.ok(!signal, 'not killed by a signal')
+})
+
+test('destroy then exit does not double-free', { skip: isCI }, (t) => {
+  const { status, signal } = runTeardown(`
+    const central = new Central()
+    central.startScan()
+    central.destroy()
+  `)
+  t.is(status, 0, 'exited cleanly')
+  t.ok(!signal, 'not killed by a signal')
 })
 
 test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async (t) => {

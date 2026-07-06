@@ -3,7 +3,7 @@ const test = require('brittle')
 const PeripheralManager = require('../lib/peripheral-manager')
 const Service = require('../lib/service')
 const Characteristic = require('../lib/characteristic')
-const { isCI, waitForPoweredOn } = require('./helpers')
+const { isCI, waitForPoweredOn, runTeardown } = require('./helpers')
 
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789ABC'
 const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
@@ -233,6 +233,15 @@ test('double destroy does not crash', { skip: isCI }, async (t) => {
 
   manager.destroy()
   t.execution(() => manager.destroy())
+})
+
+test('teardown on exit cleans up native resources', { skip: isCI }, (t) => {
+  const { status, signal } = runTeardown(`
+    const server = new PeripheralManager()
+    server.startAdvertising()
+  `)
+  t.is(status, 0, 'exited cleanly')
+  t.ok(!signal, 'not killed by a signal')
 })
 
 test('exports state constants', (t) => {

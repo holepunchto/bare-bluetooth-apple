@@ -141,7 +141,6 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @public
   js_env_t *env;
   bool destroyed;
-  bool cleaned_up;
   js_ref_t *ctx;
   js_deferred_teardown_t *teardown;
   js_threadsafe_function_t *tsfn_state_change;
@@ -161,7 +160,6 @@ struct bare_bluetooth_apple_l2cap_error_t {
 @public
   js_env_t *env;
   bool destroyed;
-  bool cleaned_up;
   js_ref_t *ctx;
   js_deferred_teardown_t *teardown;
   js_threadsafe_function_t *tsfn_services_discover;
@@ -684,9 +682,6 @@ static void
 bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
   auto wrapper = static_cast<BareBluetoothApplePeripheral *>(async->data);
 
-  if (wrapper->cleaned_up) return;
-  wrapper->cleaned_up = true;
-
   int err;
 
   err = js_release_threadsafe_function(wrapper->tsfn_services_discover, js_threadsafe_function_release);
@@ -765,7 +760,6 @@ bare_bluetooth_apple_peripheral_init(
 
     handle->env = env;
     handle->destroyed = false;
-    handle->cleaned_up = false;
     handle->peripheral = [peripheral retain];
     handle->queue = central->queue;
     dispatch_retain(handle->queue);
@@ -1282,7 +1276,6 @@ bare_bluetooth_apple_service_characteristic_at_index(
 @public
   js_env_t *env;
   bool destroyed;
-  bool cleaned_up;
   js_ref_t *ctx;
   js_deferred_teardown_t *teardown;
   js_threadsafe_function_t *tsfn_state_change;
@@ -1837,9 +1830,6 @@ static void
 bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
   auto server = static_cast<BareBluetoothAppleServer *>(async->data);
 
-  if (server->cleaned_up) return;
-  server->cleaned_up = true;
-
   int err;
 
   err = js_release_threadsafe_function(server->tsfn_advertise_error, js_threadsafe_function_release);
@@ -1919,7 +1909,6 @@ bare_bluetooth_apple_server_init(
 
     handle->env = env;
     handle->destroyed = false;
-    handle->cleaned_up = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);
@@ -2749,9 +2738,6 @@ static void
 bare_bluetooth_apple_central__on_cleanup(uv_async_t *async) {
   auto central = static_cast<BareBluetoothAppleCentral *>(async->data);
 
-  if (central->cleaned_up) return;
-  central->cleaned_up = true;
-
   int err;
 
   err = js_release_threadsafe_function(central->tsfn_connect_fail, js_threadsafe_function_release);
@@ -2811,7 +2797,6 @@ bare_bluetooth_apple_central_init(
 
     handle->env = env;
     handle->destroyed = false;
-    handle->cleaned_up = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
     assert(err == 0);

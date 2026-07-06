@@ -41,6 +41,7 @@
   "devDependencies": {
     "bare-encoding": "^1.0.3",
     "bare-os": "^3.7.1",
+    "bare-subprocess": "^5.2.3",
     "brittle": "^3.18.0",
     "cmake-bare": "^1.6.5",
     "cmake-fetch": "^1.4.9",
