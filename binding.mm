@@ -367,6 +367,11 @@ bare_bluetooth_apple_peripheral__on_services_discover(
   auto wrapper = peripheral->handle;
   int err;
 
+  if (wrapper->destroyed) {
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -396,6 +401,12 @@ bare_bluetooth_apple_peripheral__on_characteristics_discover(
 ) {
   auto wrapper = peripheral->handle;
   int err;
+
+  if (wrapper->destroyed) {
+    CFBridgingRelease(event->service);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -430,6 +441,13 @@ bare_bluetooth_apple_peripheral__on_read(
 ) {
   auto wrapper = peripheral->handle;
   int err;
+
+  if (wrapper->destroyed) {
+    if (event->data) delete[] reinterpret_cast<uint8_t *>(event->data);
+    CFBridgingRelease(event->characteristic);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -483,6 +501,12 @@ bare_bluetooth_apple_peripheral__on_write(
   auto wrapper = peripheral->handle;
   int err;
 
+  if (wrapper->destroyed) {
+    CFBridgingRelease(event->characteristic);
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -516,6 +540,13 @@ bare_bluetooth_apple_peripheral__on_notify(
 ) {
   auto wrapper = peripheral->handle;
   int err;
+
+  if (wrapper->destroyed) {
+    if (event->data) delete[] reinterpret_cast<uint8_t *>(event->data);
+    CFBridgingRelease(event->characteristic);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -569,6 +600,12 @@ bare_bluetooth_apple_peripheral__on_notify_state(
   auto wrapper = peripheral->handle;
   int err;
 
+  if (wrapper->destroyed) {
+    CFBridgingRelease(event->characteristic);
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -603,6 +640,12 @@ bare_bluetooth_apple_peripheral__on_channel_open(
 ) {
   auto wrapper = peripheral->handle;
   int err;
+
+  if (wrapper->destroyed) {
+    if (event->channel) CFBridgingRelease(event->channel);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -1422,6 +1465,11 @@ bare_bluetooth_apple_server__on_state_change(
   auto server = srv->handle;
   int err;
 
+  if (server->destroyed) {
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -1448,6 +1496,12 @@ bare_bluetooth_apple_server__on_add_service(
 ) {
   auto server = srv->handle;
   int err;
+
+  if (server->destroyed) {
+    CFBridgingRelease(event->service);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -1483,6 +1537,12 @@ bare_bluetooth_apple_server__on_read_request(
   auto server = srv->handle;
   int err;
 
+  if (server->destroyed) {
+    CFBridgingRelease(event->request);
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -1512,6 +1572,15 @@ bare_bluetooth_apple_server__on_write_requests(
 ) {
   auto server = srv->handle;
   int err;
+
+  if (server->destroyed) {
+    for (uint32_t i = 0; i < event->count; i++) {
+      CFBridgingRelease(event->requests[i]);
+    }
+    delete[] event->requests;
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -1555,6 +1624,12 @@ bare_bluetooth_apple_server__on_subscribe(
   auto server = srv->handle;
   int err;
 
+  if (server->destroyed) {
+    CFBridgingRelease(event->central);
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -1586,6 +1661,12 @@ bare_bluetooth_apple_server__on_unsubscribe(
 ) {
   auto server = srv->handle;
   int err;
+
+  if (server->destroyed) {
+    CFBridgingRelease(event->central);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -1619,6 +1700,8 @@ bare_bluetooth_apple_server__on_ready_to_update(
   auto server = srv->handle;
   int err;
 
+  if (server->destroyed) return;
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -1642,6 +1725,11 @@ bare_bluetooth_apple_server__on_channel_publish(
 ) {
   auto server = srv->handle;
   int err;
+
+  if (server->destroyed) {
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -1673,6 +1761,11 @@ bare_bluetooth_apple_server__on_advertise_error(
   auto server = srv->handle;
   int err;
 
+  if (server->destroyed) {
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -1700,6 +1793,12 @@ bare_bluetooth_apple_server__on_channel_open(
 ) {
   auto server = srv->handle;
   int err;
+
+  if (server->destroyed) {
+    if (event->channel) CFBridgingRelease(event->channel);
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -2441,6 +2540,11 @@ bare_bluetooth_apple_central__on_state_change(
   auto central = cen->handle;
   int err;
 
+  if (central->destroyed) {
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -2468,7 +2572,7 @@ bare_bluetooth_apple_central__on_discover(
   auto central = cen->handle;
   int err;
 
-  if (!central->manager.isScanning) {
+  if (central->destroyed || !central->manager.isScanning) {
     CFBridgingRelease(event->peripheral);
     if (event->service_data) CFRelease(event->service_data);
     delete event;
@@ -2538,6 +2642,12 @@ bare_bluetooth_apple_central__on_connect(
   auto central = cen->handle;
   int err;
 
+  if (central->destroyed) {
+    CFBridgingRelease(event->peripheral);
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -2570,6 +2680,11 @@ bare_bluetooth_apple_central__on_disconnect(
   auto central = cen->handle;
   int err;
 
+  if (central->destroyed) {
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -2599,6 +2714,11 @@ bare_bluetooth_apple_central__on_connect_fail(
 ) {
   auto central = cen->handle;
   int err;
+
+  if (central->destroyed) {
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -3108,6 +3228,12 @@ bare_bluetooth_apple_l2cap__on_data(
   auto channel = l2cap->handle;
   int err;
 
+  if (channel->finalized.load()) {
+    delete[] reinterpret_cast<uint8_t *>(event->bytes);
+    delete event;
+    return;
+  }
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -3146,6 +3272,8 @@ bare_bluetooth_apple_l2cap__on_drain(
   auto channel = l2cap->handle;
   int err;
 
+  if (channel->finalized.load()) return;
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -3170,6 +3298,8 @@ bare_bluetooth_apple_l2cap__on_end(
   auto channel = l2cap->handle;
   int err;
 
+  if (channel->finalized.load()) return;
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -3193,6 +3323,11 @@ bare_bluetooth_apple_l2cap__on_error(
 ) {
   auto channel = l2cap->handle;
   int err;
+
+  if (channel->finalized.load()) {
+    delete event;
+    return;
+  }
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
@@ -3253,6 +3388,8 @@ bare_bluetooth_apple_l2cap__on_close(
   auto channel = l2cap->handle;
   int err;
 
+  if (channel->finalized.load()) return;
+
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
   assert(err == 0);
@@ -3278,6 +3415,8 @@ bare_bluetooth_apple_l2cap__on_open(
 ) {
   auto channel = l2cap->handle;
   int err;
+
+  if (channel->finalized.load()) return;
 
   js_handle_scope_t *scope;
   err = js_open_handle_scope(env, &scope);
