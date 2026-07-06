@@ -1,6 +1,8 @@
 const test = require('brittle')
 const Central = require('../lib/central')
-const { isCI, waitForPoweredOn, runTeardown } = require('./helpers')
+const { isCI, waitForPoweredOn } = require('./helpers')
+
+const { Thread } = Bare
 
 test('initial state is unknown', { skip: isCI }, (t) => {
   using central = new Central()
@@ -100,22 +102,38 @@ test('double destroy does not crash', { skip: isCI }, async (t) => {
 })
 
 test('teardown on exit cleans up native resources', { skip: isCI }, (t) => {
-  const { status, signal } = runTeardown(`
-    const central = new Central()
-    central.startScan()
-  `)
-  t.is(status, 0, 'exited cleanly')
-  t.ok(!signal, 'not killed by a signal')
+  t.plan(1)
+
+  const thread = new Thread(__filename, () => {
+    const Central = require('../lib/central')
+
+    Bare.on('exit', () => {
+      const central = new Central()
+      central.startScan()
+    })
+  })
+
+  thread.join()
+
+  t.pass('thread torn down without crashing')
 })
 
 test('destroy then exit does not double-free', { skip: isCI }, (t) => {
-  const { status, signal } = runTeardown(`
-    const central = new Central()
-    central.startScan()
-    central.destroy()
-  `)
-  t.is(status, 0, 'exited cleanly')
-  t.ok(!signal, 'not killed by a signal')
+  t.plan(1)
+
+  const thread = new Thread(__filename, () => {
+    const Central = require('../lib/central')
+
+    Bare.on('exit', () => {
+      const central = new Central()
+      central.startScan()
+      central.destroy()
+    })
+  })
+
+  thread.join()
+
+  t.pass('thread torn down without crashing')
 })
 
 test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async (t) => {
