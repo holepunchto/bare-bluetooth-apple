@@ -143,6 +143,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
   bool destroyed;
   bool cleaned_up;
   js_ref_t *ctx;
+  js_deferred_teardown_t *teardown;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_discover;
   js_threadsafe_function_t *tsfn_connect;
@@ -162,6 +163,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
   bool destroyed;
   bool cleaned_up;
   js_ref_t *ctx;
+  js_deferred_teardown_t *teardown;
   js_threadsafe_function_t *tsfn_services_discover;
   js_threadsafe_function_t *tsfn_characteristics_discover;
   js_threadsafe_function_t *tsfn_read;
@@ -668,7 +670,27 @@ bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
   err = js_delete_reference(wrapper->env, wrapper->ctx);
   assert(err == 0);
 
+  err = js_finish_deferred_teardown_callback(wrapper->teardown);
+  assert(err == 0);
+
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_peripheral__on_cleanup_close);
+}
+
+static void
+bare_bluetooth_apple_peripheral__teardown(BareBluetoothApplePeripheral *wrapper) {
+  if (wrapper->destroyed) return;
+
+  wrapper->destroyed = true;
+  wrapper->peripheral.delegate = nil;
+
+  dispatch_async(wrapper->queue, ^{
+    uv_async_send(wrapper->cleanup_async);
+  });
+}
+
+static void
+bare_bluetooth_apple_peripheral__on_teardown(js_deferred_teardown_t *handle, void *data) {
+  bare_bluetooth_apple_peripheral__teardown((__bridge BareBluetoothApplePeripheral *) data);
 }
 
 static js_external_t<BareBluetoothApplePeripheral>
@@ -706,6 +728,9 @@ bare_bluetooth_apple_peripheral_init(
     dispatch_retain(handle->queue);
 
     err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
+    assert(err == 0);
+
+    err = js_add_deferred_teardown_callback(env, bare_bluetooth_apple_peripheral__on_teardown, (__bridge void *) handle, &handle->teardown);
     assert(err == 0);
 
     auto *services_discover_ctx = new bare_bluetooth_apple_peripheral_t{(__bridge BareBluetoothApplePeripheral *) CFBridgingRetain(handle)};
@@ -799,14 +824,7 @@ bare_bluetooth_apple_peripheral_destroy(
     int err = js_get_value(env, handle, wrapper);
     assert(err == 0);
 
-    if (wrapper->destroyed) return;
-
-    wrapper->destroyed = true;
-    wrapper->peripheral.delegate = nil;
-
-    dispatch_async(wrapper->queue, ^{
-      uv_async_send(wrapper->cleanup_async);
-    });
+    bare_bluetooth_apple_peripheral__teardown(wrapper);
   }
 }
 
@@ -1223,6 +1241,7 @@ bare_bluetooth_apple_service_characteristic_at_index(
   bool destroyed;
   bool cleaned_up;
   js_ref_t *ctx;
+  js_deferred_teardown_t *teardown;
   js_threadsafe_function_t *tsfn_state_change;
   js_threadsafe_function_t *tsfn_add_service;
   js_threadsafe_function_t *tsfn_read_request;
@@ -1757,7 +1776,27 @@ bare_bluetooth_apple_server__on_cleanup(uv_async_t *async) {
   err = js_delete_reference(server->env, server->ctx);
   assert(err == 0);
 
+  err = js_finish_deferred_teardown_callback(server->teardown);
+  assert(err == 0);
+
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_server__on_cleanup_close);
+}
+
+static void
+bare_bluetooth_apple_server__teardown(BareBluetoothAppleServer *server) {
+  if (server->destroyed) return;
+
+  server->destroyed = true;
+  server->manager.delegate = nil;
+
+  dispatch_async(server->queue, ^{
+    uv_async_send(server->cleanup_async);
+  });
+}
+
+static void
+bare_bluetooth_apple_server__on_teardown(js_deferred_teardown_t *handle, void *data) {
+  bare_bluetooth_apple_server__teardown((__bridge BareBluetoothAppleServer *) data);
 }
 
 static js_external_t<BareBluetoothAppleServer>
@@ -1784,6 +1823,9 @@ bare_bluetooth_apple_server_init(
     handle->cleaned_up = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
+    assert(err == 0);
+
+    err = js_add_deferred_teardown_callback(env, bare_bluetooth_apple_server__on_teardown, (__bridge void *) handle, &handle->teardown);
     assert(err == 0);
 
     auto *state_change_ctx = new bare_bluetooth_apple_server_t{(__bridge BareBluetoothAppleServer *) CFBridgingRetain(handle)};
@@ -2288,14 +2330,7 @@ bare_bluetooth_apple_server_destroy(
     int err = js_get_value(env, handle, server);
     assert(err == 0);
 
-    if (server->destroyed) return;
-
-    server->destroyed = true;
-    server->manager.delegate = nil;
-
-    dispatch_async(server->queue, ^{
-      uv_async_send(server->cleanup_async);
-    });
+    bare_bluetooth_apple_server__teardown(server);
   }
 }
 
@@ -2617,7 +2652,27 @@ bare_bluetooth_apple_central__on_cleanup(uv_async_t *async) {
   err = js_delete_reference(central->env, central->ctx);
   assert(err == 0);
 
+  err = js_finish_deferred_teardown_callback(central->teardown);
+  assert(err == 0);
+
   uv_close(reinterpret_cast<uv_handle_t *>(async), bare_bluetooth_apple_central__on_cleanup_close);
+}
+
+static void
+bare_bluetooth_apple_central__teardown(BareBluetoothAppleCentral *central) {
+  if (central->destroyed) return;
+
+  central->destroyed = true;
+  central->manager.delegate = nil;
+
+  dispatch_async(central->queue, ^{
+    uv_async_send(central->cleanup_async);
+  });
+}
+
+static void
+bare_bluetooth_apple_central__on_teardown(js_deferred_teardown_t *handle, void *data) {
+  bare_bluetooth_apple_central__teardown((__bridge BareBluetoothAppleCentral *) data);
 }
 
 static js_external_t<BareBluetoothAppleCentral>
@@ -2639,6 +2694,9 @@ bare_bluetooth_apple_central_init(
     handle->cleaned_up = false;
 
     int err = js_create_reference(env, static_cast<js_value_t *>(context), 1, &handle->ctx);
+    assert(err == 0);
+
+    err = js_add_deferred_teardown_callback(env, bare_bluetooth_apple_central__on_teardown, (__bridge void *) handle, &handle->teardown);
     assert(err == 0);
 
     auto *state_ctx = new bare_bluetooth_apple_central_t{(__bridge BareBluetoothAppleCentral *) CFBridgingRetain(handle)};
@@ -2810,14 +2868,7 @@ bare_bluetooth_apple_central_destroy(
     int err = js_get_value(env, handle, central);
     assert(err == 0);
 
-    if (central->destroyed) return;
-
-    central->destroyed = true;
-    central->manager.delegate = nil;
-
-    dispatch_async(central->queue, ^{
-      uv_async_send(central->cleanup_async);
-    });
+    bare_bluetooth_apple_central__teardown(central);
   }
 }
 
@@ -2831,6 +2882,8 @@ bare_bluetooth_apple_central_destroy(
   js_threadsafe_function_t *tsfn_error;
   js_threadsafe_function_t *tsfn_close;
   js_threadsafe_function_t *tsfn_open;
+
+  js_deferred_teardown_t *teardown;
 
   CBL2CAPChannel *channel;
   NSInputStream *inputStream;
@@ -3160,6 +3213,37 @@ bare_bluetooth_apple_l2cap__on_error(
 }
 
 static void
+bare_bluetooth_apple_l2cap__teardown(BareBluetoothAppleL2CAPChannel *l2cap, js_threadsafe_function_release_mode_t mode) {
+  if (l2cap->finalized.exchange(true)) return;
+
+  int err;
+
+  err = js_release_threadsafe_function(l2cap->tsfn_open, mode);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(l2cap->tsfn_close, mode);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(l2cap->tsfn_error, mode);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(l2cap->tsfn_end, mode);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(l2cap->tsfn_drain, mode);
+  assert(err == 0);
+
+  err = js_release_threadsafe_function(l2cap->tsfn_data, mode);
+  assert(err == 0);
+
+  err = js_delete_reference(l2cap->env, l2cap->ctx);
+  assert(err == 0);
+
+  err = js_finish_deferred_teardown_callback(l2cap->teardown);
+  assert(err == 0);
+}
+
+static void
 bare_bluetooth_apple_l2cap__on_close(
   js_env_t *env,
   bare_bluetooth_apple_l2cap__on_close_fn function,
@@ -3179,28 +3263,7 @@ bare_bluetooth_apple_l2cap__on_close(
 
   js_call_function(env, function, js_receiver_t(receiver));
 
-  if (!channel->finalized.exchange(true)) {
-    err = js_release_threadsafe_function(channel->tsfn_open, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(channel->tsfn_close, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(channel->tsfn_error, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(channel->tsfn_end, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(channel->tsfn_drain, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_release_threadsafe_function(channel->tsfn_data, js_threadsafe_function_release);
-    assert(err == 0);
-
-    err = js_delete_reference(env, channel->ctx);
-    assert(err == 0);
-  }
+  bare_bluetooth_apple_l2cap__teardown(channel, js_threadsafe_function_release);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
@@ -3228,6 +3291,17 @@ bare_bluetooth_apple_l2cap__on_open(
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);
+}
+
+static void
+bare_bluetooth_apple_l2cap__on_teardown(js_deferred_teardown_t *handle, void *data) {
+  auto l2cap = (__bridge BareBluetoothAppleL2CAPChannel *) data;
+
+  if (!l2cap->destroyed.load()) {
+    [l2cap destroy];
+  }
+
+  bare_bluetooth_apple_l2cap__teardown(l2cap, js_threadsafe_function_abort);
 }
 
 static js_external_t<BareBluetoothAppleL2CAPChannel>
@@ -3307,6 +3381,9 @@ bare_bluetooth_apple_l2cap_init(
       bare_bluetooth_apple_l2cap__on_finalize,
       bare_bluetooth_apple_l2cap_t,
       void>(env, on_open, 0, 1, open_ctx, handle->tsfn_open);
+    assert(err == 0);
+
+    err = js_add_deferred_teardown_callback(env, bare_bluetooth_apple_l2cap__on_teardown, (__bridge void *) handle, &handle->teardown);
     assert(err == 0);
 
     js_external_t<BareBluetoothAppleL2CAPChannel> result;
