@@ -2990,6 +2990,7 @@ bare_bluetooth_apple_central_destroy(
 @implementation BareBluetoothAppleL2CAPChannel
 
 - (void)dealloc {
+  [channel release];
   [streamThread release];
   [writeQueue release];
   [super dealloc];
@@ -3420,7 +3421,7 @@ bare_bluetooth_apple_l2cap_init(
     BareBluetoothAppleL2CAPChannel *handle = [[BareBluetoothAppleL2CAPChannel alloc] init];
 
     handle->env = env;
-    handle->channel = channel;
+    handle->channel = [channel retain];
     handle->opened.store(false);
     handle->closing.store(false);
     handle->closed.store(false);
