@@ -44,359 +44,712 @@ manager.on('writeRequest', (requests) => {
 })
 ```
 
+<!-- bare-refgen:api start -->
 ## API
 
-#### `const central = new Central()`
+### L2CAPChannel
 
-Create a new BLE central manager. The central scans for and connects to peripherals.
+#### `new L2CAPChannel(channelHandle: ArrayBuffer)`
 
-#### `central.state`
-
-The current Bluetooth state. One of `'unknown'`, `'resetting'`, `'unsupported'`, `'unauthorized'`, `'poweredOff'`, or `'poweredOn'`.
-
-#### `central.startScan([serviceUUIDs])`
-
-Start scanning for peripherals. If `serviceUUIDs` is provided, only peripherals advertising those services will be discovered.
-
-#### `central.stopScan()`
-
-Stop scanning for peripherals.
-
-#### `central.connect(peripheral)`
-
-Connect to a discovered `peripheral`.
-
-#### `central.disconnect(peripheral)`
-
-Disconnect from a connected `peripheral`.
-
-#### `central.destroy()`
-
-Destroy the central manager and release all resources.
-
-#### `event: 'stateChange'`
-
-Emitted with `state` when the Bluetooth state changes.
-
-#### `event: 'discover'`
-
-Emitted when a peripheral is discovered during scanning. The listener receives a `peripheral` object.
-
-The `peripheral` object has `id`, `name`, `rssi`, and `serviceData` properties. `rssi` is the signal strength reported with the most recent advertisement packet. `serviceData` is an object mapping service UUIDs to `Uint8Array` data, or `null` if no service data was advertised in this packet.
-
-The same `peripheral` reference is reused across discover events for a given `id`; its `rssi` and `serviceData` are updated in place to reflect the latest packet.
-
-#### `event: 'connect'`
-
-Emitted with `peripheral` when a connection to a peripheral is established. The `peripheral` is a `Peripheral` instance.
-
-#### `event: 'disconnect'`
-
-Emitted with `peripheral` and `error` when a peripheral disconnects.
-
-#### `event: 'connectFail'`
-
-Emitted with `id` and `error` when a connection attempt fails.
-
-#### `const manager = new PeripheralManager()`
-
-Create a new BLE peripheral manager. Advertises services and handles read/write requests from centrals.
-
-#### `manager.state`
-
-The current Bluetooth state. One of `'unknown'`, `'resetting'`, `'unsupported'`, `'unauthorized'`, `'poweredOff'`, or `'poweredOn'`.
-
-#### `manager.addService(service)`
-
-Add a `service` to the manager. The service and its characteristics will be registered with the system.
-
-#### `manager.startAdvertising([options])`
-
-Start advertising.
-
-Options include:
-
-```js
-options = {
-  name: null,
-  serviceUUIDs: null,
-  serviceData: null
-}
-```
-
-`serviceData` is an object mapping service UUID strings to `Uint8Array` values. When set, the advertised data will include the given service data, which can be read by scanning centrals without connecting.
-
-#### `manager.stopAdvertising()`
-
-Stop advertising.
-
-#### `manager.respondToRequest(request, result[, data])`
-
-Respond to a read or write `request` with the given ATT `result` code. Optionally include `data` for read responses.
-
-#### `manager.updateValue(characteristic, data)`
-
-Update the value of a `characteristic` and notify subscribed centrals. Returns `true` if the update was sent successfully.
-
-#### `manager.publishChannel([options])`
-
-Publish an L2CAP channel.
-
-Options include:
-
-```js
-options = {
-  encrypted: false
-}
-```
-
-#### `manager.unpublishChannel(psm)`
-
-Unpublish a previously published L2CAP channel identified by `psm`.
-
-#### `manager.destroy()`
-
-Destroy the manager and release all resources.
-
-#### `event: 'stateChange'`
-
-Emitted with `state` when the Bluetooth state changes.
-
-#### `event: 'serviceAdd'`
-
-Emitted with `uuid` and `error` when a service has been added.
-
-#### `event: 'error'`
-
-Emitted with an `Error` when an operation fails asynchronously, such as advertising failing to start after `startAdvertising()`. Use `err.code` to distinguish the kind of error, e.g. `'ADVERTISE_FAILED'`.
-
-#### `event: 'readRequest'`
-
-Emitted with `request` when a central reads a characteristic. The `request` object has `characteristicUuid` and `offset` properties.
-
-#### `event: 'writeRequest'`
-
-Emitted with `requests` when a central writes to a characteristic. Each request has `characteristicUuid`, `data`, and `offset` properties.
-
-#### `event: 'subscribe'`
-
-Emitted with `centralHandle` and `characteristicUuid` when a central subscribes to notifications.
-
-#### `event: 'unsubscribe'`
-
-Emitted with `centralHandle` and `characteristicUuid` when a central unsubscribes from notifications.
-
-#### `event: 'readyToUpdate'`
-
-Emitted when the manager is ready to send another update after a previous `updateValue()` returned `false`.
-
-#### `event: 'channelPublish'`
-
-Emitted with `psm` and `error` when an L2CAP channel is published.
-
-#### `event: 'channelOpen'`
-
-Emitted with `channel` and `error` when an L2CAP channel is opened. The `channel` is an `L2CAPChannel` instance.
-
-#### `const peripheral = new Peripheral(peripheralHandle[, options])`
-
-Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` — not typically constructed directly.
-
-#### `peripheral.id`
-
-The unique identifier of the peripheral.
-
-#### `peripheral.name`
-
-The advertised name of the peripheral.
-
-#### `peripheral.serviceData`
-
-A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral before connect or `null`. Service data is only in advertisement packets, so this value never updates after connect.
-
-#### `peripheral.discoverServices([serviceUUIDs])`
-
-Discover services on the peripheral. If `serviceUUIDs` is provided, only those services will be discovered.
-
-#### `peripheral.discoverCharacteristics(service[, characteristicUUIDs])`
-
-Discover characteristics for a `service`. If `characteristicUUIDs` is provided, only those characteristics will be discovered.
-
-#### `peripheral.read(characteristic)`
-
-Read the value of a `characteristic`.
-
-#### `peripheral.write(characteristic, data[, withResponse])`
-
-Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will be confirmed by the peripheral.
-
-#### `peripheral.subscribe(characteristic)`
-
-Subscribe to notifications for a `characteristic`.
-
-#### `peripheral.unsubscribe(characteristic)`
-
-Unsubscribe from notifications for a `characteristic`.
-
-#### `peripheral.openL2CAPChannel(psm)`
-
-Open an L2CAP channel to the peripheral using the given `psm`.
-
-#### `peripheral.destroy()`
-
-Destroy the peripheral instance and release resources.
-
-#### `event: 'servicesDiscover'`
-
-Emitted with `services` and `error` when services are discovered.
-
-#### `event: 'characteristicsDiscover'`
-
-Emitted with `service`, `characteristics`, and `error` when characteristics are discovered.
-
-#### `event: 'read'`
-
-Emitted with `characteristic`, `data`, and `error` when a characteristic value is read.
-
-#### `event: 'write'`
-
-Emitted with `characteristic` and `error` when a characteristic write completes.
-
-#### `event: 'notify'`
-
-Emitted with `characteristic`, `data`, and `error` when a notification is received.
-
-#### `event: 'notifyState'`
-
-Emitted with `characteristic`, `isNotifying`, and `error` when the notification state changes.
-
-#### `event: 'channelOpen'`
-
-Emitted with `channel` and `error` when an L2CAP channel is opened.
-
-#### `const service = new Service(uuid[, characteristics][, options])`
-
-Create a GATT service definition.
-
-Options include:
-
-```js
-options = {
-  primary: true
-}
-```
-
-#### `service.uuid`
-
-The UUID of the service.
-
-#### `service.characteristics`
-
-The list of characteristics belonging to the service.
-
-#### `service.primary`
-
-Whether the service is a primary service.
-
-#### `const characteristic = new Characteristic(uuid[, options])`
-
-Create a GATT characteristic definition.
-
-Options include:
-
-```js
-options = {
-  read: false,
-  write: false,
-  writeWithoutResponse: false,
-  notify: false,
-  indicate: false,
-  permissions: null,
-  value: null
-}
-```
-
-Setting `read`, `write`, `writeWithoutResponse`, `notify`, or `indicate` to `true` enables the corresponding characteristic property.
-
-#### `characteristic.uuid`
-
-The UUID of the characteristic.
-
-#### `characteristic.properties`
-
-The bitmask of characteristic properties.
-
-#### `characteristic.permissions`
-
-The bitmask of characteristic permissions, or `null` if permissions are inferred from properties.
-
-#### `characteristic.value`
-
-The static value of the characteristic, or `null`.
-
-#### `const channel = new L2CAPChannel(channelHandle)`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/channel.d.ts#L7)
 
 An L2CAP channel, obtained through the `'channelOpen'` event on `PeripheralManager` or `Peripheral`. Extends `Duplex` from `bare-stream` and supports standard readable and writable stream operations.
 
-#### `channel.psm`
+**Parameters**
 
-The Protocol/Service Multiplexer number of the channel.
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `channelHandle` | `ArrayBuffer` | — | The native channel handle backing the stream; supplied internally when a channel opens, not usually passed directly. |
 
-#### `channel.peer`
+#### `peer: string | null`
 
-The peer identifier of the channel.
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/channel.d.ts#L13)
 
-### Constants
+The UUID of the remote peer if available
 
-#### `PeripheralManager.STATE_UNKNOWN`
+#### `psm: number`
 
-#### `PeripheralManager.STATE_POWERED_ON`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/channel.d.ts#L10)
 
-#### `PeripheralManager.STATE_POWERED_OFF`
+The L2CAP PSM (Protocol/Service Multiplexer) for this channel
 
-#### `PeripheralManager.STATE_RESETTING`
+### Service
 
-#### `PeripheralManager.STATE_UNAUTHORIZED`
+#### `new Service(uuid: string, characteristics?: Characteristic[], opts?: ServiceOptions)`
 
-#### `PeripheralManager.STATE_UNSUPPORTED`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/service.d.ts#L7)
 
-Bluetooth state constants.
+Create a GATT service definition.
 
-#### `PeripheralManager.PROPERTY_READ`
+**Parameters**
 
-#### `PeripheralManager.PROPERTY_WRITE_WITHOUT_RESPONSE`
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `uuid` | `string` | — | The service's UUID. |
+| `characteristics?` | `Characteristic[]` | — | The characteristics belonging to the service. |
+| `opts?` | `ServiceOptions` | — | Options; set `primary: true` to mark this a primary service. |
 
-#### `PeripheralManager.PROPERTY_WRITE`
+#### `characteristics: Characteristic[]`
 
-#### `PeripheralManager.PROPERTY_NOTIFY`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/service.d.ts#L13)
 
-#### `PeripheralManager.PROPERTY_INDICATE`
+The characteristics belonging to this service
 
-Characteristic property flags.
+#### `primary: boolean`
 
-#### `PeripheralManager.PERMISSION_READABLE`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/service.d.ts#L16)
 
-#### `PeripheralManager.PERMISSION_WRITEABLE`
+Whether this is a primary service
 
-#### `PeripheralManager.PERMISSION_READ_ENCRYPTED`
+#### `Service.uuid: string`
 
-#### `PeripheralManager.PERMISSION_WRITE_ENCRYPTED`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/service.d.ts#L10)
+
+The service UUID
+
+### Characteristic
+
+#### `new Characteristic(uuid: string, opts?: CharacteristicOptions)`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L5)
+
+Create a GATT characteristic definition.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `uuid` | `string` | — | The characteristic's UUID. |
+| `opts?` | `CharacteristicOptions` | — | Options selecting the characteristic `properties` (`read`, `write`, `writeWithoutResponse`, `notify`, `indicate`) and its optional `permissions` and initial `value`. |
+
+#### `Characteristic.PROPERTY_INDICATE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L24)
+
+#### `Characteristic.PROPERTY_NOTIFY: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L23)
+
+#### `Characteristic.PROPERTY_READ: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L20)
+
+#### `Characteristic.PROPERTY_WRITE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L22)
+
+#### `Characteristic.PROPERTY_WRITE_WITHOUT_RESPONSE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L21)
+
+#### `permissions: number | null`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L14)
+
+Bitmask of characteristic permissions, if set explicitly
+
+#### `properties: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L11)
+
+Bitmask of characteristic properties
+
+#### `Characteristic.uuid: string`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L8)
+
+The characteristic UUID
+
+#### `value: Uint8Array | null`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L17)
+
+The current value, if set
+
+### PeripheralManager
+
+#### `new PeripheralManager()`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L48)
+
+Create a new BLE peripheral manager. Advertises services and handles read/write requests from centrals.
+
+#### `addService(service: Service): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L53)
+
+Add a `service` to the manager. The service and its characteristics will be registered with the system.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `service` | `Service` | — | The `Service` to register with the system, along with its characteristics. |
+
+#### `PeripheralManager.destroy(): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L60)
+
+Destroy the instance and release all resources.
+
+#### `PeripheralManager.ATT_INSUFFICIENT_RESOURCES: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L88)
+
+#### `PeripheralManager.ATT_INVALID_HANDLE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L85)
+
+#### `PeripheralManager.ATT_READ_NOT_PERMITTED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L86)
+
+#### `PeripheralManager.ATT_SUCCESS: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L84)
+
+#### `PeripheralManager.ATT_UNLIKELY_ERROR: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L89)
+
+ATT result codes for use with `manager.respondToRequest()`.
+
+#### `PeripheralManager.ATT_WRITE_NOT_PERMITTED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L87)
+
+#### `PeripheralManager.PERMISSION_READ_ENCRYPTED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L80)
+
+#### `PeripheralManager.PERMISSION_READABLE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L78)
+
+#### `PeripheralManager.PERMISSION_WRITE_ENCRYPTED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L81)
 
 Characteristic permission flags.
 
-#### `PeripheralManager.ATT_SUCCESS`
+#### `PeripheralManager.PERMISSION_WRITEABLE: number`
 
-#### `PeripheralManager.ATT_INVALID_HANDLE`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L79)
 
-#### `PeripheralManager.ATT_READ_NOT_PERMITTED`
+#### `PeripheralManager.PROPERTY_INDICATE: number`
 
-#### `PeripheralManager.ATT_WRITE_NOT_PERMITTED`
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L75)
 
-#### `PeripheralManager.ATT_INSUFFICIENT_RESOURCES`
+Characteristic property flags.
 
-#### `PeripheralManager.ATT_UNLIKELY_ERROR`
+#### `PeripheralManager.PROPERTY_NOTIFY: number`
 
-ATT result codes for use with `manager.respondToRequest()`.
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L74)
+
+#### `PeripheralManager.PROPERTY_READ: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L71)
+
+#### `PeripheralManager.PROPERTY_WRITE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L73)
+
+#### `PeripheralManager.PROPERTY_WRITE_WITHOUT_RESPONSE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L72)
+
+#### `PeripheralManager.STATE_POWERED_OFF: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L65)
+
+#### `PeripheralManager.STATE_POWERED_ON: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L64)
+
+#### `PeripheralManager.STATE_RESETTING: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L66)
+
+#### `PeripheralManager.STATE_UNAUTHORIZED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L67)
+
+#### `PeripheralManager.STATE_UNKNOWN: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L63)
+
+#### `PeripheralManager.STATE_UNSUPPORTED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L68)
+
+Bluetooth state constants.
+
+#### `publishChannel(opts?: ChannelOptions): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L58)
+
+Publish an L2CAP channel.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opts?` | `ChannelOptions` | — | Options for the L2CAP channel to publish. |
+
+#### `respondToRequest(request: ReadRequest, result: number, data?: Uint8Array | null): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L56)
+
+Respond to a read or write `request` with the given ATT `result` code. Optionally include `data` for read responses.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `request` | `ReadRequest` | — | The read or write request to respond to, as delivered by the `'readRequest'`/`'writeRequest'` event. |
+| `result` | `number` | — | The ATT result code, e.g. `PeripheralManager.ATT_SUCCESS`. |
+| `data?` | `Uint8Array \| null` | — | The value to return for a read request; omit for write responses. |
+
+#### `startAdvertising(opts?: AdvertisingOptions): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L54)
+
+Start advertising.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opts?` | `AdvertisingOptions` | — | Advertising options such as the local `name` and the `serviceUUIDs` to advertise. |
+
+#### `PeripheralManager.state: BluetoothState`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L51)
+
+The current Bluetooth adapter state
+
+#### `stopAdvertising(): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L55)
+
+Stop advertising.
+
+#### `unpublishChannel(psm: number): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L59)
+
+Unpublish a previously published L2CAP channel identified by `psm`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `psm` | `number` | — | The PSM of the channel to unpublish, as assigned when it was published. |
+
+#### `updateValue(characteristic: Characteristic, data: Uint8Array): boolean`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L57)
+
+Update the value of a `characteristic` and notify subscribed centrals.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `characteristic` | `Characteristic` | — | The characteristic whose value changed. |
+| `data` | `Uint8Array` | — | The new value to send to subscribed centrals. |
+
+**Returns** `boolean` — Whether the notification was sent to subscribed centrals successfully.
+
+### Central
+
+#### `new Central()`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L27)
+
+Create a new BLE central manager. The central scans for and connects to peripherals.
+
+#### `Central.STATE_POWERED_OFF: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L41)
+
+#### `Central.STATE_POWERED_ON: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L40)
+
+#### `Central.STATE_RESETTING: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L42)
+
+#### `Central.STATE_UNAUTHORIZED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L43)
+
+#### `Central.STATE_UNKNOWN: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L39)
+
+#### `Central.STATE_UNSUPPORTED: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L44)
+
+#### `connect(peripheral: DiscoveredPeripheral): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L34)
+
+Connect to a discovered `peripheral`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `peripheral` | `DiscoveredPeripheral` | — | A discovered peripheral to connect to. |
+
+#### `Central.destroy(): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L36)
+
+Destroy the instance and release all resources.
+
+#### `disconnect(peripheral: Peripheral): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L35)
+
+Disconnect from a connected `peripheral`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `peripheral` | `Peripheral` | — | The connected peripheral to disconnect from. |
+
+#### `startScan(serviceUUIDs?: string[]): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L32)
+
+Start scanning for peripherals. If `serviceUUIDs` is provided, only peripherals advertising those services will be discovered.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `serviceUUIDs?` | `string[]` | — | The service UUIDs to filter advertisements by; omit to discover all peripherals. |
+
+#### `Central.state: BluetoothState`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L30)
+
+The current Bluetooth adapter state
+
+#### `stopScan(): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L33)
+
+Stop scanning for peripherals.
+
+### Peripheral
+
+#### `new Peripheral(peripheralHandle: ArrayBuffer, opts?: PeripheralOptions)`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L30)
+
+Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` — not typically constructed directly.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `peripheralHandle` | `ArrayBuffer` | — | The native peripheral handle; supplied internally when Central emits `'connect'`, not usually passed directly. |
+| `opts?` | `PeripheralOptions` | — | Options carrying the peripheral's advertised metadata. |
+
+#### `Peripheral.destroy(): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L48)
+
+Destroy the instance and release all resources.
+
+#### `discoverCharacteristics(service: Service, characteristicUUIDs?: string[]): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L42)
+
+Discover characteristics for a `service`. If `characteristicUUIDs` is provided, only those characteristics will be discovered.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `service` | `Service` | — | The service to discover characteristics on. |
+| `characteristicUUIDs?` | `string[]` | — | The characteristic UUIDs to discover; omit to discover all characteristics of the service. |
+
+#### `discoverServices(serviceUUIDs?: string[]): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L41)
+
+Discover services on the peripheral. If `serviceUUIDs` is provided, only those services will be discovered.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `serviceUUIDs?` | `string[]` | — | The service UUIDs to discover; omit to discover all services. |
+
+#### `id: string`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L33)
+
+The peripheral UUID identifier
+
+#### `name: string | null`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L36)
+
+The peripheral name, if available
+
+#### `openL2CAPChannel(psm: number): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L47)
+
+Open an L2CAP channel to the peripheral using the given `psm`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `psm` | `number` | — | The PSM (Protocol/Service Multiplexer) of the channel to open. |
+
+#### `Peripheral.PROPERTY_INDICATE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L55)
+
+#### `Peripheral.PROPERTY_NOTIFY: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L54)
+
+#### `Peripheral.PROPERTY_READ: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L51)
+
+#### `Peripheral.PROPERTY_WRITE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L53)
+
+#### `Peripheral.PROPERTY_WRITE_WITHOUT_RESPONSE: number`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L52)
+
+#### `read(characteristic: Characteristic): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L43)
+
+Read the value of a `characteristic`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `characteristic` | `Characteristic` | — | The characteristic to read. |
+
+#### `serviceData: { [uuid: string]: Uint8Array } | null`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L39)
+
+Service data captured from the most recent advertisement seen before connect, or null
+
+#### `subscribe(characteristic: Characteristic): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L45)
+
+Subscribe to notifications for a `characteristic`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `characteristic` | `Characteristic` | — | The characteristic to start receiving notifications for. |
+
+#### `unsubscribe(characteristic: Characteristic): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L46)
+
+Unsubscribe from notifications for a `characteristic`.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `characteristic` | `Characteristic` | — | The characteristic to stop receiving notifications for. |
+
+#### `write(characteristic: Characteristic, data: Uint8Array, withResponse?: boolean): void`
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L44)
+
+Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will be confirmed by the peripheral.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `characteristic` | `Characteristic` | — | The characteristic to write to. |
+| `data` | `Uint8Array` | — | The bytes to write. |
+| `withResponse?` | `boolean` | — | Whether the peripheral confirms the write (default `true`). |
+
+### Types
+
+#### `ServiceOptions`
+
+```ts
+interface ServiceOptions {
+  primary?: boolean
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/service.d.ts#L19)
+
+#### `CharacteristicOptions`
+
+```ts
+interface CharacteristicOptions {
+  read?: boolean
+  write?: boolean
+  writeWithoutResponse?: boolean
+  notify?: boolean
+  indicate?: boolean
+  permissions?: number
+  value?: Uint8Array | null
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/characteristic.d.ts#L27)
+
+#### `BluetoothState`
+
+```ts
+type BluetoothState = 'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L7)
+
+#### `AdvertisingOptions`
+
+```ts
+interface AdvertisingOptions {
+  name?: string
+  serviceUUIDs?: string[]
+  serviceData?: { [uuid: string]: Uint8Array }
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L10)
+
+#### `ChannelOptions`
+
+```ts
+interface ChannelOptions {
+  encrypted?: boolean
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L16)
+
+#### `ReadRequest`
+
+```ts
+interface ReadRequest {
+  characteristicUuid: string
+  offset: number
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L20)
+
+#### `WriteRequest`
+
+```ts
+interface WriteRequest {
+  characteristicUuid: string
+  data: Uint8Array
+  offset: number
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L25)
+
+#### `PeripheralManagerEventMap`
+
+```ts
+interface PeripheralManagerEventMap extends EventMap {
+  stateChange: [state: BluetoothState]
+  error: [error: BluetoothError]
+  serviceAdd: [uuid: string]
+  channelPublish: [psm: number]
+  channelOpen: [channel: L2CAPChannel]
+  readRequest: [request: ReadRequest]
+  writeRequest: [requests: WriteRequest[]]
+  subscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
+  unsubscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
+  readyToUpdate: []
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L31)
+
+#### `DiscoveredPeripheral`
+
+```ts
+interface DiscoveredPeripheral {
+  id: string
+  name: string | null
+  rssi: number
+  serviceData: { [uuid: string]: Uint8Array } | null
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L8)
+
+#### `CentralEventMap`
+
+```ts
+interface CentralEventMap extends EventMap {
+  stateChange: [state: BluetoothState]
+  error: [error: BluetoothError]
+  discover: [peripheral: DiscoveredPeripheral]
+  connect: [peripheral: Peripheral]
+  disconnect: [peripheral: Peripheral | null]
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/central.d.ts#L15)
+
+#### `PeripheralOptions`
+
+```ts
+interface PeripheralOptions {
+  central?: Central
+  id?: string
+  name?: string
+  serviceData?: { [uuid: string]: Uint8Array } | null
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L8)
+
+#### `PeripheralEventMap`
+
+```ts
+interface PeripheralEventMap extends EventMap {
+  error: [error: BluetoothError]
+  servicesDiscover: [services: Service[]]
+  characteristicsDiscover: [service: Service | null, characteristics: Characteristic[]]
+  read: [characteristic: Characteristic | null, data: Uint8Array | null]
+  write: [characteristic: Characteristic | null]
+  notify: [characteristic: Characteristic | null, data: Uint8Array | null]
+  notifyState: [characteristic: Characteristic | null, isNotifying: boolean]
+  channelOpen: [channel: L2CAPChannel]
+}
+```
+
+[source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L15)
+<!-- bare-refgen:api end -->
 
 ## License
 
