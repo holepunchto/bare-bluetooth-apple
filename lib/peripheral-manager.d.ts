@@ -5,7 +5,12 @@ import L2CAPChannel from './channel'
 import BluetoothError from './errors'
 
 export type BluetoothState =
-  'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
+  | 'unknown'
+  | 'resetting'
+  | 'unsupported'
+  | 'unauthorized'
+  | 'poweredOff'
+  | 'poweredOn'
 
 export interface AdvertisingOptions {
   /** The name of the peripheral, if available. */

@@ -45,6 +45,7 @@ manager.on('writeRequest', (requests) => {
 ```
 
 <!-- bare-refgen:api start -->
+
 ## API
 
 ### L2CAPChannel
@@ -57,9 +58,9 @@ An L2CAP channel, obtained through the `'channelOpen'` event on `PeripheralManag
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `channelHandle` | `ArrayBuffer` | — | The native channel handle backing the stream; supplied internally when a channel opens, not usually passed directly. |
+| Parameter       | Type          | Default | Description                                                                                                          |
+| --------------- | ------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `channelHandle` | `ArrayBuffer` | —       | The native channel handle backing the stream; supplied internally when a channel opens, not usually passed directly. |
 
 #### `peer: string | null`
 
@@ -83,11 +84,11 @@ Create a GATT service definition.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `uuid` | `string` | — | The service's UUID. |
-| `characteristics?` | `Characteristic[]` | — | The characteristics belonging to the service. |
-| `opts?` | `ServiceOptions` | — | Options; set `primary: true` to mark this a primary service. |
+| Parameter          | Type               | Default | Description                                                  |
+| ------------------ | ------------------ | ------- | ------------------------------------------------------------ |
+| `uuid`             | `string`           | —       | The service's UUID.                                          |
+| `characteristics?` | `Characteristic[]` | —       | The characteristics belonging to the service.                |
+| `opts?`            | `ServiceOptions`   | —       | Options; set `primary: true` to mark this a primary service. |
 
 #### `characteristics: Characteristic[]`
 
@@ -117,10 +118,10 @@ Create a GATT characteristic definition.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `uuid` | `string` | — | The characteristic's UUID. |
-| `opts?` | `CharacteristicOptions` | — | Options selecting the characteristic `properties` (`read`, `write`, `writeWithoutResponse`, `notify`, `indicate`) and its optional `permissions` and initial `value`. |
+| Parameter | Type                    | Default | Description                                                                                                                                                           |
+| --------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uuid`    | `string`                | —       | The characteristic's UUID.                                                                                                                                            |
+| `opts?`   | `CharacteristicOptions` | —       | Options selecting the characteristic `properties` (`read`, `write`, `writeWithoutResponse`, `notify`, `indicate`) and its optional `permissions` and initial `value`. |
 
 #### `Characteristic.PROPERTY_INDICATE: number`
 
@@ -182,9 +183,9 @@ Add a `service` to the manager. The service and its characteristics will be regi
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `service` | `Service` | — | The `Service` to register with the system, along with its characteristics. |
+| Parameter | Type      | Default | Description                                                                |
+| --------- | --------- | ------- | -------------------------------------------------------------------------- |
+| `service` | `Service` | —       | The `Service` to register with the system, along with its characteristics. |
 
 #### `PeripheralManager.destroy(): void`
 
@@ -292,9 +293,9 @@ Publish an L2CAP channel.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `opts?` | `ChannelOptions` | — | Options for the L2CAP channel to publish. |
+| Parameter | Type             | Default | Description                               |
+| --------- | ---------------- | ------- | ----------------------------------------- |
+| `opts?`   | `ChannelOptions` | —       | Options for the L2CAP channel to publish. |
 
 #### `respondToRequest(request: ReadRequest, result: number, data?: Uint8Array | null): void`
 
@@ -304,11 +305,11 @@ Respond to a read or write `request` with the given ATT `result` code. Optionall
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `request` | `ReadRequest` | — | The read or write request to respond to, as delivered by the `'readRequest'`/`'writeRequest'` event. |
-| `result` | `number` | — | The ATT result code, e.g. `PeripheralManager.ATT_SUCCESS`. |
-| `data?` | `Uint8Array \| null` | — | The value to return for a read request; omit for write responses. |
+| Parameter | Type                 | Default | Description                                                                                          |
+| --------- | -------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `request` | `ReadRequest`        | —       | The read or write request to respond to, as delivered by the `'readRequest'`/`'writeRequest'` event. |
+| `result`  | `number`             | —       | The ATT result code, e.g. `PeripheralManager.ATT_SUCCESS`.                                           |
+| `data?`   | `Uint8Array \| null` | —       | The value to return for a read request; omit for write responses.                                    |
 
 #### `startAdvertising(opts?: AdvertisingOptions): void`
 
@@ -318,9 +319,9 @@ Start advertising.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `opts?` | `AdvertisingOptions` | — | Advertising options such as the local `name` and the `serviceUUIDs` to advertise. |
+| Parameter | Type                 | Default | Description                                                                       |
+| --------- | -------------------- | ------- | --------------------------------------------------------------------------------- |
+| `opts?`   | `AdvertisingOptions` | —       | Advertising options such as the local `name` and the `serviceUUIDs` to advertise. |
 
 #### `PeripheralManager.state: BluetoothState`
 
@@ -342,9 +343,9 @@ Unpublish a previously published L2CAP channel identified by `psm`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `psm` | `number` | — | The PSM of the channel to unpublish, as assigned when it was published. |
+| Parameter | Type     | Default | Description                                                             |
+| --------- | -------- | ------- | ----------------------------------------------------------------------- |
+| `psm`     | `number` | —       | The PSM of the channel to unpublish, as assigned when it was published. |
 
 #### `updateValue(characteristic: Characteristic, data: Uint8Array): boolean`
 
@@ -354,10 +355,10 @@ Update the value of a `characteristic` and notify subscribed centrals.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `characteristic` | `Characteristic` | — | The characteristic whose value changed. |
-| `data` | `Uint8Array` | — | The new value to send to subscribed centrals. |
+| Parameter        | Type             | Default | Description                                   |
+| ---------------- | ---------------- | ------- | --------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic whose value changed.       |
+| `data`           | `Uint8Array`     | —       | The new value to send to subscribed centrals. |
 
 **Returns** `boolean` — Whether the notification was sent to subscribed centrals successfully.
 
@@ -401,9 +402,9 @@ Connect to a discovered `peripheral`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `peripheral` | `DiscoveredPeripheral` | — | A discovered peripheral to connect to. |
+| Parameter    | Type                   | Default | Description                            |
+| ------------ | ---------------------- | ------- | -------------------------------------- |
+| `peripheral` | `DiscoveredPeripheral` | —       | A discovered peripheral to connect to. |
 
 #### `Central.destroy(): void`
 
@@ -419,9 +420,9 @@ Disconnect from a connected `peripheral`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `peripheral` | `Peripheral` | — | The connected peripheral to disconnect from. |
+| Parameter    | Type         | Default | Description                                  |
+| ------------ | ------------ | ------- | -------------------------------------------- |
+| `peripheral` | `Peripheral` | —       | The connected peripheral to disconnect from. |
 
 #### `startScan(serviceUUIDs?: string[]): void`
 
@@ -431,9 +432,9 @@ Start scanning for peripherals. If `serviceUUIDs` is provided, only peripherals 
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `serviceUUIDs?` | `string[]` | — | The service UUIDs to filter advertisements by; omit to discover all peripherals. |
+| Parameter       | Type       | Default | Description                                                                      |
+| --------------- | ---------- | ------- | -------------------------------------------------------------------------------- |
+| `serviceUUIDs?` | `string[]` | —       | The service UUIDs to filter advertisements by; omit to discover all peripherals. |
 
 #### `Central.state: BluetoothState`
 
@@ -457,10 +458,10 @@ Represents a connected BLE peripheral. Obtained through the `'connect'` event on
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `peripheralHandle` | `ArrayBuffer` | — | The native peripheral handle; supplied internally when Central emits `'connect'`, not usually passed directly. |
-| `opts?` | `PeripheralOptions` | — | Options carrying the peripheral's advertised metadata. |
+| Parameter          | Type                | Default | Description                                                                                                    |
+| ------------------ | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `peripheralHandle` | `ArrayBuffer`       | —       | The native peripheral handle; supplied internally when Central emits `'connect'`, not usually passed directly. |
+| `opts?`            | `PeripheralOptions` | —       | Options carrying the peripheral's advertised metadata.                                                         |
 
 #### `Peripheral.destroy(): void`
 
@@ -476,10 +477,10 @@ Discover characteristics for a `service`. If `characteristicUUIDs` is provided, 
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `service` | `Service` | — | The service to discover characteristics on. |
-| `characteristicUUIDs?` | `string[]` | — | The characteristic UUIDs to discover; omit to discover all characteristics of the service. |
+| Parameter              | Type       | Default | Description                                                                                |
+| ---------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------ |
+| `service`              | `Service`  | —       | The service to discover characteristics on.                                                |
+| `characteristicUUIDs?` | `string[]` | —       | The characteristic UUIDs to discover; omit to discover all characteristics of the service. |
 
 #### `discoverServices(serviceUUIDs?: string[]): void`
 
@@ -489,9 +490,9 @@ Discover services on the peripheral. If `serviceUUIDs` is provided, only those s
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `serviceUUIDs?` | `string[]` | — | The service UUIDs to discover; omit to discover all services. |
+| Parameter       | Type       | Default | Description                                                   |
+| --------------- | ---------- | ------- | ------------------------------------------------------------- |
+| `serviceUUIDs?` | `string[]` | —       | The service UUIDs to discover; omit to discover all services. |
 
 #### `id: string`
 
@@ -513,9 +514,9 @@ Open an L2CAP channel to the peripheral using the given `psm`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `psm` | `number` | — | The PSM (Protocol/Service Multiplexer) of the channel to open. |
+| Parameter | Type     | Default | Description                                                    |
+| --------- | -------- | ------- | -------------------------------------------------------------- |
+| `psm`     | `number` | —       | The PSM (Protocol/Service Multiplexer) of the channel to open. |
 
 #### `Peripheral.PROPERTY_INDICATE: number`
 
@@ -545,9 +546,9 @@ Read the value of a `characteristic`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `characteristic` | `Characteristic` | — | The characteristic to read. |
+| Parameter        | Type             | Default | Description                 |
+| ---------------- | ---------------- | ------- | --------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to read. |
 
 #### `serviceData: { [uuid: string]: Uint8Array } | null`
 
@@ -563,9 +564,9 @@ Subscribe to notifications for a `characteristic`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `characteristic` | `Characteristic` | — | The characteristic to start receiving notifications for. |
+| Parameter        | Type             | Default | Description                                              |
+| ---------------- | ---------------- | ------- | -------------------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to start receiving notifications for. |
 
 #### `unsubscribe(characteristic: Characteristic): void`
 
@@ -575,9 +576,9 @@ Unsubscribe from notifications for a `characteristic`.
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `characteristic` | `Characteristic` | — | The characteristic to stop receiving notifications for. |
+| Parameter        | Type             | Default | Description                                             |
+| ---------------- | ---------------- | ------- | ------------------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to stop receiving notifications for. |
 
 #### `write(characteristic: Characteristic, data: Uint8Array, withResponse?: boolean): void`
 
@@ -587,11 +588,11 @@ Write `data` to a `characteristic`. If `withResponse` is `true` (the default), t
 
 **Parameters**
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `characteristic` | `Characteristic` | — | The characteristic to write to. |
-| `data` | `Uint8Array` | — | The bytes to write. |
-| `withResponse?` | `boolean` | — | Whether the peripheral confirms the write (default `true`). |
+| Parameter        | Type             | Default | Description                                                 |
+| ---------------- | ---------------- | ------- | ----------------------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to write to.                             |
+| `data`           | `Uint8Array`     | —       | The bytes to write.                                         |
+| `withResponse?`  | `boolean`        | —       | Whether the peripheral confirms the write (default `true`). |
 
 ### Types
 
@@ -624,7 +625,13 @@ interface CharacteristicOptions {
 #### `BluetoothState`
 
 ```ts
-type BluetoothState = 'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
+type BluetoothState =
+  | 'unknown'
+  | 'resetting'
+  | 'unsupported'
+  | 'unauthorized'
+  | 'poweredOff'
+  | 'poweredOn'
 ```
 
 [source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L7)
@@ -749,6 +756,7 @@ interface PeripheralEventMap extends EventMap {
 ```
 
 [source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral.d.ts#L15)
+
 <!-- bare-refgen:api end -->
 
 ## License
