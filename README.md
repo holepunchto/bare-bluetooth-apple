@@ -626,12 +626,7 @@ interface CharacteristicOptions {
 
 ```ts
 type BluetoothState =
-  | 'unknown'
-  | 'resetting'
-  | 'unsupported'
-  | 'unauthorized'
-  | 'poweredOff'
-  | 'poweredOn'
+  'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
 ```
 
 [source](https://github.com/holepunchto/bare-bluetooth-apple/blob/v0.3.4/lib/peripheral-manager.d.ts#L7)

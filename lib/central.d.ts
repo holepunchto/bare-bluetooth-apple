@@ -3,12 +3,7 @@ import Peripheral from './peripheral'
 import BluetoothError from './errors'
 
 export type BluetoothState =
-  | 'unknown'
-  | 'resetting'
-  | 'unsupported'
-  | 'unauthorized'
-  | 'poweredOff'
-  | 'poweredOn'
+  'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
 
 export interface DiscoveredPeripheral {
   /** The unique identifier of the peripheral. */
