@@ -54,9 +54,17 @@ Create a new BLE central manager. The central scans for and connects to peripher
 
 The current Bluetooth state. One of `'unknown'`, `'resetting'`, `'unsupported'`, `'unauthorized'`, `'poweredOff'`, or `'poweredOn'`.
 
-#### `central.startScan([serviceUUIDs])`
+#### `central.startScan([serviceUUIDs[, options]])`
 
 Start scanning for peripherals. If `serviceUUIDs` is provided, only peripherals advertising those services will be discovered.
+
+```js
+options = {
+  allowDuplicates: false
+}
+```
+
+By default a peripheral is reported once per scan. Set `allowDuplicates` to `true` to get a `discover` for every advertising packet instead, which is useful to track `rssi` but costs battery.
 
 #### `central.stopScan()`
 

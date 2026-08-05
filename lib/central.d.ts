@@ -29,7 +29,7 @@ export default class Central extends EventEmitter<CentralEventMap> {
   /** The current Bluetooth adapter state */
   readonly state: BluetoothState
 
-  startScan(serviceUUIDs?: string[]): void
+  startScan(serviceUUIDs?: string[], opts?: { allowDuplicates?: boolean }): void
   stopScan(): void
   connect(peripheral: DiscoveredPeripheral): void
   disconnect(peripheral: Peripheral): void
