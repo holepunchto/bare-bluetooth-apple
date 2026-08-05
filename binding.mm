@@ -2847,7 +2847,8 @@ bare_bluetooth_apple_central_start_scan(
   js_env_t *env,
   js_receiver_t,
   js_external_t<BareBluetoothAppleCentral> handle,
-  std::optional<js_array_t> uuids_array
+  std::optional<js_array_t> uuids_array,
+  std::optional<bool> allow_duplicates
 ) {
   @autoreleasepool {
     BareBluetoothAppleCentral *central;
@@ -2878,7 +2879,9 @@ bare_bluetooth_apple_central_start_scan(
       serviceUUIDs = uuids;
     }
 
-    NSDictionary *options = @{CBCentralManagerScanOptionAllowDuplicatesKey : @NO};
+    NSDictionary *options = @{
+      CBCentralManagerScanOptionAllowDuplicatesKey : @(allow_duplicates.value_or(false))
+    };
 
     [central->manager scanForPeripheralsWithServices:serviceUUIDs options:options];
   }

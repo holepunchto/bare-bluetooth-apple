@@ -80,6 +80,31 @@ test(
   }
 )
 
+test('allowDuplicates reports the same peripheral repeatedly', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  central.startScan(null, { allowDuplicates: true })
+
+  const repeated = await new Promise((resolve) => {
+    const seen = new Set()
+    const timeout = setTimeout(() => resolve(false), 5000)
+
+    central.on('discover', (peripheral) => {
+      if (seen.has(peripheral.id)) {
+        clearTimeout(timeout)
+        resolve(true)
+        return
+      }
+      seen.add(peripheral.id)
+    })
+  })
+
+  central.stopScan()
+
+  t.ok(repeated)
+})
+
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
   using central = new Central()
   await waitForPoweredOn(central)
