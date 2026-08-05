@@ -44,367 +44,536 @@ manager.on('writeRequest', (requests) => {
 })
 ```
 
+<!-- bare-refgen:api start -->
+
 ## API
 
-#### `const central = new Central()`
+### L2CAPChannel
 
-Create a new BLE central manager. The central scans for and connects to peripherals.
-
-#### `central.state`
-
-The current Bluetooth state. One of `'unknown'`, `'resetting'`, `'unsupported'`, `'unauthorized'`, `'poweredOff'`, or `'poweredOn'`.
-
-#### `central.startScan([serviceUUIDs[, options]])`
-
-Start scanning for peripherals. If `serviceUUIDs` is provided, only peripherals advertising those services will be discovered.
-
-```js
-options = {
-  allowDuplicates: false
-}
-```
-
-By default a peripheral is reported once per scan. Set `allowDuplicates` to `true` to get a `discover` for every advertising packet instead, which is useful to track `rssi` but costs battery.
-
-#### `central.stopScan()`
-
-Stop scanning for peripherals.
-
-#### `central.connect(peripheral)`
-
-Connect to a discovered `peripheral`.
-
-#### `central.disconnect(peripheral)`
-
-Disconnect from a connected `peripheral`.
-
-#### `central.destroy()`
-
-Destroy the central manager and release all resources.
-
-#### `event: 'stateChange'`
-
-Emitted with `state` when the Bluetooth state changes.
-
-#### `event: 'discover'`
-
-Emitted when a peripheral is discovered during scanning. The listener receives a `peripheral` object.
-
-The `peripheral` object has `id`, `name`, `rssi`, and `serviceData` properties. `rssi` is the signal strength reported with the most recent advertisement packet. `serviceData` is an object mapping service UUIDs to `Uint8Array` data, or `null` if no service data was advertised in this packet.
-
-The same `peripheral` reference is reused across discover events for a given `id`; its `rssi` and `serviceData` are updated in place to reflect the latest packet.
-
-#### `event: 'connect'`
-
-Emitted with `peripheral` when a connection to a peripheral is established. The `peripheral` is a `Peripheral` instance.
-
-#### `event: 'disconnect'`
-
-Emitted with `peripheral` and `error` when a peripheral disconnects.
-
-#### `event: 'connectFail'`
-
-Emitted with `id` and `error` when a connection attempt fails.
-
-#### `const manager = new PeripheralManager()`
-
-Create a new BLE peripheral manager. Advertises services and handles read/write requests from centrals.
-
-#### `manager.state`
-
-The current Bluetooth state. One of `'unknown'`, `'resetting'`, `'unsupported'`, `'unauthorized'`, `'poweredOff'`, or `'poweredOn'`.
-
-#### `manager.addService(service)`
-
-Add a `service` to the manager. The service and its characteristics will be registered with the system.
-
-#### `manager.startAdvertising([options])`
-
-Start advertising.
-
-Options include:
-
-```js
-options = {
-  name: null,
-  serviceUUIDs: null,
-  serviceData: null
-}
-```
-
-`serviceData` is an object mapping service UUID strings to `Uint8Array` values. When set, the advertised data will include the given service data, which can be read by scanning centrals without connecting.
-
-#### `manager.stopAdvertising()`
-
-Stop advertising.
-
-#### `manager.respondToRequest(request, result[, data])`
-
-Respond to a read or write `request` with the given ATT `result` code. Optionally include `data` for read responses.
-
-#### `manager.updateValue(characteristic, data)`
-
-Update the value of a `characteristic` and notify subscribed centrals. Returns `true` if the update was sent successfully.
-
-#### `manager.publishChannel([options])`
-
-Publish an L2CAP channel.
-
-Options include:
-
-```js
-options = {
-  encrypted: false
-}
-```
-
-#### `manager.unpublishChannel(psm)`
-
-Unpublish a previously published L2CAP channel identified by `psm`.
-
-#### `manager.destroy()`
-
-Destroy the manager and release all resources.
-
-#### `event: 'stateChange'`
-
-Emitted with `state` when the Bluetooth state changes.
-
-#### `event: 'serviceAdd'`
-
-Emitted with `uuid` and `error` when a service has been added.
-
-#### `event: 'error'`
-
-Emitted with an `Error` when an operation fails asynchronously, such as advertising failing to start after `startAdvertising()`. Use `err.code` to distinguish the kind of error, e.g. `'ADVERTISE_FAILED'`.
-
-#### `event: 'readRequest'`
-
-Emitted with `request` when a central reads a characteristic. The `request` object has `characteristicUuid` and `offset` properties.
-
-#### `event: 'writeRequest'`
-
-Emitted with `requests` when a central writes to a characteristic. Each request has `characteristicUuid`, `data`, and `offset` properties.
-
-#### `event: 'subscribe'`
-
-Emitted with `centralHandle` and `characteristicUuid` when a central subscribes to notifications.
-
-#### `event: 'unsubscribe'`
-
-Emitted with `centralHandle` and `characteristicUuid` when a central unsubscribes from notifications.
-
-#### `event: 'readyToUpdate'`
-
-Emitted when the manager is ready to send another update after a previous `updateValue()` returned `false`.
-
-#### `event: 'channelPublish'`
-
-Emitted with `psm` and `error` when an L2CAP channel is published.
-
-#### `event: 'channelOpen'`
-
-Emitted with `channel` and `error` when an L2CAP channel is opened. The `channel` is an `L2CAPChannel` instance.
-
-#### `const peripheral = new Peripheral(peripheralHandle[, options])`
-
-Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` — not typically constructed directly.
-
-#### `peripheral.id`
-
-The unique identifier of the peripheral.
-
-#### `peripheral.name`
-
-The advertised name of the peripheral.
-
-#### `peripheral.serviceData`
-
-A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral before connect or `null`. Service data is only in advertisement packets, so this value never updates after connect.
-
-#### `peripheral.discoverServices([serviceUUIDs])`
-
-Discover services on the peripheral. If `serviceUUIDs` is provided, only those services will be discovered.
-
-#### `peripheral.discoverCharacteristics(service[, characteristicUUIDs])`
-
-Discover characteristics for a `service`. If `characteristicUUIDs` is provided, only those characteristics will be discovered.
-
-#### `peripheral.read(characteristic)`
-
-Read the value of a `characteristic`.
-
-#### `peripheral.write(characteristic, data[, withResponse])`
-
-Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will be confirmed by the peripheral.
-
-#### `peripheral.subscribe(characteristic)`
-
-Subscribe to notifications for a `characteristic`.
-
-#### `peripheral.unsubscribe(characteristic)`
-
-Unsubscribe from notifications for a `characteristic`.
-
-#### `peripheral.openL2CAPChannel(psm)`
-
-Open an L2CAP channel to the peripheral using the given `psm`.
-
-#### `peripheral.destroy()`
-
-Destroy the peripheral instance and release resources.
-
-#### `event: 'servicesDiscover'`
-
-Emitted with `services` and `error` when services are discovered.
-
-#### `event: 'characteristicsDiscover'`
-
-Emitted with `service`, `characteristics`, and `error` when characteristics are discovered.
-
-#### `event: 'read'`
-
-Emitted with `characteristic`, `data`, and `error` when a characteristic value is read.
-
-#### `event: 'write'`
-
-Emitted with `characteristic` and `error` when a characteristic write completes.
-
-#### `event: 'notify'`
-
-Emitted with `characteristic`, `data`, and `error` when a notification is received.
-
-#### `event: 'notifyState'`
-
-Emitted with `characteristic`, `isNotifying`, and `error` when the notification state changes.
-
-#### `event: 'channelOpen'`
-
-Emitted with `channel` and `error` when an L2CAP channel is opened.
-
-#### `const service = new Service(uuid[, characteristics][, options])`
-
-Create a GATT service definition.
-
-Options include:
-
-```js
-options = {
-  primary: true
-}
-```
-
-#### `service.uuid`
-
-The UUID of the service.
-
-#### `service.characteristics`
-
-The list of characteristics belonging to the service.
-
-#### `service.primary`
-
-Whether the service is a primary service.
-
-#### `const characteristic = new Characteristic(uuid[, options])`
-
-Create a GATT characteristic definition.
-
-Options include:
-
-```js
-options = {
-  read: false,
-  write: false,
-  writeWithoutResponse: false,
-  notify: false,
-  indicate: false,
-  permissions: null,
-  value: null
-}
-```
-
-Setting `read`, `write`, `writeWithoutResponse`, `notify`, or `indicate` to `true` enables the corresponding characteristic property.
-
-#### `characteristic.uuid`
-
-The UUID of the characteristic.
-
-#### `characteristic.properties`
-
-The bitmask of characteristic properties.
-
-#### `characteristic.permissions`
-
-The bitmask of characteristic permissions, or `null` if permissions are inferred from properties.
-
-#### `characteristic.value`
-
-The static value of the characteristic, or `null`.
-
-#### `const channel = new L2CAPChannel(channelHandle)`
+#### `new L2CAPChannel(channelHandle: ArrayBuffer)`
 
 An L2CAP channel, obtained through the `'channelOpen'` event on `PeripheralManager` or `Peripheral`. Extends `Duplex` from `bare-stream` and supports standard readable and writable stream operations.
 
-#### `channel.psm`
+**Parameters**
 
-The Protocol/Service Multiplexer number of the channel.
+| Parameter       | Type          | Default | Description                                                                                                          |
+| --------------- | ------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `channelHandle` | `ArrayBuffer` | —       | The native channel handle backing the stream; supplied internally when a channel opens, not usually passed directly. |
 
-#### `channel.peer`
+#### `peer: string | null`
 
-The peer identifier of the channel.
+The UUID of the remote peer if available
 
-### Constants
+#### `psm: number`
 
-#### `PeripheralManager.STATE_UNKNOWN`
+The L2CAP PSM (Protocol/Service Multiplexer) for this channel
 
-#### `PeripheralManager.STATE_POWERED_ON`
+### Service
 
-#### `PeripheralManager.STATE_POWERED_OFF`
+#### `new Service(uuid: string, characteristics?: Characteristic[], opts?: ServiceOptions)`
 
-#### `PeripheralManager.STATE_RESETTING`
+Create a GATT service definition.
 
-#### `PeripheralManager.STATE_UNAUTHORIZED`
+**Parameters**
 
-#### `PeripheralManager.STATE_UNSUPPORTED`
+| Parameter          | Type               | Default | Description                                                  |
+| ------------------ | ------------------ | ------- | ------------------------------------------------------------ |
+| `uuid`             | `string`           | —       | The service's UUID.                                          |
+| `characteristics?` | `Characteristic[]` | —       | The characteristics belonging to the service.                |
+| `opts?`            | `ServiceOptions`   | —       | Options; set `primary: true` to mark this a primary service. |
 
-Bluetooth state constants.
+#### `characteristics: Characteristic[]`
 
-#### `PeripheralManager.PROPERTY_READ`
+The characteristics belonging to this service
 
-#### `PeripheralManager.PROPERTY_WRITE_WITHOUT_RESPONSE`
+#### `primary: boolean`
 
-#### `PeripheralManager.PROPERTY_WRITE`
+Whether this is a primary service
 
-#### `PeripheralManager.PROPERTY_NOTIFY`
+#### `Service.uuid: string`
 
-#### `PeripheralManager.PROPERTY_INDICATE`
+The service UUID
 
-Characteristic property flags.
+### Characteristic
 
-#### `PeripheralManager.PERMISSION_READABLE`
+#### `new Characteristic(uuid: string, opts?: CharacteristicOptions)`
 
-#### `PeripheralManager.PERMISSION_WRITEABLE`
+Create a GATT characteristic definition.
 
-#### `PeripheralManager.PERMISSION_READ_ENCRYPTED`
+**Parameters**
 
-#### `PeripheralManager.PERMISSION_WRITE_ENCRYPTED`
+| Parameter | Type                    | Default | Description                                                                                                                                                           |
+| --------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uuid`    | `string`                | —       | The characteristic's UUID.                                                                                                                                            |
+| `opts?`   | `CharacteristicOptions` | —       | Options selecting the characteristic `properties` (`read`, `write`, `writeWithoutResponse`, `notify`, `indicate`) and its optional `permissions` and initial `value`. |
+
+#### `Characteristic.PROPERTY_INDICATE: number`
+
+#### `Characteristic.PROPERTY_NOTIFY: number`
+
+#### `Characteristic.PROPERTY_READ: number`
+
+#### `Characteristic.PROPERTY_WRITE: number`
+
+#### `Characteristic.PROPERTY_WRITE_WITHOUT_RESPONSE: number`
+
+#### `permissions: number | null`
+
+Bitmask of characteristic permissions, if set explicitly
+
+#### `properties: number`
+
+Bitmask of characteristic properties
+
+#### `Characteristic.uuid: string`
+
+The characteristic UUID
+
+#### `value: Uint8Array | null`
+
+The current value, if set
+
+### PeripheralManager
+
+#### `new PeripheralManager()`
+
+Create a new BLE peripheral manager. Advertises services and handles read/write requests from centrals.
+
+#### `addService(service: Service): void`
+
+Add a `service` to the manager. The service and its characteristics will be registered with the system.
+
+**Parameters**
+
+| Parameter | Type      | Default | Description                                                                |
+| --------- | --------- | ------- | -------------------------------------------------------------------------- |
+| `service` | `Service` | —       | The `Service` to register with the system, along with its characteristics. |
+
+#### `PeripheralManager.destroy(): void`
+
+Destroy the instance and release all resources.
+
+#### `PeripheralManager.ATT_INSUFFICIENT_RESOURCES: number`
+
+#### `PeripheralManager.ATT_INVALID_HANDLE: number`
+
+#### `PeripheralManager.ATT_READ_NOT_PERMITTED: number`
+
+#### `PeripheralManager.ATT_SUCCESS: number`
+
+#### `PeripheralManager.ATT_UNLIKELY_ERROR: number`
+
+ATT result codes for use with `manager.respondToRequest()`.
+
+#### `PeripheralManager.ATT_WRITE_NOT_PERMITTED: number`
+
+#### `PeripheralManager.PERMISSION_READ_ENCRYPTED: number`
+
+#### `PeripheralManager.PERMISSION_READABLE: number`
+
+#### `PeripheralManager.PERMISSION_WRITE_ENCRYPTED: number`
 
 Characteristic permission flags.
 
-#### `PeripheralManager.ATT_SUCCESS`
+#### `PeripheralManager.PERMISSION_WRITEABLE: number`
 
-#### `PeripheralManager.ATT_INVALID_HANDLE`
+#### `PeripheralManager.PROPERTY_INDICATE: number`
 
-#### `PeripheralManager.ATT_READ_NOT_PERMITTED`
+Characteristic property flags.
 
-#### `PeripheralManager.ATT_WRITE_NOT_PERMITTED`
+#### `PeripheralManager.PROPERTY_NOTIFY: number`
 
-#### `PeripheralManager.ATT_INSUFFICIENT_RESOURCES`
+#### `PeripheralManager.PROPERTY_READ: number`
 
-#### `PeripheralManager.ATT_UNLIKELY_ERROR`
+#### `PeripheralManager.PROPERTY_WRITE: number`
 
-ATT result codes for use with `manager.respondToRequest()`.
+#### `PeripheralManager.PROPERTY_WRITE_WITHOUT_RESPONSE: number`
+
+#### `PeripheralManager.STATE_POWERED_OFF: number`
+
+#### `PeripheralManager.STATE_POWERED_ON: number`
+
+#### `PeripheralManager.STATE_RESETTING: number`
+
+#### `PeripheralManager.STATE_UNAUTHORIZED: number`
+
+#### `PeripheralManager.STATE_UNKNOWN: number`
+
+#### `PeripheralManager.STATE_UNSUPPORTED: number`
+
+Bluetooth state constants.
+
+#### `publishChannel(opts?: ChannelOptions): void`
+
+Publish an L2CAP channel.
+
+**Parameters**
+
+| Parameter | Type             | Default | Description                               |
+| --------- | ---------------- | ------- | ----------------------------------------- |
+| `opts?`   | `ChannelOptions` | —       | Options for the L2CAP channel to publish. |
+
+#### `respondToRequest(request: ReadRequest, result: number, data?: Uint8Array | null): void`
+
+Respond to a read or write `request` with the given ATT `result` code. Optionally include `data` for read responses.
+
+**Parameters**
+
+| Parameter | Type                 | Default | Description                                                                                          |
+| --------- | -------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `request` | `ReadRequest`        | —       | The read or write request to respond to, as delivered by the `'readRequest'`/`'writeRequest'` event. |
+| `result`  | `number`             | —       | The ATT result code, for example `PeripheralManager.ATT_SUCCESS`.                                    |
+| `data?`   | `Uint8Array \| null` | —       | The value to return for a read request; omit for write responses.                                    |
+
+#### `startAdvertising(opts?: AdvertisingOptions): void`
+
+Start advertising.
+
+**Parameters**
+
+| Parameter | Type                 | Default | Description                                                                       |
+| --------- | -------------------- | ------- | --------------------------------------------------------------------------------- |
+| `opts?`   | `AdvertisingOptions` | —       | Advertising options such as the local `name` and the `serviceUUIDs` to advertise. |
+
+#### `PeripheralManager.state: BluetoothState`
+
+The current Bluetooth adapter state
+
+#### `stopAdvertising(): void`
+
+Stop advertising.
+
+#### `unpublishChannel(psm: number): void`
+
+Unpublish a previously published L2CAP channel identified by `psm`.
+
+**Parameters**
+
+| Parameter | Type     | Default | Description                                                             |
+| --------- | -------- | ------- | ----------------------------------------------------------------------- |
+| `psm`     | `number` | —       | The PSM of the channel to unpublish, as assigned when it was published. |
+
+#### `updateValue(characteristic: Characteristic, data: Uint8Array): boolean`
+
+Update the value of a `characteristic` and notify subscribed centrals.
+
+**Parameters**
+
+| Parameter        | Type             | Default | Description                                   |
+| ---------------- | ---------------- | ------- | --------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic whose value changed.       |
+| `data`           | `Uint8Array`     | —       | The new value to send to subscribed centrals. |
+
+**Returns** `boolean` — Whether the notification was sent to subscribed centrals successfully.
+
+### Central
+
+#### `new Central()`
+
+Create a new BLE central manager. The central scans for and connects to peripherals.
+
+#### `Central.STATE_POWERED_OFF: number`
+
+#### `Central.STATE_POWERED_ON: number`
+
+#### `Central.STATE_RESETTING: number`
+
+#### `Central.STATE_UNAUTHORIZED: number`
+
+#### `Central.STATE_UNKNOWN: number`
+
+#### `Central.STATE_UNSUPPORTED: number`
+
+#### `connect(peripheral: DiscoveredPeripheral): void`
+
+Connect to a discovered `peripheral`.
+
+**Parameters**
+
+| Parameter    | Type                   | Default | Description                            |
+| ------------ | ---------------------- | ------- | -------------------------------------- |
+| `peripheral` | `DiscoveredPeripheral` | —       | A discovered peripheral to connect to. |
+
+#### `Central.destroy(): void`
+
+Destroy the instance and release all resources.
+
+#### `disconnect(peripheral: Peripheral): void`
+
+Disconnect from a connected `peripheral`.
+
+**Parameters**
+
+| Parameter    | Type         | Default | Description                                  |
+| ------------ | ------------ | ------- | -------------------------------------------- |
+| `peripheral` | `Peripheral` | —       | The connected peripheral to disconnect from. |
+
+#### `startScan(serviceUUIDs?: string[], opts?: { allowDuplicates?: boolean }): void`
+
+Start scanning for peripherals. If `serviceUUIDs` is provided, only peripherals advertising those services will be discovered.
+
+**Parameters**
+
+| Parameter       | Type                            | Default | Description                                                                      |
+| --------------- | ------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `serviceUUIDs?` | `string[]`                      | —       | The service UUIDs to filter advertisements by; omit to discover all peripherals. |
+| `opts?`         | `{ allowDuplicates?: boolean }` | —       | —                                                                                |
+
+#### `Central.state: BluetoothState`
+
+The current Bluetooth adapter state
+
+#### `stopScan(): void`
+
+Stop scanning for peripherals.
+
+### Peripheral
+
+#### `new Peripheral(peripheralHandle: ArrayBuffer, opts?: PeripheralOptions)`
+
+Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` — not typically constructed directly.
+
+**Parameters**
+
+| Parameter          | Type                | Default | Description                                                                                                    |
+| ------------------ | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `peripheralHandle` | `ArrayBuffer`       | —       | The native peripheral handle; supplied internally when Central emits `'connect'`, not usually passed directly. |
+| `opts?`            | `PeripheralOptions` | —       | Options carrying the peripheral's advertised metadata.                                                         |
+
+#### `Peripheral.destroy(): void`
+
+Destroy the instance and release all resources.
+
+#### `discoverCharacteristics(service: Service, characteristicUUIDs?: string[]): void`
+
+Discover characteristics for a `service`. If `characteristicUUIDs` is provided, only those characteristics will be discovered.
+
+**Parameters**
+
+| Parameter              | Type       | Default | Description                                                                                |
+| ---------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------ |
+| `service`              | `Service`  | —       | The service to discover characteristics on.                                                |
+| `characteristicUUIDs?` | `string[]` | —       | The characteristic UUIDs to discover; omit to discover all characteristics of the service. |
+
+#### `discoverServices(serviceUUIDs?: string[]): void`
+
+Discover services on the peripheral. If `serviceUUIDs` is provided, only those services will be discovered.
+
+**Parameters**
+
+| Parameter       | Type       | Default | Description                                                   |
+| --------------- | ---------- | ------- | ------------------------------------------------------------- |
+| `serviceUUIDs?` | `string[]` | —       | The service UUIDs to discover; omit to discover all services. |
+
+#### `id: string`
+
+The peripheral UUID identifier
+
+#### `name: string | null`
+
+The peripheral name, if available
+
+#### `openL2CAPChannel(psm: number): void`
+
+Open an L2CAP channel to the peripheral using the given `psm`.
+
+**Parameters**
+
+| Parameter | Type     | Default | Description                                                    |
+| --------- | -------- | ------- | -------------------------------------------------------------- |
+| `psm`     | `number` | —       | The PSM (Protocol/Service Multiplexer) of the channel to open. |
+
+#### `Peripheral.PROPERTY_INDICATE: number`
+
+#### `Peripheral.PROPERTY_NOTIFY: number`
+
+#### `Peripheral.PROPERTY_READ: number`
+
+#### `Peripheral.PROPERTY_WRITE: number`
+
+#### `Peripheral.PROPERTY_WRITE_WITHOUT_RESPONSE: number`
+
+#### `read(characteristic: Characteristic): void`
+
+Read the value of a `characteristic`.
+
+**Parameters**
+
+| Parameter        | Type             | Default | Description                 |
+| ---------------- | ---------------- | ------- | --------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to read. |
+
+#### `serviceData: { [uuid: string]: Uint8Array } | null`
+
+Service data captured from the most recent advertisement seen before connect, or null
+
+#### `subscribe(characteristic: Characteristic): void`
+
+Subscribe to notifications for a `characteristic`.
+
+**Parameters**
+
+| Parameter        | Type             | Default | Description                                              |
+| ---------------- | ---------------- | ------- | -------------------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to start receiving notifications for. |
+
+#### `unsubscribe(characteristic: Characteristic): void`
+
+Unsubscribe from notifications for a `characteristic`.
+
+**Parameters**
+
+| Parameter        | Type             | Default | Description                                             |
+| ---------------- | ---------------- | ------- | ------------------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to stop receiving notifications for. |
+
+#### `write(characteristic: Characteristic, data: Uint8Array, withResponse?: boolean): void`
+
+Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will be confirmed by the peripheral.
+
+**Parameters**
+
+| Parameter        | Type             | Default | Description                                                 |
+| ---------------- | ---------------- | ------- | ----------------------------------------------------------- |
+| `characteristic` | `Characteristic` | —       | The characteristic to write to.                             |
+| `data`           | `Uint8Array`     | —       | The bytes to write.                                         |
+| `withResponse?`  | `boolean`        | —       | Whether the peripheral confirms the write (default `true`). |
+
+### Types
+
+#### `ServiceOptions`
+
+```ts
+interface ServiceOptions {
+  primary?: boolean
+}
+```
+
+#### `CharacteristicOptions`
+
+```ts
+interface CharacteristicOptions {
+  read?: boolean
+  write?: boolean
+  writeWithoutResponse?: boolean
+  notify?: boolean
+  indicate?: boolean
+  permissions?: number
+  value?: Uint8Array | null
+}
+```
+
+#### `BluetoothState`
+
+```ts
+type BluetoothState =
+  'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
+```
+
+#### `AdvertisingOptions`
+
+```ts
+interface AdvertisingOptions {
+  name?: string
+  serviceUUIDs?: string[]
+  serviceData?: { [uuid: string]: Uint8Array }
+}
+```
+
+#### `ChannelOptions`
+
+```ts
+interface ChannelOptions {
+  encrypted?: boolean
+}
+```
+
+#### `ReadRequest`
+
+```ts
+interface ReadRequest {
+  characteristicUuid: string
+  offset: number
+}
+```
+
+#### `WriteRequest`
+
+```ts
+interface WriteRequest {
+  characteristicUuid: string
+  data: Uint8Array
+  offset: number
+}
+```
+
+#### `PeripheralManagerEventMap`
+
+```ts
+interface PeripheralManagerEventMap {
+  stateChange: [state: BluetoothState]
+  error: [error: BluetoothError]
+  serviceAdd: [uuid: string]
+  channelPublish: [psm: number]
+  channelOpen: [channel: L2CAPChannel]
+  readRequest: [request: ReadRequest]
+  writeRequest: [requests: WriteRequest[]]
+  subscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
+  unsubscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
+  readyToUpdate: []
+}
+```
+
+#### `DiscoveredPeripheral`
+
+```ts
+interface DiscoveredPeripheral {
+  id: string
+  name: string | null
+  rssi: number
+  serviceData: { [uuid: string]: Uint8Array } | null
+}
+```
+
+#### `CentralEventMap`
+
+```ts
+interface CentralEventMap {
+  stateChange: [state: BluetoothState]
+  error: [error: BluetoothError]
+  discover: [peripheral: DiscoveredPeripheral]
+  connect: [peripheral: Peripheral]
+  disconnect: [peripheral: Peripheral | null]
+}
+```
+
+#### `PeripheralOptions`
+
+```ts
+interface PeripheralOptions {
+  central?: Central
+  id?: string
+  name?: string
+  serviceData?: { [uuid: string]: Uint8Array } | null
+}
+```
+
+#### `PeripheralEventMap`
+
+```ts
+interface PeripheralEventMap {
+  error: [error: BluetoothError]
+  servicesDiscover: [services: Service[]]
+  characteristicsDiscover: [service: Service | null, characteristics: Characteristic[]]
+  read: [characteristic: Characteristic | null, data: Uint8Array | null]
+  write: [characteristic: Characteristic | null]
+  notify: [characteristic: Characteristic | null, data: Uint8Array | null]
+  notifyState: [characteristic: Characteristic | null, isNotifying: boolean]
+  channelOpen: [channel: L2CAPChannel]
+}
+```
+
+<!-- bare-refgen:api end -->
 
 ## License
 
