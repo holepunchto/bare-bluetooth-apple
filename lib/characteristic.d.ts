@@ -1,10 +1,10 @@
-/**
- * Bluetooth Characteristic - represents a GATT characteristic
- */
+/** Bluetooth Characteristic - represents a GATT characteristic */
 export default class Characteristic {
   /**
    * @param uuid - The characteristic's UUID.
-   * @param opts - Options selecting the characteristic `properties` (`read`, `write`, `writeWithoutResponse`, `notify`, `indicate`) and its optional `permissions` and initial `value`.
+   * @param opts - Options selecting the characteristic `properties` (`read`, `write`,
+   * `writeWithoutResponse`, `notify`, `indicate`) and its optional `permissions` and initial
+   * `value`.
    */
   constructor(uuid: string, opts?: CharacteristicOptions)
 
@@ -36,7 +36,8 @@ export interface CharacteristicOptions {
    */
   read?: boolean
   /**
-   * Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will be confirmed by the peripheral.
+   * Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will
+   * be confirmed by the peripheral.
    * @param characteristic - The characteristic to write to.
    * @param data - The bytes to write.
    * @param withResponse - Whether the peripheral confirms the write (default `true`).

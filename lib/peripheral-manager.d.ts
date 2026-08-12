@@ -11,7 +11,11 @@ export interface AdvertisingOptions {
   /** The name of the peripheral, if available. */
   name?: string
   serviceUUIDs?: string[]
-  /** A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral before connect or `null`. Service data is only in advertisement packets, so this value never updates after connect. */
+  /**
+   * A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral
+   * before connect or `null`. Service data is only in advertisement packets, so this value never
+   * updates after connect.
+   */
   serviceData?: { [uuid: string]: Uint8Array }
 }
 
@@ -51,11 +55,12 @@ export interface PeripheralManagerEventMap extends EventMap {
   readyToUpdate: []
 }
 
-/**
- * Bluetooth PeripheralManager - peripheral server for GATT services and L2CAP channels
- */
+/** Bluetooth PeripheralManager - peripheral server for GATT services and L2CAP channels */
 declare class PeripheralManager extends EventEmitter<PeripheralManagerEventMap> {
-  /** Create a new BLE peripheral manager. Advertises services and handles read/write requests from centrals. */
+  /**
+   * Create a new BLE peripheral manager. Advertises services and handles read/write requests from
+   * centrals.
+   */
   constructor()
 
   /** The current Bluetooth adapter state */
@@ -72,7 +77,8 @@ declare class PeripheralManager extends EventEmitter<PeripheralManagerEventMap> 
   /** Stop advertising. */
   stopAdvertising(): void
   /**
-   * @param request - The read or write request to respond to, as delivered by the `'readRequest'`/`'writeRequest'` event.
+   * @param request - The read or write request to respond to, as delivered by the
+   * `'readRequest'`/`'writeRequest'` event.
    * @param result - The ATT result code, for example `PeripheralManager.ATT_SUCCESS`.
    * @param data - The value to return for a read request; omit for write responses.
    */

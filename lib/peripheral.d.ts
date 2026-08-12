@@ -11,7 +11,11 @@ export interface PeripheralOptions {
   id?: string
   /** The name of the peripheral, if available. */
   name?: string
-  /** A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral before connect or `null`. Service data is only in advertisement packets, so this value never updates after connect. */
+  /**
+   * A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral
+   * before connect or `null`. Service data is only in advertisement packets, so this value never
+   * updates after connect.
+   */
   serviceData?: { [uuid: string]: Uint8Array } | null
 }
 
@@ -25,7 +29,8 @@ export interface PeripheralEventMap extends EventMap {
    */
   read: [characteristic: Characteristic | null, data: Uint8Array | null]
   /**
-   * Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will be confirmed by the peripheral.
+   * Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will
+   * be confirmed by the peripheral.
    * @param characteristic - The characteristic to write to.
    * @param data - The bytes to write.
    * @param withResponse - Whether the peripheral confirms the write (default `true`).
@@ -36,12 +41,11 @@ export interface PeripheralEventMap extends EventMap {
   channelOpen: [channel: L2CAPChannel]
 }
 
-/**
- * Bluetooth Peripheral - represents a connected or discovered peripheral device
- */
+/** Bluetooth Peripheral - represents a connected or discovered peripheral device */
 export default class Peripheral extends EventEmitter<PeripheralEventMap> {
   /**
-   * @param peripheralHandle - The native peripheral handle; supplied internally when Central emits `'connect'`, not usually passed directly.
+   * @param peripheralHandle - The native peripheral handle; supplied internally when Central emits
+   * `'connect'`, not usually passed directly.
    * @param opts - Options carrying the peripheral's advertised metadata.
    */
   constructor(peripheralHandle: ArrayBuffer, opts?: PeripheralOptions)
@@ -61,7 +65,8 @@ export default class Peripheral extends EventEmitter<PeripheralEventMap> {
   discoverServices(serviceUUIDs?: string[]): void
   /**
    * @param service - The service to discover characteristics on.
-   * @param characteristicUUIDs - The characteristic UUIDs to discover; omit to discover all characteristics of the service.
+   * @param characteristicUUIDs - The characteristic UUIDs to discover; omit to discover all
+   * characteristics of the service.
    */
   discoverCharacteristics(service: Service, characteristicUUIDs?: string[]): void
   /**

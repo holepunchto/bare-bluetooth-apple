@@ -1,8 +1,6 @@
 import Characteristic from './characteristic'
 
-/**
- * Bluetooth Service - represents a GATT service
- */
+/** Bluetooth Service - represents a GATT service */
 export default class Service {
   /**
    * @param uuid - The service's UUID.

@@ -11,7 +11,11 @@ export interface DiscoveredPeripheral {
   /** The name of the peripheral, if available. */
   name: string | null
   rssi: number
-  /** A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral before connect or `null`. Service data is only in advertisement packets, so this value never updates after connect. */
+  /**
+   * A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral
+   * before connect or `null`. Service data is only in advertisement packets, so this value never
+   * updates after connect.
+   */
   serviceData: { [uuid: string]: Uint8Array } | null
 }
 
@@ -31,9 +35,7 @@ export interface CentralEventMap extends EventMap {
   disconnect: [peripheral: Peripheral | null]
 }
 
-/**
- * Bluetooth Central - central manager for scanning and connecting to peripherals
- */
+/** Bluetooth Central - central manager for scanning and connecting to peripherals */
 export default class Central extends EventEmitter<CentralEventMap> {
   /** Create a new BLE central manager. The central scans for and connects to peripherals. */
   constructor()
@@ -42,7 +44,8 @@ export default class Central extends EventEmitter<CentralEventMap> {
   readonly state: BluetoothState
 
   /**
-   * @param serviceUUIDs - The service UUIDs to filter advertisements by; omit to discover all peripherals.
+   * @param serviceUUIDs - The service UUIDs to filter advertisements by; omit to discover all
+   * peripherals.
    */
   startScan(serviceUUIDs?: string[], opts?: { allowDuplicates?: boolean }): void
   /** Stop scanning for peripherals. */
