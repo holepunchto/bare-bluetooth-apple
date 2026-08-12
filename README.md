@@ -46,7 +46,9 @@ manager.on('writeRequest', (requests) => {
 
 ## API
 
-See the [full API reference](https://docs.pears.com/reference/bare/modules/bare-bluetooth-apple).
+See the [`bare-bluetooth-apple` reference][reference].
+
+[reference]: https://docs.pears.com/reference/bare/modules/bare-bluetooth-apple
 
 ## License
 
