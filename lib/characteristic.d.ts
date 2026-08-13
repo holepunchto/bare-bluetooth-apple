@@ -30,23 +30,14 @@ export default class Characteristic {
 }
 
 export interface CharacteristicOptions {
-  /**
-   * Read the value of a `characteristic`.
-   * @param characteristic - The characteristic to read.
-   */
+  /** Whether to set the `PROPERTY_READ` flag in the characteristic's `properties` bitmask. */
   read?: boolean
-  /**
-   * Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will
-   * be confirmed by the peripheral.
-   * @param characteristic - The characteristic to write to.
-   * @param data - The bytes to write.
-   * @param withResponse - Whether the peripheral confirms the write (default `true`).
-   */
+  /** Whether to set the `PROPERTY_WRITE` flag in the characteristic's `properties` bitmask. */
   write?: boolean
   writeWithoutResponse?: boolean
   notify?: boolean
   indicate?: boolean
-  /** The bitmask of characteristic permissions, or `null` if not set explicitly. */
+  /** The bitmask of characteristic permissions to set. */
   permissions?: number
   /** The current value of the characteristic, or `null`. */
   value?: Uint8Array | null

@@ -23,14 +23,11 @@ export interface CentralEventMap extends EventMap {
   stateChange: [state: BluetoothState]
   error: [error: BluetoothError]
   discover: [peripheral: DiscoveredPeripheral]
-  /**
-   * Connect to a discovered `peripheral`.
-   * @param peripheral - A discovered peripheral to connect to.
-   */
+  /** Emitted when a connection is established, with the connected `Peripheral`. */
   connect: [peripheral: Peripheral]
   /**
-   * Disconnect from a connected `peripheral`.
-   * @param peripheral - The connected peripheral to disconnect from.
+   * Emitted when a peripheral disconnects, with the now-destroyed `Peripheral`, or `null` if it
+   * was not tracked as connected. If the disconnect carried an error, `error` is emitted instead.
    */
   disconnect: [peripheral: Peripheral | null]
 }
@@ -51,10 +48,12 @@ export default class Central extends EventEmitter<CentralEventMap> {
   /** Stop scanning for peripherals. */
   stopScan(): void
   /**
+   * Connect to a discovered `peripheral`.
    * @param peripheral - A discovered peripheral to connect to.
    */
   connect(peripheral: DiscoveredPeripheral): void
   /**
+   * Disconnect from a connected `peripheral`.
    * @param peripheral - The connected peripheral to disconnect from.
    */
   disconnect(peripheral: Peripheral): void

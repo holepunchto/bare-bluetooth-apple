@@ -24,16 +24,14 @@ export interface PeripheralEventMap extends EventMap {
   servicesDiscover: [services: Service[]]
   characteristicsDiscover: [service: Service | null, characteristics: Characteristic[]]
   /**
-   * Read the value of a `characteristic`.
-   * @param characteristic - The characteristic to read.
+   * Emitted when a characteristic has been read.
+   * @param characteristic - The characteristic that was read, or `null` if it isn't known.
+   * @param data - The value read from the characteristic, or `null` if it is absent or empty.
    */
   read: [characteristic: Characteristic | null, data: Uint8Array | null]
   /**
-   * Write `data` to a `characteristic`. If `withResponse` is `true` (the default), the write will
-   * be confirmed by the peripheral.
-   * @param characteristic - The characteristic to write to.
-   * @param data - The bytes to write.
-   * @param withResponse - Whether the peripheral confirms the write (default `true`).
+   * Emitted when a characteristic has been written.
+   * @param characteristic - The characteristic that was written to, or `null` if it isn't known.
    */
   write: [characteristic: Characteristic | null]
   notify: [characteristic: Characteristic | null, data: Uint8Array | null]

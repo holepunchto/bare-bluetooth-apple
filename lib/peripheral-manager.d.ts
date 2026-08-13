@@ -8,14 +8,10 @@ export type BluetoothState =
   'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
 
 export interface AdvertisingOptions {
-  /** The name of the peripheral, if available. */
+  /** The local name to advertise. */
   name?: string
   serviceUUIDs?: string[]
-  /**
-   * A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral
-   * before connect or `null`. Service data is only in advertisement packets, so this value never
-   * updates after connect.
-   */
+  /** The service data to advertise, keyed by service UUID. */
   serviceData?: { [uuid: string]: Uint8Array }
 }
 
@@ -43,13 +39,15 @@ export interface PeripheralManagerEventMap extends EventMap {
   readRequest: [request: ReadRequest]
   writeRequest: [requests: WriteRequest[]]
   /**
-   * Subscribe to notifications for a `characteristic`.
-   * @param characteristic - The characteristic to start receiving notifications for.
+   * Emitted when a central subscribes to notifications for a characteristic.
+   * @param centralHandle - The native handle of the central that subscribed.
+   * @param characteristicUuid - The UUID of the characteristic that was subscribed to.
    */
   subscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
   /**
-   * Unsubscribe from notifications for a `characteristic`.
-   * @param characteristic - The characteristic to stop receiving notifications for.
+   * Emitted when a central unsubscribes from notifications for a characteristic.
+   * @param centralHandle - The native handle of the central that unsubscribed.
+   * @param characteristicUuid - The UUID of the characteristic that was unsubscribed from.
    */
   unsubscribe: [centralHandle: ArrayBuffer, characteristicUuid: string]
   readyToUpdate: []
