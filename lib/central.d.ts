@@ -31,7 +31,22 @@ export default class Central extends EventEmitter<CentralEventMap> {
 
   startScan(serviceUUIDs?: string[], opts?: { allowDuplicates?: boolean }): void
   stopScan(): void
+  /**
+   * Peripherals CoreBluetooth can resolve without scanning. Requires `ids`
+   * (persisted from an earlier scan) or `services`; unlike the linux and
+   * android backends this platform cannot enumerate on its own.
+   *
+   * @throws if neither `ids` nor `services` is given
+   */
+  knownPeripherals(opts: { ids?: string[]; services?: string[] }): DiscoveredPeripheral[]
   connect(peripheral: DiscoveredPeripheral): void
+  /**
+   * Connect by CoreBluetooth identifier, without scanning first. The id is the
+   * per host UUID reported as `peripheral.id`, not a MAC address.
+   *
+   * @throws if CoreBluetooth has no record of the id
+   */
+  connectById(id: string): DiscoveredPeripheral
   disconnect(peripheral: Peripheral): void
   destroy(): void
 

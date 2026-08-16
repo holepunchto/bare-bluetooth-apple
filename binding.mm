@@ -2902,6 +2902,116 @@ bare_bluetooth_apple_central_stop_scan(
   }
 }
 
+using bare_bluetooth_apple_central__on_known_peripheral_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, std::optional<std::string>>;
+
+// Invokes `on_peripheral` once per peripheral, matching the argument shape of
+// the discover callback minus the advertisement-derived fields.
+static void
+bare_bluetooth_apple__emit_peripherals(
+  js_env_t *env,
+  BareBluetoothAppleCentral *central,
+  NSArray<CBPeripheral *> *peripherals,
+  bare_bluetooth_apple_central__on_known_peripheral_fn on_peripheral
+) {
+  int err;
+
+  js_value_t *receiver;
+  err = js_get_reference_value(env, central->ctx, &receiver);
+  assert(err == 0);
+
+  for (CBPeripheral *peripheral in peripherals) {
+    js_value_t *peripheral_ext;
+    err = js_create_external(env, const_cast<void *>(CFBridgingRetain(peripheral)), bare_bluetooth_apple__on_bridged_release, NULL, &peripheral_ext);
+    assert(err == 0);
+
+    std::string id(peripheral.identifier.UUIDString.UTF8String);
+
+    std::optional<std::string> name;
+    if (peripheral.name) name = std::string(peripheral.name.UTF8String);
+
+    err = js_call_function(env, on_peripheral, js_receiver_t(receiver), js_object_t(peripheral_ext), id, name);
+    assert(err == 0);
+  }
+}
+
+// Resolves peripherals the caller already has identifiers for.
+//
+// CoreBluetooth deliberately offers no way to list everything previously
+// connected: identifiers are per host and per application, and it is the
+// application's job to persist them. So unlike the linux and android backends,
+// this cannot enumerate without being told what to look for.
+static void
+bare_bluetooth_apple_central_retrieve_peripherals(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle,
+  std::vector<std::string> ids,
+  bare_bluetooth_apple_central__on_known_peripheral_fn on_peripheral
+) {
+  @autoreleasepool {
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
+
+    NSMutableArray<NSUUID *> *identifiers = [NSMutableArray arrayWithCapacity:ids.size()];
+
+    for (const auto &id : ids) {
+      NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:[NSString stringWithUTF8String:id.c_str()]];
+
+      // Skip anything malformed rather than throwing. These are commonly
+      // persisted by the application, and one stale entry should not take out
+      // the whole lookup.
+      if (uuid) [identifiers addObject:uuid];
+    }
+
+    NSArray<CBPeripheral *> *peripherals = [central->manager retrievePeripheralsWithIdentifiers:identifiers];
+
+    bare_bluetooth_apple__emit_peripherals(env, central, peripherals, on_peripheral);
+  }
+}
+
+// Peripherals the system already has connected, filtered by service. These may
+// have been connected by another application entirely, and still need
+// connectPeripheral: before this central can use them.
+static void
+bare_bluetooth_apple_central_retrieve_connected_peripherals(
+  js_env_t *env,
+  js_receiver_t,
+  js_external_t<BareBluetoothAppleCentral> handle,
+  std::optional<js_array_t> uuids_array,
+  bare_bluetooth_apple_central__on_known_peripheral_fn on_peripheral
+) {
+  @autoreleasepool {
+    BareBluetoothAppleCentral *central;
+    int err = js_get_value(env, handle, central);
+    assert(err == 0);
+
+    NSMutableArray<CBUUID *> *uuids = [NSMutableArray array];
+
+    if (uuids_array) {
+      uint32_t len;
+      err = js_get_array_length(env, static_cast<js_value_t *>(*uuids_array), &len);
+      assert(err == 0);
+
+      for (uint32_t i = 0; i < len; i++) {
+        js_external_t<CBUUID> ext;
+        err = js_get_element(env, *uuids_array, i, ext);
+        assert(err == 0);
+
+        CBUUID *uuid;
+        err = js_get_value(env, ext, uuid);
+        assert(err == 0);
+
+        [uuids addObject:uuid];
+      }
+    }
+
+    NSArray<CBPeripheral *> *peripherals = [central->manager retrieveConnectedPeripheralsWithServices:uuids];
+
+    bare_bluetooth_apple__emit_peripherals(env, central, peripherals, on_peripheral);
+  }
+}
+
 static void
 bare_bluetooth_apple_central_connect(
   js_env_t *env,
@@ -3636,6 +3746,8 @@ bare_bluetooth_apple_exports(js_env_t *env, js_value_t *exports) {
   V("centralInit", bare_bluetooth_apple_central_init)
   V("centralStartScan", bare_bluetooth_apple_central_start_scan)
   V("centralStopScan", bare_bluetooth_apple_central_stop_scan)
+  V("centralRetrievePeripherals", bare_bluetooth_apple_central_retrieve_peripherals)
+  V("centralRetrieveConnectedPeripherals", bare_bluetooth_apple_central_retrieve_connected_peripherals)
   V("centralConnect", bare_bluetooth_apple_central_connect)
   V("centralDisconnect", bare_bluetooth_apple_central_disconnect)
   V("centralDestroy", bare_bluetooth_apple_central_destroy)
