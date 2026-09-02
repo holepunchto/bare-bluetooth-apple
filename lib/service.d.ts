@@ -1,9 +1,12 @@
 import Characteristic from './characteristic'
 
-/**
- * Bluetooth Service - represents a GATT service
- */
+/** Bluetooth Service - represents a GATT service */
 export default class Service {
+  /**
+   * @param uuid - The service's UUID.
+   * @param characteristics - The characteristics belonging to the service.
+   * @param opts - Options; services are primary unless `primary: false` is set.
+   */
   constructor(uuid: string, characteristics?: Characteristic[], opts?: ServiceOptions)
 
   /** The service UUID */
@@ -17,5 +20,6 @@ export default class Service {
 }
 
 export interface ServiceOptions {
+  /** Whether the service is a primary service. */
   primary?: boolean
 }
