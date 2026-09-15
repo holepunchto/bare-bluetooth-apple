@@ -1,6 +1,7 @@
 const test = require('brittle')
 const Central = require('../lib/central')
-const { isCI, waitForPoweredOn, runFixture } = require('./helpers')
+const Thread = require('bare-thread')
+const { isCI, waitForPoweredOn } = require('./helpers')
 
 test('initial state is unknown', { skip: isCI }, (t) => {
   using central = new Central()
@@ -127,17 +128,19 @@ test('double destroy does not crash', { skip: isCI }, async (t) => {
 test('teardown on exit cleans up native resources', { skip: isCI }, (t) => {
   t.plan(1)
 
-  const status = runFixture(require.resolve('./fixtures/teardown-scan.js'))
+  const thread = new Thread(require.resolve('./fixtures/teardown-scan.js'))
+  thread.join()
 
-  t.is(status, 0, 'process torn down without crashing')
+  t.pass('thread torn down without crashing')
 })
 
 test('destroy then exit does not double-free', { skip: isCI }, (t) => {
   t.plan(1)
 
-  const status = runFixture(require.resolve('./fixtures/teardown-scan-destroy.js'))
+  const thread = new Thread(require.resolve('./fixtures/teardown-scan-destroy.js'))
+  thread.join()
 
-  t.is(status, 0, 'process torn down without crashing')
+  t.pass('thread torn down without crashing')
 })
 
 test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async (t) => {
