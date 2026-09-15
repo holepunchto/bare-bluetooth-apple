@@ -732,7 +732,6 @@ bare_bluetooth_apple_peripheral__on_teardown(js_deferred_teardown_t *handle, voi
   bare_bluetooth_apple_peripheral__teardown((__bridge BareBluetoothApplePeripheral *) data);
 }
 
-// Wraps a CFBridgingRetain'd CBPeripheral; the wrapper adopts the +1 and releases it in dealloc.
 static js_value_t *
 bare_bluetooth_apple_peripheral__wrap(js_env_t *env, dispatch_queue_t queue, const void *peripheral) {
   auto wrapper = [[BareBluetoothApplePeripheral alloc] init];
