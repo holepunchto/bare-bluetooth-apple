@@ -76,7 +76,7 @@ Connect to a discovered `peripheral`.
 
 #### `central.disconnect(peripheral)`
 
-Disconnect from a connected `peripheral`.
+Disconnect from a connected `peripheral`, or cancel a pending connection to a discovered one.
 
 #### `central.destroy()`
 
@@ -208,7 +208,7 @@ Emitted with `channel` and `error` when an L2CAP channel is opened. The `channel
 
 #### `const peripheral = new Peripheral(peripheralHandle[, options])`
 
-Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` — not typically constructed directly.
+Represents a connected BLE peripheral. Obtained through the `'connect'` event on `Central` - not typically constructed directly.
 
 #### `peripheral.id`
 

@@ -3,9 +3,7 @@ const test = require('brittle')
 const PeripheralManager = require('../lib/peripheral-manager')
 const Service = require('../lib/service')
 const Characteristic = require('../lib/characteristic')
-const { isCI, waitForPoweredOn } = require('./helpers')
-
-const { Thread } = Bare
+const { isCI, waitForPoweredOn, runFixture } = require('./helpers')
 
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789ABC'
 const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
@@ -240,18 +238,9 @@ test('double destroy does not crash', { skip: isCI }, async (t) => {
 test('teardown on exit cleans up native resources', { skip: isCI }, (t) => {
   t.plan(1)
 
-  const thread = new Thread(__filename, () => {
-    const PeripheralManager = require('../lib/peripheral-manager')
+  const status = runFixture(require.resolve('./fixtures/teardown-advertise.js'))
 
-    Bare.on('exit', () => {
-      const server = new PeripheralManager()
-      server.startAdvertising()
-    })
-  })
-
-  thread.join()
-
-  t.pass('thread torn down without crashing')
+  t.is(status, 0, 'process torn down without crashing')
 })
 
 test('exports state constants', (t) => {

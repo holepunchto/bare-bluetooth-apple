@@ -32,7 +32,7 @@ export default class Central extends EventEmitter<CentralEventMap> {
   startScan(serviceUUIDs?: string[], opts?: { allowDuplicates?: boolean }): void
   stopScan(): void
   connect(peripheral: DiscoveredPeripheral): void
-  disconnect(peripheral: Peripheral): void
+  disconnect(peripheral: Peripheral | DiscoveredPeripheral): void
   destroy(): void
 
   // State constants
