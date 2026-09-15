@@ -53,10 +53,11 @@ export default class Central extends EventEmitter<CentralEventMap> {
    */
   connect(peripheral: DiscoveredPeripheral): void
   /**
-   * Disconnect from a connected `peripheral`.
-   * @param peripheral - The connected peripheral to disconnect from.
+   * Disconnect from a connected `peripheral`, or cancel a pending connection to a discovered one.
+   * @param peripheral - The connected peripheral to disconnect from, or a discovered peripheral
+   * with a pending connection.
    */
-  disconnect(peripheral: Peripheral): void
+  disconnect(peripheral: Peripheral | DiscoveredPeripheral): void
   /** Destroy the instance and release all resources. */
   destroy(): void
 

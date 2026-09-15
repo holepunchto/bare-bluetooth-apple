@@ -1,12 +1,10 @@
 import { EventEmitter, EventMap } from 'bare-events'
-import Central from './central'
 import Service from './service'
 import Characteristic from './characteristic'
 import L2CAPChannel from './channel'
 import BluetoothError from './errors'
 
 export interface PeripheralOptions {
-  central?: Central
   /** The unique identifier of the peripheral. */
   id?: string
   /** The name of the peripheral, if available. */
