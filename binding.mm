@@ -2151,7 +2151,7 @@ bare_bluetooth_apple_server_start_advertising(
       err = js_get_array_length(env, keys, &key_count);
       assert(err == 0);
 
-      NSMutableDictionary<CBUUID *, NSData *> *sd = [NSMutableDictionary dictionaryWithCapacity:key_count];
+      NSMutableDictionary<NSString *, NSData *> *sd = [NSMutableDictionary dictionaryWithCapacity:key_count];
 
       for (uint32_t i = 0; i < key_count; i++) {
         js_value_t *key;
@@ -2174,7 +2174,7 @@ bare_bluetooth_apple_server_start_advertising(
         CBUUID *uuid = [CBUUID UUIDWithString:[NSString stringWithUTF8String:uuid_str.c_str()]];
         NSData *data = [NSData dataWithBytes:buf length:buf_len];
 
-        sd[uuid] = data;
+        sd[uuid.UUIDString] = data;
       }
 
       advertisementData[CBAdvertisementDataServiceDataKey] = sd;
