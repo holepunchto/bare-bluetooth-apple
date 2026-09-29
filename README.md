@@ -48,6 +48,16 @@ manager.on('writeRequest', (requests) => {
 
 See the [`bare-bluetooth-apple` reference](https://docs.pears.com/reference/bare/modules/bare-bluetooth-apple).
 
+## Running the tests under ASan
+
+`./run-test-asan` rebuilds the addon with AddressSanitizer and runs `test.js` (or the file you pass) under an ASan-instrumented `bare`. It refuses to run if that `bare` is missing or not instrumented.
+
+```
+./run-test-asan                       # whole suite
+./run-test-asan test/peripheral.js    # one file
+BARE=/path/to/bare ./run-test-asan    # another bare
+```
+
 ## License
 
 Apache-2.0

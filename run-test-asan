@@ -1,0 +1,42 @@
+#!/bin/sh
+# Rebuild the addon with AddressSanitizer and run the tests under an
+# ASan-instrumented bare, built from source with --debug --sanitize address.
+#
+# Usage: ./run-test-asan [test file]   (default: test.js)
+# Env:   BARE=<path to an ASan bare>   (default: $HOME/bare/bare/build/bin/bare)
+
+set -e
+
+BARE="${BARE:-$HOME/bare/bare/build/bin/bare}"
+
+if [ ! -x "$BARE" ]; then
+  echo "run-test-asan: no bare at $BARE" >&2
+  echo "Build bare with --debug --sanitize address, or point BARE at one." >&2
+  exit 1
+fi
+
+if ! nm -u "$BARE" 2>/dev/null | grep -q __asan_; then
+  echo "run-test-asan: $BARE is not ASan-instrumented" >&2
+  echo "Rebuild it with --debug --sanitize address." >&2
+  exit 1
+fi
+
+npx bare-make generate --debug --sanitize address --no-cache
+npx bare-make build
+npx bare-make install
+
+ROOT=$(cd "$(dirname "$0")" && pwd)
+
+# Silence the macOS nano zone warning ASan prints on every start.
+export MallocNanoZone=0
+
+# Leak detection is off by default on macOS. The runtime's own allocations are
+# suppressed so only this addon's leaks are reported.
+export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1}"
+export LSAN_OPTIONS="${LSAN_OPTIONS:-suppressions=$ROOT/test/leaks.txt:print_suppressions=1}"
+
+if [ -x /opt/homebrew/opt/llvm/bin/llvm-symbolizer ]; then
+  export ASAN_SYMBOLIZER_PATH=/opt/homebrew/opt/llvm/bin/llvm-symbolizer
+fi
+
+exec "$BARE" "${1:-test.js}"
