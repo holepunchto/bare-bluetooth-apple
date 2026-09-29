@@ -11,3 +11,8 @@ leak:v8::internal::GCTracer::*
 # https://github.com/llvm/llvm-project/issues/115992
 leak:dyld::*
 leak:dyld4::*
+
+# CoreFoundation's per-thread table, created on a libdispatch worker thread that
+# outlives the process.
+# https://github.com/swiftlang/swift-corelibs-libdispatch/issues/668
+leak:__CFTSDGetTable
