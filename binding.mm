@@ -339,7 +339,11 @@ bare_bluetooth_apple_create_cbuuid(
     CBUUID *uuid = [CBUUID UUIDWithString:[NSString stringWithUTF8String:str.c_str()]];
 
     js_external_t<CBUUID> result;
-    err = js_create_external(env, static_cast<CBUUID *>(CFBridgingRetain(uuid)), result);
+    err = js_create_external<bare_bluetooth_apple__release_bridged<CBUUID>>(
+      env,
+      static_cast<CBUUID *>(CFBridgingRetain(uuid)),
+      result
+    );
     assert(err == 0);
 
     return result;
