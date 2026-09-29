@@ -35,8 +35,4 @@ export MallocNanoZone=0
 export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1}"
 export LSAN_OPTIONS="${LSAN_OPTIONS:-suppressions=$ROOT/test/leaks.txt:print_suppressions=1}"
 
-if [ -x /opt/homebrew/opt/llvm/bin/llvm-symbolizer ]; then
-  export ASAN_SYMBOLIZER_PATH=/opt/homebrew/opt/llvm/bin/llvm-symbolizer
-fi
-
 exec "$BARE" "${1:-test.js}"
