@@ -21,7 +21,7 @@ if ! nm -u "$BARE" 2>/dev/null | grep -q __asan_; then
   exit 1
 fi
 
-npx bare-make generate --debug --sanitize address --no-cache
+npx bare-make generate --debug --sanitize address
 npx bare-make build
 npx bare-make install
 
