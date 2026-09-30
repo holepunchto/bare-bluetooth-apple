@@ -3,11 +3,11 @@
 # ASan-instrumented bare, built from source with --debug --sanitize address.
 #
 # Usage: ./run-test-asan [test file]   (default: test.js)
-# Env:   BARE=<path to an ASan bare>   (default: $HOME/bare/bare/build/bin/bare)
+# Env:   BARE=<path to an ASan bare>   (default: $HOME/bare/bare/build-v8asan/bin/bare)
 
 set -e
 
-BARE="${BARE:-$HOME/bare/bare/build/bin/bare}"
+BARE="${BARE:-$HOME/bare/bare/build-v8asan/bin/bare}"
 
 if [ ! -x "$BARE" ]; then
   echo "run-test-asan: no bare at $BARE" >&2
@@ -27,11 +27,10 @@ npx bare-make install
 
 ROOT=$(cd "$(dirname "$0")" && pwd)
 
-# Silence the macOS nano zone warning ASan prints on every start.
+# LeakSanitizer cannot scan macOS' nano zone and reports phantom leaks.
 export MallocNanoZone=0
 
-# Leak detection is off by default on macOS. The runtime's own allocations are
-# suppressed so only this addon's leaks are reported.
+# Leak detection is off by default on macOS.
 export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1}"
 export LSAN_OPTIONS="${LSAN_OPTIONS:-suppressions=$ROOT/test/leaks.txt:print_suppressions=1}"
 
