@@ -1,18 +1,7 @@
-leak:js_add_finalizer
-leak:js_create_function
-leak:js_create_typed_function
-leak:js_create_external
-leak:js_create_module
-leak:js_create_synthetic_module
-leak:js_wrap
+# https://clang.llvm.org/docs/LeakSanitizer.html#suppressions
 
-leak:v8::internal::GCTracer::*
-
-# https://github.com/llvm/llvm-project/issues/115992
-leak:dyld::*
-leak:dyld4::*
-
-# CoreFoundation's per-thread table, created on a libdispatch worker thread that
-# outlives the process.
-# https://github.com/swiftlang/swift-corelibs-libdispatch/issues/668
+# Per-thread caches on libdispatch workers that outlive the process; bounded.
+# swiftlang/swift-corelibs-libdispatch#668
 leak:__CFTSDGetTable
+# libdispatch's own pool page, pushed when draining a queue. No upstream report.
+leak:objc_autoreleasePoolPush
