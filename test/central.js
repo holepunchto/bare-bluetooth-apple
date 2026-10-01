@@ -1,7 +1,7 @@
 const test = require('brittle')
 const Central = require('../lib/central')
 const Thread = require('bare-thread')
-const { isCI, waitForPoweredOn } = require('./helpers')
+const { isCI, waitForPoweredOn, waitForEvent } = require('./helpers')
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000001'
 
@@ -224,6 +224,49 @@ test('retrieveConnectedPeripherals reports connection state', { skip: isCI }, as
     t.ok(typeof peripheral.id === 'string')
     t.ok(['disconnected', 'connecting', 'connected', 'disconnecting'].includes(peripheral.state))
   }
+})
+
+test('connect and disconnect a retrieved peripheral', { skip: isCI, timeout: 30000 }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  central.on('error', () => {})
+
+  let retrieved = null
+  let connected = null
+
+  central.startScan()
+
+  while (connected === null) {
+    const discovered = await new Promise((resolve) => {
+      central.once('discover', resolve)
+    })
+
+    central.stopScan()
+
+    retrieved = central.retrievePeripherals([discovered.id])[0]
+
+    if (retrieved) {
+      central.connect(retrieved)
+
+      const event = await waitForEvent(central, 'connect', 5000)
+
+      // A connect attempt never times out on its own, so a pending one has to be
+      // cancelled or it outlives this loop and fires later.
+      if (event) connected = event[0]
+      else central.disconnect(retrieved)
+    }
+
+    if (connected === null) central.startScan()
+  }
+
+  t.is(connected.id, retrieved.id)
+  t.is(central.retrievePeripherals([retrieved.id])[0].state, 'connected')
+
+  central.disconnect(retrieved)
+
+  t.ok(await waitForEvent(central, 'disconnect', 5000))
+  t.is(central.retrievePeripherals([retrieved.id])[0].state, 'disconnected')
 })
 
 test('exports state constants', (t) => {

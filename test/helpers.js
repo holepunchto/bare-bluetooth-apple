@@ -9,3 +9,19 @@ exports.waitForPoweredOn = async function waitForPoweredOn(emitter) {
     })
   })
 }
+
+exports.waitForEvent = function waitForEvent(emitter, name, timeout) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      emitter.off(name, onevent)
+      resolve(null)
+    }, timeout)
+
+    emitter.once(name, onevent)
+
+    function onevent(...args) {
+      clearTimeout(timer)
+      resolve(args)
+    }
+  })
+}
