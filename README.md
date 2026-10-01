@@ -52,6 +52,8 @@ See the [`bare-bluetooth-apple` reference](https://docs.pears.com/reference/bare
 
 `./run-test-asan` rebuilds the addon with AddressSanitizer and runs `test.js` (or the file you pass) under an ASan-instrumented `bare`. It refuses to run if that `bare` is missing or not instrumented.
 
+See <https://github.com/holepunchto/bare#sanitizers> for building that `bare`.
+
 ```
 ./run-test-asan                       # whole suite
 ./run-test-asan test/peripheral.js    # one file
