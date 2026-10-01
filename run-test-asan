@@ -1,0 +1,37 @@
+#!/bin/sh
+# Rebuild the addon with AddressSanitizer and run the tests under an
+# ASan-instrumented bare, built from source with --debug --sanitize address.
+#
+# Usage: ./run-test-asan [test file]   (default: test.js)
+# Env:   BARE=<path to an ASan bare>   (default: $HOME/bare/bare/build-v8asan/bin/bare)
+
+set -e
+
+BARE="${BARE:-$HOME/bare/bare/build-v8asan/bin/bare}"
+
+if [ ! -x "$BARE" ]; then
+  echo "run-test-asan: no bare at $BARE" >&2
+  echo "Build bare with --debug --sanitize address, or point BARE at one." >&2
+  exit 1
+fi
+
+if ! nm -u "$BARE" 2>/dev/null | grep -q __asan_; then
+  echo "run-test-asan: $BARE is not ASan-instrumented" >&2
+  echo "Rebuild it with --debug --sanitize address." >&2
+  exit 1
+fi
+
+npx bare-make generate --debug --sanitize address
+npx bare-make build
+npx bare-make install
+
+ROOT=$(cd "$(dirname "$0")" && pwd)
+
+# LeakSanitizer cannot scan macOS' nano zone and reports phantom leaks.
+export MallocNanoZone=0
+
+# Leak detection is off by default on macOS.
+export ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=1}"
+export LSAN_OPTIONS="${LSAN_OPTIONS:-suppressions=$ROOT/test/leaks.txt:print_suppressions=1}"
+
+exec "$BARE" "${1:-test.js}"

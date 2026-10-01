@@ -3,12 +3,12 @@ const test = require('brittle')
 const PeripheralManager = require('../lib/peripheral-manager')
 const Service = require('../lib/service')
 const Characteristic = require('../lib/characteristic')
+const Thread = require('bare-thread')
 const { isCI, waitForPoweredOn } = require('./helpers')
-
-const { Thread } = Bare
 
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789ABC'
 const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
+const OTHER_SERVICE_UUID = 'ABCDEF01-1234-1234-1234-123456789ABC'
 
 test('initial state is unknown', { skip: isCI }, (t) => {
   using manager = new PeripheralManager()
@@ -48,6 +48,45 @@ test('addService registers and confirms service', { skip: isCI }, async (t) => {
   const [uuid, error] = await new Promise((resolve) => {
     manager.on('serviceAdd', (uuid, error) => resolve([uuid, error]))
   })
+  t.absent(error)
+  t.is(uuid, SERVICE_UUID)
+})
+
+test('removeAllServices without services does not throw', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  t.execution(() => manager.removeAllServices())
+})
+
+test('removeAllServices accepts another service afterwards', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.addService(new Service(SERVICE_UUID))
+  await waitForServiceAdd(manager)
+
+  manager.removeAllServices()
+
+  manager.addService(new Service(OTHER_SERVICE_UUID))
+
+  const [uuid, error] = await waitForServiceAdd(manager)
+  t.absent(error)
+  t.is(uuid, OTHER_SERVICE_UUID)
+})
+
+test('removeAllServices frees the service uuid for reuse', { skip: isCI }, async (t) => {
+  using manager = new PeripheralManager()
+  await waitForPoweredOn(manager)
+
+  manager.addService(new Service(SERVICE_UUID))
+  await waitForServiceAdd(manager)
+
+  manager.removeAllServices()
+
+  manager.addService(new Service(SERVICE_UUID))
+
+  const [uuid, error] = await waitForServiceAdd(manager)
   t.absent(error)
   t.is(uuid, SERVICE_UUID)
 })
@@ -240,15 +279,7 @@ test('double destroy does not crash', { skip: isCI }, async (t) => {
 test('teardown on exit cleans up native resources', { skip: isCI }, (t) => {
   t.plan(1)
 
-  const thread = new Thread(__filename, () => {
-    const PeripheralManager = require('../lib/peripheral-manager')
-
-    Bare.on('exit', () => {
-      const server = new PeripheralManager()
-      server.startAdvertising()
-    })
-  })
-
+  const thread = new Thread(require.resolve('./fixtures/teardown-advertise.js'))
   thread.join()
 
   t.pass('thread torn down without crashing')
@@ -339,9 +370,9 @@ test('publishChannel with encryption', { skip: isCI }, async (t) => {
 
 // Helpers
 
-async function waitForServiceAdd(manager) {
-  await new Promise((resolve) => {
-    manager.on('serviceAdd', () => resolve())
+function waitForServiceAdd(manager) {
+  return new Promise((resolve) => {
+    manager.once('serviceAdd', (uuid, error) => resolve([uuid, error]))
   })
 }
 

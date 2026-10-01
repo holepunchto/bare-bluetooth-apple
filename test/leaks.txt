@@ -1,0 +1,7 @@
+# https://clang.llvm.org/docs/LeakSanitizer.html#suppressions
+
+# Per-thread caches on libdispatch workers that outlive the process; bounded.
+# swiftlang/swift-corelibs-libdispatch#668
+leak:__CFTSDGetTable
+# libdispatch's own pool page, pushed when draining a queue. No upstream report.
+leak:objc_autoreleasePoolPush
