@@ -3,6 +3,8 @@ const Central = require('../lib/central')
 const Thread = require('bare-thread')
 const { isCI, waitForPoweredOn } = require('./helpers')
 
+const UNKNOWN_ID = '00000000-0000-0000-0000-000000000001'
+
 test('initial state is unknown', { skip: isCI }, (t) => {
   using central = new Central()
   t.is(central.state, 'unknown')
@@ -158,6 +160,70 @@ test('filtered scan with non-existent UUID finds nothing', { skip: isCI }, async
 
   central.stopScan()
   t.absent(found)
+})
+
+test('retrievePeripherals with no ids finds nothing', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  t.alike(central.retrievePeripherals([]), [])
+})
+
+test('retrievePeripherals rejects a malformed id', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  t.exception(() => central.retrievePeripherals(['not-a-uuid']))
+})
+
+test('retrievePeripherals finds nothing for an unknown id', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  t.alike(central.retrievePeripherals([UNKNOWN_ID]), [])
+})
+
+test('retrievePeripherals resolves a peripheral seen while scanning', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  central.startScan()
+
+  const discovered = await new Promise((resolve) => {
+    central.on('discover', resolve)
+  })
+
+  central.stopScan()
+
+  const [peripheral] = central.retrievePeripherals([discovered.id])
+
+  t.ok(peripheral)
+  t.is(peripheral.id, discovered.id)
+  t.is(peripheral.state, 'disconnected')
+  t.ok(peripheral.name === null || typeof peripheral.name === 'string')
+  t.absent('rssi' in peripheral)
+  t.absent('serviceData' in peripheral)
+})
+
+test('retrieveConnectedPeripherals with no services finds nothing', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  t.alike(central.retrieveConnectedPeripherals([]), [])
+})
+
+test('retrieveConnectedPeripherals reports connection state', { skip: isCI }, async (t) => {
+  using central = new Central()
+  await waitForPoweredOn(central)
+
+  const found = central.retrieveConnectedPeripherals(['180D'])
+
+  t.ok(Array.isArray(found))
+
+  for (const peripheral of found) {
+    t.ok(typeof peripheral.id === 'string')
+    t.ok(['disconnected', 'connecting', 'connected', 'disconnecting'].includes(peripheral.state))
+  }
 })
 
 test('exports state constants', (t) => {

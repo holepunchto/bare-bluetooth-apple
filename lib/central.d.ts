@@ -19,6 +19,21 @@ export interface DiscoveredPeripheral {
   serviceData: { [uuid: string]: Uint8Array } | null
 }
 
+export type PeripheralState = 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
+
+/**
+ * A peripheral resolved without scanning. It carries no advertisement data, so it has no `rssi`
+ * or `serviceData`.
+ */
+export interface KnownPeripheral {
+  /** The unique identifier of the peripheral. */
+  id: string
+  /** The name of the peripheral, if available. */
+  name: string | null
+  /** The connection state, which may reflect a connection made by another application. */
+  state: PeripheralState
+}
+
 export interface CentralEventMap extends EventMap {
   stateChange: [state: BluetoothState]
   error: [error: BluetoothError]
@@ -48,31 +63,29 @@ export default class Central extends EventEmitter<CentralEventMap> {
   /** Stop scanning for peripherals. */
   stopScan(): void
   /**
-   * Peripherals CoreBluetooth can resolve without scanning. Requires `ids`
-   * (persisted from an earlier scan) or `services`; unlike the linux and
-   * android backends this platform cannot enumerate on its own.
-   *
-   * @throws if neither `ids` nor `services` is given
+   * Resolve peripherals from identifiers persisted after an earlier scan, without scanning again.
+   * @param ids - The per host UUIDs reported as `peripheral.id`, not MAC addresses.
+   * @throws if an id is not a UUID, or if Bluetooth is not powered on.
    */
-  knownPeripherals(opts: { ids?: string[]; services?: string[] }): DiscoveredPeripheral[]
+  retrievePeripherals(ids: string[]): KnownPeripheral[]
   /**
-   * Connect to a discovered `peripheral`.
-   * @param peripheral - A discovered peripheral to connect to.
-   */
-  connect(peripheral: DiscoveredPeripheral): void
-  /**
-   * Connect by CoreBluetooth identifier, without scanning first. The id is the
-   * per host UUID reported as `peripheral.id`, not a MAC address.
+   * Peripherals already connected to the system that implement any of `services`. Those connected
+   * by another application still need `connect()` before this central can use them.
    *
-   * @throws if CoreBluetooth has no record of the id
+   * @throws if Bluetooth is not powered on.
    */
-  connectById(id: string): DiscoveredPeripheral
+  retrieveConnectedPeripherals(services: string[]): KnownPeripheral[]
+  /**
+   * Connect to a discovered or retrieved `peripheral`.
+   * @param peripheral - The peripheral to connect to.
+   */
+  connect(peripheral: DiscoveredPeripheral | KnownPeripheral): void
   /**
    * Disconnect from a connected `peripheral`, or cancel a pending connection to a discovered one.
    * @param peripheral - The connected peripheral to disconnect from, or a discovered peripheral
    * with a pending connection.
    */
-  disconnect(peripheral: Peripheral | DiscoveredPeripheral): void
+  disconnect(peripheral: Peripheral | DiscoveredPeripheral | KnownPeripheral): void
   /** Destroy the instance and release all resources. */
   destroy(): void
 
