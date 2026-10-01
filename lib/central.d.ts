@@ -25,7 +25,7 @@ export type PeripheralState = 'disconnected' | 'connecting' | 'connected' | 'dis
  * A peripheral resolved without scanning. It carries no advertisement data, so it has no `rssi`
  * or `serviceData`.
  */
-export interface KnownPeripheral {
+export interface RetrievedPeripheral {
   /** The unique identifier of the peripheral. */
   id: string
   /** The name of the peripheral, if available. */
@@ -67,25 +67,25 @@ export default class Central extends EventEmitter<CentralEventMap> {
    * @param ids - The per host UUIDs reported as `peripheral.id`, not MAC addresses.
    * @throws if an id is not a UUID, or if Bluetooth is not powered on.
    */
-  retrievePeripherals(ids: string[]): KnownPeripheral[]
+  retrievePeripherals(ids: string[]): RetrievedPeripheral[]
   /**
    * Peripherals already connected to the system that implement any of `services`. Those connected
    * by another application still need `connect()` before this central can use them.
    *
    * @throws if Bluetooth is not powered on.
    */
-  retrieveConnectedPeripherals(services: string[]): KnownPeripheral[]
+  retrieveConnectedPeripherals(services: string[]): RetrievedPeripheral[]
   /**
    * Connect to a discovered or retrieved `peripheral`.
    * @param peripheral - The peripheral to connect to.
    */
-  connect(peripheral: DiscoveredPeripheral | KnownPeripheral): void
+  connect(peripheral: DiscoveredPeripheral | RetrievedPeripheral): void
   /**
    * Disconnect from a connected `peripheral`, or cancel a pending connection to a discovered one.
    * @param peripheral - The connected peripheral to disconnect from, or a discovered peripheral
    * with a pending connection.
    */
-  disconnect(peripheral: Peripheral | DiscoveredPeripheral | KnownPeripheral): void
+  disconnect(peripheral: Peripheral | DiscoveredPeripheral | RetrievedPeripheral): void
   /** Destroy the instance and release all resources. */
   destroy(): void
 
