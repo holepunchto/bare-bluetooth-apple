@@ -3,6 +3,7 @@ export { default as Service, ServiceOptions } from './lib/service'
 export { default as Characteristic, CharacteristicOptions } from './lib/characteristic'
 export {
   default as PeripheralManager,
+  PeripheralManagerOptions,
   BluetoothState,
   AdvertisingOptions,
   ChannelOptions,
@@ -12,6 +13,7 @@ export {
 } from './lib/peripheral-manager'
 export {
   default as Central,
+  CentralOptions,
   DiscoveredPeripheral,
   RetrievedPeripheral,
   PeripheralState,

@@ -21,6 +21,13 @@ export interface DiscoveredPeripheral {
 
 export type PeripheralState = 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
 
+export interface CentralOptions {
+  /**
+   * Let the system show its own Bluetooth power alert when Bluetooth is off. Defaults to `false`.
+   */
+  showPowerAlert?: boolean
+}
+
 /**
  * A peripheral resolved without scanning. It carries no advertisement data, so it has no `rssi`
  * or `serviceData`.
@@ -49,8 +56,11 @@ export interface CentralEventMap extends EventMap {
 
 /** Bluetooth Central - central manager for scanning and connecting to peripherals */
 export default class Central extends EventEmitter<CentralEventMap> {
-  /** Create a new BLE central manager. The central scans for and connects to peripherals. */
-  constructor()
+  /**
+   * Create a new BLE central manager. The central scans for and connects to peripherals.
+   * @param opts - Manager options such as `showPowerAlert`.
+   */
+  constructor(opts?: CentralOptions)
 
   /** The current Bluetooth adapter state */
   readonly state: BluetoothState
