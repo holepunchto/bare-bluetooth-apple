@@ -1952,7 +1952,7 @@ bare_bluetooth_apple_server_init(
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.server", DISPATCH_QUEUE_SERIAL);
-    handle->manager = [[CBPeripheralManager alloc] initWithDelegate:handle queue:handle->queue];
+    handle->manager = [[CBPeripheralManager alloc] initWithDelegate:handle queue:handle->queue options:@{CBPeripheralManagerOptionShowPowerAlertKey : @NO}];
 
     uv_loop_t *loop;
     err = js_get_env_loop(env, &loop);
@@ -2784,7 +2784,7 @@ bare_bluetooth_apple_central_init(
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.central", DISPATCH_QUEUE_SERIAL);
-    handle->manager = [[CBCentralManager alloc] initWithDelegate:handle queue:handle->queue];
+    handle->manager = [[CBCentralManager alloc] initWithDelegate:handle queue:handle->queue options:@{CBCentralManagerOptionShowPowerAlertKey : @NO}];
 
     uv_loop_t *loop;
     err = js_get_env_loop(env, &loop);
