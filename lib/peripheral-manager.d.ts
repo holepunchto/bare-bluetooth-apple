@@ -7,6 +7,13 @@ import BluetoothError from './errors'
 export type BluetoothState =
   'unknown' | 'resetting' | 'unsupported' | 'unauthorized' | 'poweredOff' | 'poweredOn'
 
+export interface PeripheralManagerOptions {
+  /**
+   * Let the system show its own Bluetooth power alert when Bluetooth is off. Defaults to `false`.
+   */
+  showPowerAlert?: boolean
+}
+
 export interface AdvertisingOptions {
   /** The local name to advertise. */
   name?: string
@@ -58,8 +65,9 @@ declare class PeripheralManager extends EventEmitter<PeripheralManagerEventMap> 
   /**
    * Create a new BLE peripheral manager. Advertises services and handles read/write requests from
    * centrals.
+   * @param opts - Manager options such as `showPowerAlert`.
    */
-  constructor()
+  constructor(opts?: PeripheralManagerOptions)
 
   /** The current Bluetooth adapter state */
   readonly state: BluetoothState

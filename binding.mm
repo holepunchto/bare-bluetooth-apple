@@ -1857,7 +1857,8 @@ bare_bluetooth_apple_server_init(
   bare_bluetooth_apple_server__on_ready_to_update_fn on_ready_to_update,
   bare_bluetooth_apple_server__on_channel_publish_fn on_channel_publish,
   bare_bluetooth_apple_server__on_channel_open_fn on_channel_open,
-  bare_bluetooth_apple_server__on_advertise_error_fn on_advertise_error
+  bare_bluetooth_apple_server__on_advertise_error_fn on_advertise_error,
+  bool show_power_alert
 ) {
   @autoreleasepool {
     BareBluetoothAppleServer *handle = [[BareBluetoothAppleServer alloc] init];
@@ -1952,7 +1953,7 @@ bare_bluetooth_apple_server_init(
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.server", DISPATCH_QUEUE_SERIAL);
-    handle->manager = [[CBPeripheralManager alloc] initWithDelegate:handle queue:handle->queue];
+    handle->manager = [[CBPeripheralManager alloc] initWithDelegate:handle queue:handle->queue options:@{CBPeripheralManagerOptionShowPowerAlertKey : @(show_power_alert)}];
 
     uv_loop_t *loop;
     err = js_get_env_loop(env, &loop);
@@ -2729,7 +2730,8 @@ bare_bluetooth_apple_central_init(
   bare_bluetooth_apple_central__on_discover_fn on_discover,
   bare_bluetooth_apple_central__on_connect_fn on_connect,
   bare_bluetooth_apple_central__on_disconnect_fn on_disconnect,
-  bare_bluetooth_apple_central__on_connect_fail_fn on_connect_fail
+  bare_bluetooth_apple_central__on_connect_fail_fn on_connect_fail,
+  bool show_power_alert
 ) {
   @autoreleasepool {
     BareBluetoothAppleCentral *handle = [[BareBluetoothAppleCentral alloc] init];
@@ -2784,7 +2786,7 @@ bare_bluetooth_apple_central_init(
     assert(err == 0);
 
     handle->queue = dispatch_queue_create("bare.bluetooth.central", DISPATCH_QUEUE_SERIAL);
-    handle->manager = [[CBCentralManager alloc] initWithDelegate:handle queue:handle->queue];
+    handle->manager = [[CBCentralManager alloc] initWithDelegate:handle queue:handle->queue options:@{CBCentralManagerOptionShowPowerAlertKey : @(show_power_alert)}];
 
     uv_loop_t *loop;
     err = js_get_env_loop(env, &loop);

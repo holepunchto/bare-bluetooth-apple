@@ -4,7 +4,7 @@ const PeripheralManager = require('../lib/peripheral-manager')
 const Service = require('../lib/service')
 const Characteristic = require('../lib/characteristic')
 const Thread = require('bare-thread')
-const { isCI, waitForPoweredOn } = require('./helpers')
+const { isCI, waitForPoweredOn, waitForEvent } = require('./helpers')
 
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789ABC'
 const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
@@ -13,6 +13,14 @@ const OTHER_SERVICE_UUID = 'ABCDEF01-1234-1234-1234-123456789ABC'
 test('initial state is unknown', { skip: isCI }, (t) => {
   using manager = new PeripheralManager()
   t.is(manager.state, 'unknown')
+})
+
+test('accepts the showPowerAlert option', { skip: isCI }, async (t) => {
+  for (const opts of [undefined, { showPowerAlert: false }, { showPowerAlert: true }]) {
+    using manager = new PeripheralManager(opts)
+
+    t.ok(await waitForEvent(manager, 'stateChange', 5000))
+  }
 })
 
 test('emits stateChange on init', { skip: isCI }, async (t) => {
