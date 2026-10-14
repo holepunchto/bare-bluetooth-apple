@@ -52,7 +52,7 @@ test('value is stored', (t) => {
   t.alike(char.value, data)
 })
 
-test('value is mutable', (t) => {
+test('a local characteristic accepts a value', (t) => {
   const data = new Uint8Array([0x01, 0x02])
   const char = new Characteristic('0000', { value: data })
   const newData = new Uint8Array([0x03])
