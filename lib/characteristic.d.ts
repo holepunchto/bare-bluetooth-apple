@@ -17,7 +17,7 @@ export default class Characteristic {
   /** Bitmask of characteristic permissions, if set explicitly */
   readonly permissions: number | null
 
-  /** The current value, if set */
+  /** The current value, if set. Assigning throws on a discovered characteristic */
   value: Uint8Array | null
 
   // Property constants

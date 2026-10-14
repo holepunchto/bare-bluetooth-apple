@@ -67,6 +67,9 @@ test('discover characteristics', { skip: isCI, timeout: 15000 }, async (t) => {
   t.ok(characteristics.length > 0)
   t.ok(typeof characteristics[0].uuid === 'string')
   t.ok(typeof characteristics[0].properties === 'number')
+  t.exception(() => {
+    characteristics[0].value = new Uint8Array([1])
+  }, /discovered characteristic/)
 })
 
 test('read readable characteristics', { skip: isCI, timeout: 60000 }, async (t) => {
@@ -92,7 +95,7 @@ test('read readable characteristics', { skip: isCI, timeout: 60000 }, async (t) 
     })
 
     if (!chars) {
-      t.comment('  ' + service.uuid + ' — discover timed out')
+      t.comment('  ' + service.uuid + ' - discover timed out')
       continue
     }
 
