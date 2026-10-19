@@ -60,6 +60,26 @@ See <https://github.com/holepunchto/bare#sanitizers> for building that `bare`.
 BARE=/path/to/bare ./run-test-asan    # another bare
 ```
 
+## Running the tests
+
+The tests drive a real radio. `npm test` packs them into an app with [`bare-native-test`](https://github.com/holepunchto/bare-native-test), launches it on this Mac and streams the TAP output. [`test/build.js`](test/build.js) carries the build options and [`test/Info.plist`](test/Info.plist) declares the Bluetooth usage.
+
+To run them on an iPhone instead, build the addon for it:
+
+```console
+bare-make generate --platform ios --arch arm64
+bare-make build
+bare-make install
+```
+
+Then point at a provisioning profile that covers the phone, and name a signing identity if the keychain holds several:
+
+```console
+PROVISIONING_PROFILE=~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/<id>.mobileprovision npm test -- --platform ios
+```
+
+The first run waits on the Bluetooth prompt on the phone, which iOS then remembers.
+
 ## License
 
 Apache-2.0

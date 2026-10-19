@@ -10,15 +10,7 @@ test('initial state is unknown', { skip: isCI }, (t) => {
   t.is(central.state, 'unknown')
 })
 
-test('accepts the showPowerAlert option', { skip: isCI }, async (t) => {
-  for (const opts of [undefined, { showPowerAlert: false }, { showPowerAlert: true }]) {
-    using central = new Central(opts)
-
-    t.ok(await waitForEvent(central, 'stateChange', 5000))
-  }
-})
-
-test('emits stateChange on init', { skip: isCI }, async (t) => {
+test('emits stateChange on init', { skip: isCI, timeout: 60000 }, async (t) => {
   using central = new Central()
 
   const state = await new Promise((resolve) => {
@@ -30,6 +22,14 @@ test('emits stateChange on init', { skip: isCI }, async (t) => {
       state
     )
   )
+})
+
+test('accepts the showPowerAlert option', { skip: isCI }, async (t) => {
+  for (const opts of [undefined, { showPowerAlert: false }, { showPowerAlert: true }]) {
+    using central = new Central(opts)
+
+    t.ok(await waitForEvent(central, 'stateChange', 5000))
+  }
 })
 
 test('state property tracks emitted state', { skip: isCI }, async (t) => {
