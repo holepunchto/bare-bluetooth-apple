@@ -62,7 +62,7 @@ BARE=/path/to/bare ./run-test-asan    # another bare
 
 ## Running the tests
 
-The tests drive a real radio. `npm test` packs them into an app with [`bare-native-test`](https://github.com/holepunchto/bare-native-test), launches it on this Mac and streams the TAP output. [`test/build.js`](test/build.js) carries the build options and [`test/Info.plist`](test/Info.plist) declares the Bluetooth usage.
+The tests drive a real radio. `npm test` packs them into an app and launches it on this Mac and streams the TAP output.
 
 To run them on an iPhone instead, build the addon for it:
 
@@ -72,7 +72,7 @@ bare-make build
 bare-make install
 ```
 
-Then put the signing options in `test/signing.json`, which git ignores: a provisioning profile that covers the phone, and the identity to sign with if the keychain holds several.
+Then put the signing options in `test/signing.json`: a provisioning profile that covers the phone, and the identity to sign with if the keychain holds several.
 
 ```json
 {
