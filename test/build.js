@@ -1,10 +1,13 @@
 const path = require('path')
 
-const { IDENTITY, PROVISIONING_PROFILE } = process.env
+let signing = {}
+
+try {
+  signing = require('./signing.json')
+} catch {}
 
 module.exports = {
-  sign: !!PROVISIONING_PROFILE,
-  identity: IDENTITY,
-  provisioningProfile: PROVISIONING_PROFILE,
+  sign: 'provisioningProfile' in signing,
+  ...signing,
   infoPlist: path.join(__dirname, 'Info.plist')
 }

@@ -72,10 +72,19 @@ bare-make build
 bare-make install
 ```
 
-Then point at a provisioning profile that covers the phone, and name a signing identity if the keychain holds several:
+Then put the signing options in `test/signing.json`, which git ignores: a provisioning profile that covers the phone, and the identity to sign with if the keychain holds several.
+
+```json
+{
+  "identity": "Apple Development: Jane Doe (TEAMID)",
+  "provisioningProfile": "/Users/jane/Library/Developer/Xcode/UserData/Provisioning Profiles/<id>.mobileprovision"
+}
+```
+
+Plug the phone in and run:
 
 ```console
-PROVISIONING_PROFILE=~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/<id>.mobileprovision npm test -- --platform ios
+npm test -- --platform ios
 ```
 
 The first run waits on the Bluetooth prompt on the phone, which iOS then remembers.

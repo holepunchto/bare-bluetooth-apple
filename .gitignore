@@ -5,3 +5,4 @@ prebuilds
 tmp
 package-lock.json
 coverage
+test/signing.json
