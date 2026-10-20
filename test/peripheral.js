@@ -108,11 +108,19 @@ test('read readable characteristics', { skip: isCI, timeout: 60000 }, async (t) 
       peripheral.read(char)
 
       const result = await new Promise((resolve) => {
-        const timeout = setTimeout(() => resolve(null), 5000)
-        peripheral.once('read', (c, data, error) => {
+        const timeout = setTimeout(() => done(null), 5000)
+        const onread = (c, data) => done([c, data, null])
+        const onerror = (error) => done([null, null, error])
+
+        peripheral.once('read', onread)
+        peripheral.once('error', onerror)
+
+        function done(value) {
           clearTimeout(timeout)
-          resolve([c, data, error])
-        })
+          peripheral.off('read', onread)
+          peripheral.off('error', onerror)
+          resolve(value)
+        }
       })
 
       if (!result) {
