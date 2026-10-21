@@ -41,7 +41,7 @@
   "devDependencies": {
     "bare-encoding": "^1.0.3",
     "bare-native": "^0.3.6",
-    "bare-native-test": "^0.1.4",
+    "bare-native-test": "^0.1.6",
     "bare-os": "^3.7.1",
     "bare-thread": "^1.2.6",
     "brittle": "^4.2.0",
