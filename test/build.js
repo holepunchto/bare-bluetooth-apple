@@ -1,13 +1,24 @@
 const path = require('path')
 
-let signing = {}
+module.exports = function build({ device }) {
+  let signing = {}
 
-try {
-  signing = require('./signing.json')
-} catch {}
+  try {
+    signing = require('./signing.json')
+  } catch {}
 
-module.exports = {
-  sign: 'provisioningProfile' in signing,
-  ...signing,
-  infoPlist: path.join(__dirname, 'Info.plist')
+  const { identity, provisioningProfile } = signing
+
+  const options = {
+    identifier: 'to.holepunch.bare.bluetooth.test',
+    infoPlist: path.join(__dirname, 'Info.plist'),
+    sign: identity !== undefined,
+    identity
+  }
+
+  if (device.platform === 'ios') {
+    return { ...options, sign: provisioningProfile !== undefined, provisioningProfile }
+  }
+
+  return options
 }
