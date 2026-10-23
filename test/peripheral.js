@@ -8,6 +8,9 @@ let peripheral = null
 
 hook('setup: connect to nearby peripheral', { skip: isCI, timeout: 30000 }, async (t) => {
   central = new Central()
+
+  central.on('error', () => {})
+
   await waitForPoweredOn(central)
 
   central.startScan()
@@ -36,6 +39,14 @@ hook('setup: connect to nearby peripheral', { skip: isCI, timeout: 30000 }, asyn
 
 test('peripheral has a string id', { skip: isCI }, (t) => {
   t.ok(typeof peripheral.id === 'string')
+})
+
+test('name matches what the system knows about the device', { skip: isCI }, (t) => {
+  const [retrieved] = central.retrievePeripherals([peripheral.id])
+
+  t.ok(retrieved)
+  t.comment('name is ' + retrieved.name)
+  t.is(peripheral.name, retrieved.name)
 })
 
 test('discover services', { skip: isCI, timeout: 15000 }, async (t) => {
