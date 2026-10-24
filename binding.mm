@@ -13,6 +13,10 @@ struct bare_bluetooth_apple_external_t {
   std::string uuid;
 };
 
+struct bare_bluetooth_apple_peripheral_name_change_t {
+  std::optional<std::string> name;
+};
+
 struct bare_bluetooth_apple_peripheral_services_discover_t {
   std::optional<std::string> error;
 };
@@ -167,6 +171,7 @@ struct bare_bluetooth_apple_l2cap_error_t {
   js_threadsafe_function_t *tsfn_notify;
   js_threadsafe_function_t *tsfn_notify_state;
   js_threadsafe_function_t *tsfn_channel_open;
+  js_threadsafe_function_t *tsfn_name_change;
 
   CBPeripheral *peripheral;
   dispatch_queue_t queue;
@@ -181,6 +186,17 @@ struct bare_bluetooth_apple_l2cap_error_t {
   [peripheral release];
   dispatch_release(queue);
   [super dealloc];
+}
+
+- (void)peripheralDidUpdateName:(CBPeripheral *)p {
+  auto event = new bare_bluetooth_apple_peripheral_name_change_t;
+  if (!event) abort();
+
+  NSString *name = p.name;
+  if (name) event->name = name.UTF8String;
+
+  int err = js_call_threadsafe_function(tsfn_name_change, event, js_threadsafe_function_nonblocking);
+  assert(err == 0);
 }
 
 - (void)peripheral:(CBPeripheral *)p didDiscoverServices:(NSError *)error {
@@ -361,6 +377,7 @@ using bare_bluetooth_apple_peripheral__on_write_fn = js_function_t<void, js_rece
 using bare_bluetooth_apple_peripheral__on_notify_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, js_object_t, std::optional<std::string>>;
 using bare_bluetooth_apple_peripheral__on_notify_state_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, bool, std::optional<std::string>>;
 using bare_bluetooth_apple_peripheral__on_channel_open_fn = js_function_t<void, js_receiver_t, js_object_t, std::optional<std::string>>;
+using bare_bluetooth_apple_peripheral__on_name_change_fn = js_function_t<void, js_receiver_t, std::optional<std::string>>;
 
 static js_value_t *
 bare_bluetooth_apple__bridged_array(js_env_t *env, NSArray *items) {
@@ -380,6 +397,39 @@ bare_bluetooth_apple__bridged_array(js_env_t *env, NSArray *items) {
   }
 
   return array;
+}
+
+static void
+bare_bluetooth_apple_peripheral__on_name_change(
+  js_env_t *env,
+  bare_bluetooth_apple_peripheral__on_name_change_fn function,
+  bare_bluetooth_apple_peripheral_t *peripheral,
+  bare_bluetooth_apple_peripheral_name_change_t *event
+) {
+  auto wrapper = peripheral->handle;
+  int err;
+
+  if (wrapper->destroyed) {
+    delete event;
+    return;
+  }
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *receiver;
+  err = js_get_reference_value(env, wrapper->ctx, &receiver);
+  assert(err == 0);
+
+  std::optional<std::string> name = std::move(event->name);
+
+  delete event;
+
+  js_call_function(env, function, js_receiver_t(receiver), name);
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
 }
 
 static void
@@ -726,6 +776,9 @@ bare_bluetooth_apple_peripheral__on_cleanup(uv_async_t *async) {
   err = js_release_threadsafe_function(wrapper->tsfn_channel_open, js_threadsafe_function_release);
   assert(err == 0);
 
+  err = js_release_threadsafe_function(wrapper->tsfn_name_change, js_threadsafe_function_release);
+  assert(err == 0);
+
   err = js_delete_reference(wrapper->env, wrapper->ctx);
   assert(err == 0);
 
@@ -781,7 +834,8 @@ bare_bluetooth_apple_peripheral_init(
   bare_bluetooth_apple_peripheral__on_write_fn onWrite,
   bare_bluetooth_apple_peripheral__on_notify_fn onNotify,
   bare_bluetooth_apple_peripheral__on_notify_state_fn onNotifyState,
-  bare_bluetooth_apple_peripheral__on_channel_open_fn onChannelOpen
+  bare_bluetooth_apple_peripheral__on_channel_open_fn onChannelOpen,
+  bare_bluetooth_apple_peripheral__on_name_change_fn onNameChange
 ) {
   @autoreleasepool {
     int err;
@@ -854,6 +908,14 @@ bare_bluetooth_apple_peripheral_init(
       bare_bluetooth_apple__on_finalize<bare_bluetooth_apple_peripheral_t>,
       bare_bluetooth_apple_peripheral_t,
       bare_bluetooth_apple_peripheral_channel_open_t>(env, onChannelOpen, 0, 1, channel_open_ctx, handle->tsfn_channel_open);
+    assert(err == 0);
+
+    auto *name_change_ctx = new bare_bluetooth_apple_peripheral_t{(__bridge BareBluetoothApplePeripheral *) CFBridgingRetain(handle)};
+    err = js_create_threadsafe_function<
+      bare_bluetooth_apple_peripheral__on_name_change,
+      bare_bluetooth_apple__on_finalize<bare_bluetooth_apple_peripheral_t>,
+      bare_bluetooth_apple_peripheral_t,
+      bare_bluetooth_apple_peripheral_name_change_t>(env, onNameChange, 0, 1, name_change_ctx, handle->tsfn_name_change);
     assert(err == 0);
 
     handle->peripheral.delegate = handle;

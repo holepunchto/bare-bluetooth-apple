@@ -19,6 +19,8 @@ export interface PeripheralOptions {
 
 export interface PeripheralEventMap extends EventMap {
   error: [error: BluetoothError]
+  /** Emitted when the device reports a new name, or `null` if it no longer has one. */
+  nameChange: [name: string | null]
   servicesDiscover: [services: Service[]]
   characteristicsDiscover: [service: Service | null, characteristics: Characteristic[]]
   /**
