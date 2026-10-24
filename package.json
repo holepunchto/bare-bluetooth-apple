@@ -1,6 +1,6 @@
 {
   "name": "bare-bluetooth-apple",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "CoreBluetooth bindings for Bare",
   "exports": {
     "./package": "./package.json",
