@@ -7,8 +7,8 @@ import BluetoothError from './errors'
 export interface PeripheralOptions {
   /** The unique identifier of the peripheral. */
   id?: string
-  /** The name of the peripheral, if available. */
-  name?: string
+  /** The advertised name of the peripheral; omit or pass `null` to read it from the device. */
+  name?: string | null
   /**
    * A snapshot of the `serviceData` from the most recent advertisement seen for this peripheral
    * before connect or `null`. Service data is only in advertisement packets, so this value never
@@ -49,7 +49,10 @@ export default class Peripheral extends EventEmitter<PeripheralEventMap> {
   /** The peripheral UUID identifier */
   readonly id: string
 
-  /** The peripheral name, if available */
+  /**
+   * The advertised name, or the GAP device name once connected. `null` while neither is
+   * available yet.
+   */
   readonly name: string | null
 
   /** Service data captured from the most recent advertisement seen before connect, or null */

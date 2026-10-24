@@ -17,6 +17,7 @@ test('emits stateChange on init', { skip: isCI, timeout: 60000 }, async (t) => {
     central.on('stateChange', resolve)
   })
 
+  t.comment('state is ' + state)
   t.ok(
     ['poweredOn', 'poweredOff', 'resetting', 'unauthorized', 'unsupported', 'unknown'].includes(
       state
@@ -275,6 +276,8 @@ test('connect and disconnect a retrieved peripheral', { skip: isCI, timeout: 300
 
   t.ok(await waitForEvent(central, 'disconnect', 5000))
   t.is(central.retrievePeripherals([retrieved.id])[0].state, 'disconnected')
+
+  t.execution(() => connected.name)
 })
 
 test('exports state constants', (t) => {
