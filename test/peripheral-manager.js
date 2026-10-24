@@ -11,20 +11,20 @@ const CHAR_UUID = '87654321-4321-4321-4321-CBA987654321'
 const OTHER_SERVICE_UUID = 'ABCDEF01-1234-1234-1234-123456789ABC'
 
 test('initial state is unknown', { skip: isCI }, (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   t.is(manager.state, 'unknown')
 })
 
 test('accepts the showPowerAlert option', { skip: isCI }, async (t) => {
   for (const opts of [undefined, { showPowerAlert: false }, { showPowerAlert: true }]) {
-    using manager = new PeripheralManager(opts)
+    using manager = createManager(opts)
 
     t.ok(await waitForEvent(manager, 'stateChange', 5000))
   }
 })
 
 test('emits stateChange on init', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
 
   const state = await new Promise((resolve) => {
     manager.on('stateChange', resolve)
@@ -38,7 +38,7 @@ test('emits stateChange on init', { skip: isCI }, async (t) => {
 })
 
 test('state property tracks emitted state', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
 
   const state = await new Promise((resolve) => {
     manager.on('stateChange', resolve)
@@ -48,7 +48,7 @@ test('state property tracks emitted state', { skip: isCI }, async (t) => {
 })
 
 test('addService registers and confirms service', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(new Service(SERVICE_UUID))
@@ -61,14 +61,14 @@ test('addService registers and confirms service', { skip: isCI }, async (t) => {
 })
 
 test('removeAllServices without services does not throw', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   t.execution(() => manager.removeAllServices())
 })
 
 test('removeAllServices accepts another service afterwards', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(new Service(SERVICE_UUID))
@@ -84,7 +84,7 @@ test('removeAllServices accepts another service afterwards', { skip: isCI }, asy
 })
 
 test('removeAllServices frees the service uuid for reuse', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(new Service(SERVICE_UUID))
@@ -100,7 +100,7 @@ test('removeAllServices frees the service uuid for reuse', { skip: isCI }, async
 })
 
 test('addService works with dynamic characteristic', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   const service = new Service(SERVICE_UUID)
@@ -114,7 +114,7 @@ test('addService works with dynamic characteristic', { skip: isCI }, async (t) =
 })
 
 test('addService with multiple characteristics', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   const service = new Service(SERVICE_UUID, [
@@ -138,7 +138,7 @@ test('addService with multiple characteristics', { skip: isCI }, async (t) => {
 })
 
 test('startAdvertising and stopAdvertising do not throw', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(createSimpleService())
@@ -154,7 +154,7 @@ test('startAdvertising and stopAdvertising do not throw', { skip: isCI }, async 
 })
 
 test('startAdvertising with serviceData does not throw', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(createSimpleService())
@@ -174,7 +174,7 @@ test('startAdvertising with serviceData does not throw', { skip: isCI }, async (
 })
 
 test('startAdvertising with serviceData only', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(createSimpleService())
@@ -192,7 +192,7 @@ test('startAdvertising with serviceData only', { skip: isCI }, async (t) => {
 })
 
 test('startAdvertising with multiple serviceData entries', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(createSimpleService())
@@ -265,7 +265,7 @@ test(
 )
 
 test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.addService(createSimpleService())
@@ -277,7 +277,7 @@ test('destroy cleans up gracefully', { skip: isCI }, async (t) => {
 })
 
 test('double destroy does not crash', { skip: isCI }, async (t) => {
-  const manager = new PeripheralManager()
+  const manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.destroy()
@@ -317,7 +317,7 @@ test('exports ATT result constants', (t) => {
 })
 
 test('publishChannel returns PSM', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.publishChannel()
@@ -334,7 +334,7 @@ test('publishChannel returns PSM', { skip: isCI }, async (t) => {
 })
 
 test('publishChannel multiple times returns distinct PSMs', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.publishChannel()
@@ -361,7 +361,7 @@ test('publishChannel multiple times returns distinct PSMs', { skip: isCI }, asyn
 })
 
 test('publishChannel with encryption', { skip: isCI }, async (t) => {
-  using manager = new PeripheralManager()
+  using manager = createManager()
   await waitForPoweredOn(manager)
 
   manager.publishChannel({ encrypted: true })
@@ -377,6 +377,16 @@ test('publishChannel with encryption', { skip: isCI }, async (t) => {
 })
 
 // Helpers
+
+function createManager(opts) {
+  const manager = new PeripheralManager(opts)
+
+  manager.on('error', (err) => {
+    console.error('peripheral manager error:', err.code, err.message)
+  })
+
+  return manager
+}
 
 function waitForServiceAdd(manager) {
   return new Promise((resolve) => {

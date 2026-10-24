@@ -10,7 +10,9 @@ let discovered = null
 hook('setup: connect to nearby peripheral', { skip: isCI, timeout: 30000 }, async (t) => {
   central = new Central()
 
-  central.on('error', () => {})
+  central.on('error', (err) => {
+    console.error('central error:', err.code, err.message)
+  })
 
   await waitForPoweredOn(central)
 
