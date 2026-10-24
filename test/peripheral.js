@@ -5,6 +5,7 @@ const { isCI, waitForPoweredOn } = require('./helpers')
 
 let central = null
 let peripheral = null
+let discovered = null
 
 hook('setup: connect to nearby peripheral', { skip: isCI, timeout: 30000 }, async (t) => {
   central = new Central()
@@ -16,7 +17,7 @@ hook('setup: connect to nearby peripheral', { skip: isCI, timeout: 30000 }, asyn
   central.startScan()
 
   while (true) {
-    const discovered = await new Promise((resolve) => {
+    discovered = await new Promise((resolve) => {
       central.once('discover', resolve)
     })
 
@@ -47,6 +48,11 @@ test('name matches what the system knows about the device', { skip: isCI }, (t) 
   t.ok(retrieved)
   t.comment('name is ' + retrieved.name)
   t.is(peripheral.name, retrieved.name)
+})
+
+test('serviceData survives the scan stopping', { skip: isCI }, (t) => {
+  t.comment('serviceData is ' + (discovered.serviceData ? 'present' : 'null'))
+  t.alike(peripheral.serviceData, discovered.serviceData)
 })
 
 test('discover services', { skip: isCI, timeout: 15000 }, async (t) => {
