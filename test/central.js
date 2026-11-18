@@ -61,6 +61,13 @@ test('scan discovers peripherals with expected shape', { skip: isCI }, async (t)
   t.ok(peripheral.rssi < 0)
   t.ok(peripheral.name === null || typeof peripheral.name === 'string')
   t.ok(peripheral.serviceData === null || typeof peripheral.serviceData === 'object')
+  t.ok(Array.isArray(peripheral.serviceUUIDs))
+  t.ok(
+    peripheral.serviceUUIDs.every((uuid) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid)
+    ),
+    'serviceUUIDs are canonical: ' + peripheral.serviceUUIDs.join(', ')
+  )
 })
 
 test(

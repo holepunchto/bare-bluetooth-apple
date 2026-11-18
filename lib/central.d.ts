@@ -17,6 +17,11 @@ export interface DiscoveredPeripheral {
    * updates after connect.
    */
   serviceData: { [uuid: string]: Uint8Array } | null
+  /**
+   * The service UUIDs from the most recent advertisement seen for this peripheral, empty when it
+   * advertised none. Always the canonical 128-bit form, lowercased.
+   */
+  serviceUUIDs: string[]
 }
 
 export type PeripheralState = 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
