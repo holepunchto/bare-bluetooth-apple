@@ -12,6 +12,7 @@ declare class BluetoothError extends Error {
   static CHANNEL_FAILED(msg: string): BluetoothError
   static SERVICE_ADD_FAILED(msg: string): BluetoothError
   static CHANNEL_PUBLISH_FAILED(msg: string): BluetoothError
+  static NOT_CONNECTED(msg: string): BluetoothError
 }
 
 export default BluetoothError

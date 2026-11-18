@@ -1013,6 +1013,8 @@ bare_bluetooth_apple_peripheral_discover_services(
       }
     }
 
+    if (wrapper->destroyed) return;
+
     assert(wrapper->peripheral.delegate == wrapper);
 
     [wrapper->peripheral discoverServices:serviceUUIDs];
@@ -1051,6 +1053,8 @@ bare_bluetooth_apple_peripheral_discover_characteristics(
       }
     }
 
+    if (wrapper->destroyed) return;
+
     assert(wrapper->peripheral.delegate == wrapper);
 
     [wrapper->peripheral discoverCharacteristics:characteristicUUIDs forService:service];
@@ -1074,6 +1078,8 @@ bare_bluetooth_apple_peripheral_read(
     CBCharacteristic *characteristic;
     err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
+
+    if (wrapper->destroyed) return;
 
     assert(wrapper->peripheral.delegate == wrapper);
 
@@ -1115,6 +1121,8 @@ bare_bluetooth_apple_peripheral_write(
                                        ? CBCharacteristicWriteWithResponse
                                        : CBCharacteristicWriteWithoutResponse;
 
+    if (wrapper->destroyed) return;
+
     assert(wrapper->peripheral.delegate == wrapper);
 
     [wrapper->peripheral writeValue:nsdata forCharacteristic:characteristic type:type];
@@ -1140,6 +1148,8 @@ bare_bluetooth_apple_peripheral_subscribe(
     err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
+    if (wrapper->destroyed) return;
+
     assert(wrapper->peripheral.delegate == wrapper);
 
     [wrapper->peripheral setNotifyValue:YES forCharacteristic:characteristic];
@@ -1164,6 +1174,8 @@ bare_bluetooth_apple_peripheral_unsubscribe(
     err = js_get_value(env, char_handle, characteristic);
     assert(err == 0);
 
+    if (wrapper->destroyed) return;
+
     assert(wrapper->peripheral.delegate == wrapper);
 
     // TODO: pass notify as parameter ?
@@ -1182,6 +1194,8 @@ bare_bluetooth_apple_peripheral_open_l2cap_channel(
     BareBluetoothApplePeripheral *wrapper;
     int err = js_get_value(env, handle, wrapper);
     assert(err == 0);
+
+    if (wrapper->destroyed) return;
 
     assert(wrapper->peripheral.delegate == wrapper);
 
