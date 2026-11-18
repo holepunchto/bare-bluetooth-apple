@@ -205,8 +205,6 @@ hook('teardown: disconnect', { skip: isCI }, (t) => {
 
 // Helpers
 
-// Resolves null when the link dies or the peer stays silent, so a peer that
-// drops mid-suite skips the rest instead of timing the whole run out.
 function next(event, timeout = 5000) {
   return new Promise((resolve) => {
     const timer = setTimeout(() => done(null), timeout)
