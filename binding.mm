@@ -345,16 +345,6 @@ bare_bluetooth_apple__on_cleanup_close(uv_handle_t *handle) {
   delete handle;
 }
 
-static std::string
-bare_bluetooth_apple__uuid_string(CBUUID *uuid) {
-  NSString *string = uuid.UUIDString.lowercaseString;
-
-  if (string.length == 4) return std::string("0000") + string.UTF8String + "-0000-1000-8000-00805f9b34fb";
-  if (string.length == 8) return std::string(string.UTF8String) + "-0000-1000-8000-00805f9b34fb";
-
-  return std::string(string.UTF8String);
-}
-
 static js_external_t<CBUUID>
 bare_bluetooth_apple_create_cbuuid(
   js_env_t *env,
@@ -2490,7 +2480,7 @@ bare_bluetooth_apple_server_destroy(
 
   NSArray<CBUUID *> *su = advertisementData[CBAdvertisementDataServiceUUIDsKey];
   for (CBUUID *uuid in su) {
-    event->service_uuids.push_back(bare_bluetooth_apple__uuid_string(uuid));
+    event->service_uuids.push_back(uuid.UUIDString.UTF8String);
   }
 
   int err = js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
