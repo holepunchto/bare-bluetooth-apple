@@ -19,6 +19,11 @@ export interface PeripheralOptions {
 
 export interface PeripheralEventMap extends EventMap {
   error: [error: BluetoothError]
+  /**
+   * Emitted when the link drops, whatever the reason. The reason is reported on the central's
+   * `'error'` event, which owns connection management.
+   */
+  disconnect: []
   /** Emitted when the device reports a new name, or `null` if it no longer has one. */
   nameChange: [name: string | null]
   servicesDiscover: [services: Service[]]
@@ -59,6 +64,9 @@ export default class Peripheral extends EventEmitter<PeripheralEventMap> {
 
   /** Service data captured from the most recent advertisement seen before connect, or null */
   readonly serviceData: { [uuid: string]: Uint8Array } | null
+
+  /** Whether the link is still up. Goes false on disconnect and on `destroy()`. */
+  readonly connected: boolean
 
   /**
    * @param serviceUUIDs - The service UUIDs to discover; omit to discover all services.
