@@ -113,6 +113,7 @@ struct bare_bluetooth_apple_central_discover_t {
   std::optional<std::string> name;
   int32_t rssi;
   CFTypeRef service_data;
+  std::vector<std::string> service_uuids;
 };
 
 struct bare_bluetooth_apple_central_connect_t {
@@ -2477,6 +2478,11 @@ bare_bluetooth_apple_server_destroy(
   NSDictionary *sd = advertisementData[CBAdvertisementDataServiceDataKey];
   event->service_data = (sd && sd.count > 0) ? CFBridgingRetain(sd) : NULL;
 
+  NSArray<CBUUID *> *su = advertisementData[CBAdvertisementDataServiceUUIDsKey];
+  for (CBUUID *uuid in su) {
+    event->service_uuids.push_back(uuid.UUIDString.UTF8String);
+  }
+
   int err = js_call_threadsafe_function(tsfn_discover, event, js_threadsafe_function_nonblocking);
   assert(err == 0);
 }
@@ -2526,7 +2532,7 @@ struct bare_bluetooth_apple_central_t {
 };
 
 using bare_bluetooth_apple_central__on_state_change_fn = js_function_t<void, js_receiver_t, int32_t>;
-using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, std::optional<std::string>, int32_t, js_object_t>;
+using bare_bluetooth_apple_central__on_discover_fn = js_function_t<void, js_receiver_t, js_object_t, std::string, std::optional<std::string>, int32_t, js_object_t, std::vector<std::string>>;
 using bare_bluetooth_apple_central__on_connect_fn = js_function_t<void, js_receiver_t, js_object_t, std::string>;
 using bare_bluetooth_apple_central__on_disconnect_fn = js_function_t<void, js_receiver_t, std::string, std::optional<std::string>>;
 using bare_bluetooth_apple_central__on_connect_fail_fn = js_function_t<void, js_receiver_t, std::string, std::string>;
@@ -2596,6 +2602,8 @@ bare_bluetooth_apple_central__on_discover(
 
   int32_t rssi = event->rssi;
 
+  std::vector<std::string> service_uuids = std::move(event->service_uuids);
+
   js_value_t *service_data;
   if (event->service_data) {
     NSDictionary<CBUUID *, NSData *> *sd = (__bridge NSDictionary *) event->service_data;
@@ -2625,7 +2633,7 @@ bare_bluetooth_apple_central__on_discover(
 
   delete event;
 
-  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, name, rssi, js_object_t(service_data));
+  js_call_function(env, function, js_receiver_t(receiver), js_object_t(peripheral_ext), id, name, rssi, js_object_t(service_data), service_uuids);
 
   err = js_close_handle_scope(env, scope);
   assert(err == 0);

@@ -17,6 +17,12 @@ export interface DiscoveredPeripheral {
    * updates after connect.
    */
   serviceData: { [uuid: string]: Uint8Array } | null
+  /**
+   * The service UUIDs from the most recent advertisement seen for this peripheral, empty when it
+   * advertised none. Spelled as CoreBluetooth spells them, so a 16-bit UUID stays short and
+   * uppercased.
+   */
+  serviceUUIDs: string[]
 }
 
 export type PeripheralState = 'disconnected' | 'connecting' | 'connected' | 'disconnecting'
